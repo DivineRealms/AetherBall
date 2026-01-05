@@ -25,6 +25,7 @@ import co.aikar.commands.annotation.CommandAlias;
 import co.aikar.commands.annotation.CommandCompletion;
 import co.aikar.commands.annotation.CommandPermission;
 import co.aikar.commands.annotation.Description;
+import co.aikar.commands.annotation.Flags;
 import co.aikar.commands.annotation.Subcommand;
 import co.aikar.commands.annotation.Syntax;
 import io.github.divinerealms.footcube.core.FCManager;
@@ -118,7 +119,7 @@ public class FCTeamCommands extends BaseCommand {
   @Syntax("<2v2|3v3|4v4> <player>")
   @CommandCompletion("2v2|3v3|4v4 @players")
   @Description("Invite a player to team up")
-  public void onTeamInvite(Player player, String matchType, Player target) {
+  public void onTeamInvite(Player player, String matchType, @Flags("other") Player target) {
     if (!matchManager.getData().isMatchesEnabled()) {
       logger.send(player, FC_DISABLED);
       return;

@@ -33,17 +33,6 @@ public class FCCommand extends BaseCommand {
   @Default
   @CatchUnknown
   public void onDefault(CommandSender sender) {
-    sendBanner(sender);
-  }
-
-  @Subcommand("help|h")
-  @HelpCommand
-  @Description("This page.")
-  public void onHelp(CommandSender sender, CommandHelp help) {
-    help.showHelp();
-  }
-
-  private void sendBanner(CommandSender sender) {
     Plugin plugin = fcManager.getPlugin();
 
     if (sender instanceof Player) {
@@ -61,5 +50,12 @@ public class FCCommand extends BaseCommand {
       fcManager.sendBanner();
       logger.send(sender, "&aKucajte &e/fc help &aza listu dostupnih komandi.");
     }
+  }
+
+  @Subcommand("help|h")
+  @HelpCommand
+  @Description("This page.")
+  public void onHelp(CommandSender sender, CommandHelp help) {
+    help.showHelp();
   }
 }

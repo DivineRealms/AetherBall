@@ -36,6 +36,7 @@ import io.github.divinerealms.footcube.physics.PhysicsData;
 import io.github.divinerealms.footcube.physics.utilities.PhysicsSystem;
 import io.github.divinerealms.footcube.utils.Logger;
 import io.github.divinerealms.footcube.utils.PlayerSettings;
+import java.util.List;
 import java.util.StringJoiner;
 import net.minecraft.server.v1_8_R3.EnumParticle;
 import org.bukkit.Sound;
@@ -258,7 +259,7 @@ public class FCSettingsCommands extends BaseCommand {
     logger.send(player, SET_GOAL_CELEBRATION, type);
   }
 
-  private void showAllowedSounds(Player player, java.util.List<Sound> sounds) {
+  private void showAllowedSounds(Player player, List<Sound> sounds) {
     StringJoiner joiner = new StringJoiner(", ");
     for (Sound s : sounds) {
       joiner.add(s.name());

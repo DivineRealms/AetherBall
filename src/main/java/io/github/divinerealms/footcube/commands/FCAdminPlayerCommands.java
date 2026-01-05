@@ -17,6 +17,7 @@ import co.aikar.commands.annotation.CommandAlias;
 import co.aikar.commands.annotation.CommandCompletion;
 import co.aikar.commands.annotation.CommandPermission;
 import co.aikar.commands.annotation.Description;
+import co.aikar.commands.annotation.Flags;
 import co.aikar.commands.annotation.Subcommand;
 import co.aikar.commands.annotation.Syntax;
 import io.github.divinerealms.footcube.FootCube;
@@ -51,7 +52,7 @@ public class FCAdminPlayerCommands extends BaseCommand {
   @Syntax("<player> <stat> <amount|clear>")
   @CommandCompletion("@players wins|matches|ties|goals|assists|owngoals|winstreak|bestwinstreak|all")
   @Description("Set player statistics")
-  public void onStatSet(CommandSender sender, Player target, String stat, String amountStr) {
+  public void onStatSet(CommandSender sender, @Flags("other") Player target, String stat, String amountStr) {
     PlayerData playerData = dataManager.get(target);
     if (playerData == null) {
       logger.send(sender, PLAYER_NOT_FOUND);
@@ -94,7 +95,7 @@ public class FCAdminPlayerCommands extends BaseCommand {
   @Syntax("<player>")
   @CommandCompletion("@players")
   @Description("Force a player to leave their match")
-  public void onForceLeave(CommandSender sender, Player target) {
+  public void onForceLeave(CommandSender sender, @Flags("other") Player target) {
     matchManager.leaveMatch(target);
     logger.send(sender, FORCE_LEAVE, target.getDisplayName());
   }
@@ -105,7 +106,7 @@ public class FCAdminPlayerCommands extends BaseCommand {
   @Syntax("<player>")
   @CommandCompletion("@players")
   @Description("Refresh player's prefix cache")
-  public void onRefreshPrefix(CommandSender sender, Player target) {
+  public void onRefreshPrefix(CommandSender sender, @Flags("other") Player target) {
     fcManager.cachePrefixedName(target);
     logger.send(sender, PREFIX_ADMIN + "Refreshing prefix for " + target.getName() + "...");
 

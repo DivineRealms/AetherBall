@@ -13,6 +13,7 @@ import co.aikar.commands.annotation.CommandAlias;
 import co.aikar.commands.annotation.CommandCompletion;
 import co.aikar.commands.annotation.CommandPermission;
 import co.aikar.commands.annotation.Description;
+import co.aikar.commands.annotation.Flags;
 import co.aikar.commands.annotation.Subcommand;
 import co.aikar.commands.annotation.Syntax;
 import io.github.divinerealms.footcube.core.FCManager;
@@ -38,7 +39,7 @@ public class FCAdminBanCommands extends BaseCommand {
   @Syntax("<player> <time>")
   @CommandCompletion("@players 10s|30s|5min|10min|30min|1h")
   @Description("Ban a player from matchmaking")
-  public void onBan(CommandSender sender, Player target, String timeStr) {
+  public void onBan(CommandSender sender, @Flags("other") Player target, String timeStr) {
     try {
       int seconds = Utilities.parseTime(timeStr);
       if (seconds <= 0) {
@@ -59,7 +60,7 @@ public class FCAdminBanCommands extends BaseCommand {
   @Syntax("<player>")
   @CommandCompletion("@players")
   @Description("Unban a player")
-  public void onUnban(CommandSender sender, Player target) {
+  public void onUnban(CommandSender sender, @Flags("other") Player target) {
     banManager.unbanPlayer(target);
     logger.send(sender, PLAYER_UNBANNED, target.getDisplayName());
   }
@@ -69,7 +70,7 @@ public class FCAdminBanCommands extends BaseCommand {
   @Syntax("<player>")
   @CommandCompletion("@players")
   @Description("Check if a player is banned")
-  public void onCheckBan(CommandSender sender, Player target) {
+  public void onCheckBan(CommandSender sender, @Flags("other") Player target) {
     if (banManager.isBanned(target)) {
       long banTime = banManager.getBannedPlayers().get(target.getUniqueId());
       long secondsLeft = (banTime - System.currentTimeMillis()) / 1000L;

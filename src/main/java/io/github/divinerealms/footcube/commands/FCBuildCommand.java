@@ -15,6 +15,7 @@ import co.aikar.commands.annotation.CommandCompletion;
 import co.aikar.commands.annotation.CommandPermission;
 import co.aikar.commands.annotation.Default;
 import co.aikar.commands.annotation.Description;
+import co.aikar.commands.annotation.Flags;
 import co.aikar.commands.annotation.Syntax;
 import io.github.divinerealms.footcube.core.FCManager;
 import io.github.divinerealms.footcube.matchmaking.MatchManager;
@@ -57,7 +58,7 @@ public class FCBuildCommand extends BaseCommand {
   @CommandCompletion("@players")
   @Syntax("<player>")
   @Description("Toggle build mode for another player")
-  public void onBuildOther(CommandSender sender, Player target) {
+  public void onBuildOther(CommandSender sender, @Flags("other") Player target) {
     if (matchManager.getMatch(target).isPresent()) {
       logger.send(sender, TEAM_ALREADY_IN_GAME, target.getDisplayName());
       return;

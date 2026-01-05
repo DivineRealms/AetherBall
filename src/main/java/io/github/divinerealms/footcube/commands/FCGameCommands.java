@@ -183,8 +183,7 @@ public class FCGameCommands extends BaseCommand {
   @CommandCompletion("@players")
   @Description("View player statistics")
   @CommandAlias("stats")
-  public void onStats(CommandSender sender,
-      @co.aikar.commands.annotation.Optional String targetName) {
+  public void onStats(CommandSender sender, @Optional String targetName) {
     if (sender instanceof Player) {
       Player p = (Player) sender;
       fcManager.getMatchSystem().checkStats(targetName != null ? targetName : p.getName(), sender);
