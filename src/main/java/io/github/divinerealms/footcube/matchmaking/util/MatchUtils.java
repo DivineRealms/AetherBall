@@ -453,18 +453,18 @@ public class MatchUtils {
     if (scorer != null && scorer.getPlayer() != null && scorer.getPlayer().isOnline()) {
       Player scoringPlayer = scorer.getPlayer();
       logger.send(scoringPlayer, MATCH_SCORE_CREDITS);
-      fcManager.getEconomy().depositPlayer(scoringPlayer, 10);
+      fcManager.getEconomy().depositPlayer(scoringPlayer, 50);
 
       if (scorer.getGoals() > 0 && scorer.getGoals() % 3 == 0) {
         logger.send(scoringPlayer, MATCH_SCORE_HATTRICK);
-        fcManager.getEconomy().depositPlayer(scoringPlayer, 100);
+        fcManager.getEconomy().depositPlayer(scoringPlayer, 250);
       }
     }
 
     if (assister != null && assister.getPlayer() != null && assister.getPlayer().isOnline()) {
       Player assistingPlayer = assister.getPlayer();
       logger.send(assistingPlayer, MATCH_ASSIST_CREDITS);
-      fcManager.getEconomy().depositPlayer(assistingPlayer, 5);
+      fcManager.getEconomy().depositPlayer(assistingPlayer, 25);
     }
   }
 

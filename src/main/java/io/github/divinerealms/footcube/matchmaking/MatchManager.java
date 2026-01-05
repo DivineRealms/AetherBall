@@ -468,7 +468,7 @@ public class MatchManager {
             data.add("matches");
           }
 
-          fcManager.getEconomy().depositPlayer(player, 5);
+          fcManager.getEconomy().depositPlayer(player, 50);
           logger.send(player, MATCH_TIED);
           logger.send(player, MATCH_TIED_CREDITS);
         } else {
@@ -483,12 +483,12 @@ public class MatchManager {
               }
 
               if ((int) data.get("winstreak") > 0 && (int) data.get("winstreak") % 5 == 0) {
-                fcManager.getEconomy().depositPlayer(player, 100);
+                fcManager.getEconomy().depositPlayer(player, 300);
                 logger.send(player, MATCH_WINSTREAK_CREDITS, String.valueOf(data.get("winstreak")));
               }
             }
 
-            fcManager.getEconomy().depositPlayer(player, 15);
+            fcManager.getEconomy().depositPlayer(player, 100);
             logger.send(player, MATCH_TIMES_UP, winningTeam);
             logger.send(player, MATCH_WIN_CREDITS);
           } else {
