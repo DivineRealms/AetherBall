@@ -21,7 +21,6 @@ import io.github.divinerealms.footcube.commands.FCAdminArenaCommands;
 import io.github.divinerealms.footcube.commands.FCAdminBanCommands;
 import io.github.divinerealms.footcube.commands.FCAdminCommand;
 import io.github.divinerealms.footcube.commands.FCAdminDebugCommands;
-import io.github.divinerealms.footcube.commands.MatchManCommands;
 import io.github.divinerealms.footcube.commands.FCAdminPlayerCommands;
 import io.github.divinerealms.footcube.commands.FCAdminSystemCommands;
 import io.github.divinerealms.footcube.commands.FCBuildCommand;
@@ -31,6 +30,7 @@ import io.github.divinerealms.footcube.commands.FCGameCommands;
 import io.github.divinerealms.footcube.commands.FCMatchesCommand;
 import io.github.divinerealms.footcube.commands.FCSettingsCommands;
 import io.github.divinerealms.footcube.commands.FCTeamCommands;
+import io.github.divinerealms.footcube.commands.MatchManCommands;
 import io.github.divinerealms.footcube.configs.Lang;
 import io.github.divinerealms.footcube.configs.PlayerData;
 import io.github.divinerealms.footcube.managers.ConfigManager;
@@ -54,6 +54,7 @@ import io.github.divinerealms.footcube.utils.DisableCommands;
 import io.github.divinerealms.footcube.utils.FCPlaceholders;
 import io.github.divinerealms.footcube.utils.Logger;
 import io.github.divinerealms.footcube.utils.PlayerSettings;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -72,6 +73,9 @@ import net.milkbowl.vault.economy.Economy;
 import net.minecraft.server.v1_8_R3.EnumParticle;
 import org.bukkit.Bukkit;
 import org.bukkit.Sound;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandMap;
+import org.bukkit.command.PluginIdentifiableCommand;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.RegisteredServiceProvider;
@@ -207,6 +211,7 @@ public class FCManager {
     if (commandManager != null) {
       try {
         commandManager.unregisterCommands();
+        clearBukkitCommandMap();
         logger.info("&e⟳ &6Unregistered old ACF commands.");
       } catch (Exception exception) {
         Bukkit.getLogger()
@@ -454,12 +459,38 @@ public class FCManager {
     );
   }
 
+  private void clearBukkitCommandMap() {
+    try {
+      Field field = Bukkit.getServer().getClass().getDeclaredField("commandMap");
+      field.setAccessible(true);
+      CommandMap commandMap = (CommandMap) field.get(Bukkit.getServer());
+
+      Field knownCommandsField = commandMap.getClass().getDeclaredField("knownCommands");
+      knownCommandsField.setAccessible(true);
+      //noinspection unchecked
+      Map<String, Command> knownCommands = (Map<String, Command>) knownCommandsField.get(commandMap);
+
+      knownCommands.entrySet().removeIf(entry -> {
+        Command cmd = entry.getValue();
+        if (cmd instanceof PluginIdentifiableCommand) {
+          return ((PluginIdentifiableCommand) cmd).getPlugin().equals(plugin);
+        }
+        return false;
+      });
+    } catch (Exception exception) {
+      Bukkit.getLogger().log(Level.WARNING,
+          "Failed to clear command map: " + exception.getMessage(), exception);
+    }
+  }
+
   public void cleanup() {
     long start = System.nanoTime();
     try {
       if (commandManager != null) {
         try {
           commandManager.unregisterCommands();
+          clearBukkitCommandMap();
+          commandManager = null;
           logger.info("&e⟳ &6Unregistered ACF commands during cleanup.");
         } catch (Exception exception) {
           Bukkit.getLogger().log(Level.SEVERE,
