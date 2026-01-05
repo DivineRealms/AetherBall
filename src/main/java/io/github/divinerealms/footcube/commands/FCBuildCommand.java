@@ -1,6 +1,7 @@
 package io.github.divinerealms.footcube.commands;
 
 import static io.github.divinerealms.footcube.configs.Lang.COMMAND_DISABLER_CANT_USE;
+import static io.github.divinerealms.footcube.configs.Lang.NO_PERM_PARAMETERS;
 import static io.github.divinerealms.footcube.configs.Lang.OFF;
 import static io.github.divinerealms.footcube.configs.Lang.ON;
 import static io.github.divinerealms.footcube.configs.Lang.SET_BUILD_MODE;
@@ -15,7 +16,7 @@ import co.aikar.commands.annotation.CommandCompletion;
 import co.aikar.commands.annotation.CommandPermission;
 import co.aikar.commands.annotation.Default;
 import co.aikar.commands.annotation.Description;
-import co.aikar.commands.annotation.Flags;
+import co.aikar.commands.annotation.Optional;
 import co.aikar.commands.annotation.Syntax;
 import io.github.divinerealms.footcube.core.FCManager;
 import io.github.divinerealms.footcube.matchmaking.MatchManager;
@@ -39,28 +40,29 @@ public class FCBuildCommand extends BaseCommand {
 
   @Default
   @CommandPermission(PERM_BUILD)
-  @Description("Toggle your build mode")
-  public void onBuild(Player player) {
-    if (matchManager.getMatch(player).isPresent()) {
-      logger.send(player, COMMAND_DISABLER_CANT_USE);
-      return;
+  @CommandCompletion("@players")
+  @Syntax("[player]")
+  @Description("Toggle build mode for yourself or another player")
+  public void onBuild(CommandSender sender, @Optional Player target) {
+    if (target == null) {
+      if (!(sender instanceof Player)) {
+        logger.send(sender, "&cYou must specify a player from console.");
+        return;
+      }
+      target = (Player) sender;
+    } else {
+      if (!sender.hasPermission(PERM_BUILD_OTHER)) {
+        logger.send(sender, NO_PERM_PARAMETERS, getExecCommandLabel());
+        return;
+      }
     }
 
-    PlayerSettings settings = fcManager.getPlayerSettings(player);
-    settings.toggleBuild();
-    logger.send(player, SET_BUILD_MODE, settings.isBuildEnabled()
-        ? ON.toString()
-        : OFF.toString());
-  }
-
-  @Default
-  @CommandPermission(PERM_BUILD_OTHER)
-  @CommandCompletion("@players")
-  @Syntax("<player>")
-  @Description("Toggle build mode for another player")
-  public void onBuildOther(CommandSender sender, @Flags("other") Player target) {
     if (matchManager.getMatch(target).isPresent()) {
-      logger.send(sender, TEAM_ALREADY_IN_GAME, target.getDisplayName());
+      if (target.equals(sender)) {
+        logger.send(sender, COMMAND_DISABLER_CANT_USE);
+      } else {
+        logger.send(sender, TEAM_ALREADY_IN_GAME, target.getDisplayName());
+      }
       return;
     }
 
@@ -70,7 +72,11 @@ public class FCBuildCommand extends BaseCommand {
         ? ON.toString()
         : OFF.toString();
 
-    logger.send(target, SET_BUILD_MODE, status);
-    logger.send(sender, SET_BUILD_MODE_OTHER, target.getDisplayName(), status);
+    if (target.equals(sender)) {
+      logger.send(sender, SET_BUILD_MODE, status);
+    } else {
+      logger.send(target, SET_BUILD_MODE, status);
+      logger.send(sender, SET_BUILD_MODE_OTHER, target.getDisplayName(), status);
+    }
   }
 }
