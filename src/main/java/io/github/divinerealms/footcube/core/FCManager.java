@@ -1,8 +1,5 @@
 package io.github.divinerealms.footcube.core;
 
-import static io.github.divinerealms.footcube.configs.Lang.HELP_FOOTER;
-import static io.github.divinerealms.footcube.configs.Lang.HELP_FORMAT;
-import static io.github.divinerealms.footcube.configs.Lang.HELP_HEADER;
 import static io.github.divinerealms.footcube.configs.Lang.HELP_USAGE;
 import static io.github.divinerealms.footcube.configs.Lang.INGAME_ONLY;
 import static io.github.divinerealms.footcube.configs.Lang.NO_PERM;
@@ -230,7 +227,6 @@ public class FCManager {
   }
 
   private void configureACF() {
-    commandManager.enableUnstableAPI("help");
     commandManager.getLocales().addMessage(Locale.ENGLISH,
         MessageKeys.PERMISSION_DENIED,
         NO_PERM.toString());
@@ -249,15 +245,6 @@ public class FCManager {
     commandManager.getLocales().addMessage(Locale.ENGLISH,
         MessageKeys.UNKNOWN_COMMAND,
         UNKNOWN_COMMAND.toString());
-    commandManager.getLocales().addMessage(Locale.ENGLISH,
-        MessageKeys.HELP_FORMAT,
-        HELP_FORMAT.toString());
-    commandManager.getLocales().addMessage(Locale.ENGLISH,
-        MessageKeys.HELP_HEADER,
-        HELP_HEADER.toString());
-    commandManager.getLocales().addMessage(Locale.ENGLISH,
-        MessageKeys.HELP_PAGE_INFORMATION,
-        HELP_FOOTER.toString());
   }
 
   private void registerCustomCompletions() {
@@ -280,7 +267,7 @@ public class FCManager {
   }
 
   private void registerAdminCommands() {
-    commandManager.registerCommand(new FCAdminCommand());
+    commandManager.registerCommand(new FCAdminCommand(this));
     commandManager.registerCommand(new FCAdminSystemCommands(this));
     commandManager.registerCommand(new FCAdminBanCommands(this));
     commandManager.registerCommand(new FCAdminArenaCommands(this));

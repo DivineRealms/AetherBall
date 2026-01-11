@@ -15,6 +15,7 @@ import static io.github.divinerealms.footcube.configs.Lang.MATCH_STARTED_ACTIONB
 import static io.github.divinerealms.footcube.configs.Lang.MATCH_STARTING_ACTIONBAR;
 import static io.github.divinerealms.footcube.configs.Lang.MATCH_STARTING_SUBTITLE;
 import static io.github.divinerealms.footcube.configs.Lang.MATCH_STARTING_TITLE;
+import static io.github.divinerealms.footcube.configs.Lang.MATCH_TIMES_UP;
 import static io.github.divinerealms.footcube.configs.Lang.RED;
 import static io.github.divinerealms.footcube.configs.Lang.STARTING;
 import static io.github.divinerealms.footcube.configs.Lang.STATS;
@@ -23,6 +24,7 @@ import static io.github.divinerealms.footcube.configs.Lang.TAKE_PLACE_ANNOUNCEME
 import static io.github.divinerealms.footcube.configs.Lang.TAKE_PLACE_ANNOUNCEMENT_MATCH;
 import static io.github.divinerealms.footcube.matchmaking.util.MatchConstants.FIVE_V_FIVE;
 import static io.github.divinerealms.footcube.matchmaking.util.MatchConstants.FOUR_V_FOUR;
+import static io.github.divinerealms.footcube.matchmaking.util.MatchConstants.ONE_V_ONE;
 import static io.github.divinerealms.footcube.matchmaking.util.MatchConstants.SCOREBOARD_UPDATE_INTERVAL;
 import static io.github.divinerealms.footcube.matchmaking.util.MatchConstants.TAKE_PLACE_ANNOUNCEMENT_INTERVAL_TICKS;
 import static io.github.divinerealms.footcube.matchmaking.util.MatchConstants.THREE_V_THREE;
@@ -87,7 +89,7 @@ public class MatchSystem {
     this.teamManager = fcManager.getTeamManager();
     this.utilities = fcManager.getUtilities();
 
-    int[] initialQueueOrder = {TWO_V_TWO, THREE_V_THREE, FOUR_V_FOUR};
+    int[] initialQueueOrder = {ONE_V_ONE, TWO_V_TWO, THREE_V_THREE, FOUR_V_FOUR, FIVE_V_FIVE};
     for (int t : initialQueueOrder) {
       data.getQueueLocks().put(t, new ReentrantLock());
     }
@@ -441,15 +443,31 @@ public class MatchSystem {
             player.playSound(player.getLocation(), Sound.NOTE_STICKS, 1, 1);
           }
 
-          if (match.getCountdown() <= 0) {
-            match.setPhase(MatchPhase.IN_PROGRESS);
-            for (MatchPlayer mp : players) {
-              if (mp == null || mp.getPlayer() == null) {
-                continue;
+          if (match.getCountdown() <= 1) {
+            long matchDuration = match.getArena().getType() == TWO_V_TWO ? 120 : 300;
+            long elapsedSeconds = TimeUnit.MILLISECONDS.toSeconds(
+                System.currentTimeMillis() - match.getStartTime()
+            );
+
+            if (elapsedSeconds >= matchDuration) {
+              match.setPhase(MatchPhase.ENDED);
+              for (MatchPlayer mp : players) {
+                if (mp == null || mp.getPlayer() == null) {
+                  continue;
+                }
+                logger.send(mp.getPlayer(), MATCH_TIMES_UP,
+                    match.getScoreRed() > match.getScoreBlue() ? RED.toString() : BLUE.toString());
               }
-              logger.send(mp.getPlayer(), MATCH_PROCEED);
+            } else {
+              match.setPhase(MatchPhase.IN_PROGRESS);
+              for (MatchPlayer mp : players) {
+                if (mp == null || mp.getPlayer() == null) {
+                  continue;
+                }
+                logger.send(mp.getPlayer(), MATCH_PROCEED);
+              }
+              startRound(match);
             }
-            startRound(match);
           }
         }
         break;
@@ -473,6 +491,11 @@ public class MatchSystem {
   }
 
   public void processQueues() {
+    if (arenaManager.getArenas().isEmpty()) {
+      logger.info("&c⚠ Cannot process queues - no arenas configured!");
+      return;
+    }
+
     int[] queueOrder = {TWO_V_TWO, THREE_V_THREE, FOUR_V_FOUR, FIVE_V_FIVE};
     for (int matchType : queueOrder) {
       Queue<Player> queue = data.getPlayerQueues().get(matchType);
@@ -510,6 +533,17 @@ public class MatchSystem {
       if (fcManager.getMatchManager().getMatch(head).isPresent()) {
         queue.poll();
         continue;
+      }
+
+      if (!arenaManager.hasArenaForType(matchType)) {
+        List<Player> playersToKick = new ArrayList<>(queue);
+        queue.clear();
+        for (Player p : playersToKick) {
+          if (p != null && p.isOnline()) {
+            logger.send(p, JOIN_NOARENA);
+          }
+        }
+        return;
       }
 
       Team team = teamManager.getTeam(head);
@@ -706,11 +740,14 @@ public class MatchSystem {
   private synchronized Match createNewLobby(int matchType) {
     List<Arena> available = new ArrayList<>();
     for (Arena a : arenaManager.getArenas()) {
-      if (a.getType() != matchType) {
+      if (a == null || a.getType() != matchType) {
         continue;
       }
       boolean inUse = false;
       for (Match m : data.getMatches()) {
+        if (m == null || m.getArena() == null) {
+          continue;
+        }
         if (m.getArena().getId() == a.getId()) {
           inUse = true;
           break;

@@ -8,6 +8,7 @@ import static io.github.divinerealms.footcube.configs.Lang.MATCHES_LIST_NO_MATCH
 import static io.github.divinerealms.footcube.configs.Lang.MATCHMAN_FORCE_END;
 import static io.github.divinerealms.footcube.configs.Lang.MATCHMAN_FORCE_START;
 import static io.github.divinerealms.footcube.configs.Lang.MATCH_ALREADY_STARTED;
+import static io.github.divinerealms.footcube.configs.Lang.MATCH_CLEAN_SHEET_BONUS;
 import static io.github.divinerealms.footcube.configs.Lang.MATCH_TIED;
 import static io.github.divinerealms.footcube.configs.Lang.MATCH_TIED_CREDITS;
 import static io.github.divinerealms.footcube.configs.Lang.MATCH_TIMES_UP;
@@ -19,6 +20,7 @@ import static io.github.divinerealms.footcube.configs.Lang.TAKEPLACE_INVALID_ID;
 import static io.github.divinerealms.footcube.configs.Lang.TAKEPLACE_SUCCESS;
 import static io.github.divinerealms.footcube.configs.Lang.TEAMCHAT_BLUE;
 import static io.github.divinerealms.footcube.configs.Lang.TEAMCHAT_RED;
+import static io.github.divinerealms.footcube.matchmaking.util.MatchConstants.ONE_V_ONE;
 import static io.github.divinerealms.footcube.matchmaking.util.MatchConstants.TWO_V_TWO;
 import static io.github.divinerealms.footcube.matchmaking.util.MatchUtils.clearPlayer;
 import static io.github.divinerealms.footcube.matchmaking.util.MatchUtils.giveArmor;
@@ -448,7 +450,8 @@ public class MatchManager {
     }
 
     String winningTeam = winner == TeamColor.RED ? RED.toString() : BLUE.toString();
-    boolean shouldCount = match.getArena().getType() != TWO_V_TWO;
+    boolean shouldCount =
+        match.getArena().getType() != TWO_V_TWO && match.getArena().getType() != ONE_V_ONE;
 
     for (MatchPlayer matchPlayer : match.getPlayers()) {
       if (matchPlayer == null) {
@@ -461,6 +464,16 @@ public class MatchManager {
 
       if (match.getPhase() == MatchPhase.ENDED) {
         PlayerData data = fcManager.getDataManager().get(player);
+
+        boolean cleanSheet = false;
+        if (matchPlayer.getTeamColor() == TeamColor.RED
+            && match.getScoreBlue() == 0) {
+          cleanSheet = true;
+        } else if (matchPlayer.getTeamColor() == TeamColor.BLUE
+            && match.getScoreRed() == 0) {
+          cleanSheet = true;
+        }
+
         if (winner == null) {
           if (shouldCount) {
             data.add("ties");
@@ -471,6 +484,11 @@ public class MatchManager {
           fcManager.getEconomy().depositPlayer(player, 50);
           logger.send(player, MATCH_TIED);
           logger.send(player, MATCH_TIED_CREDITS);
+
+          if (cleanSheet) {
+            fcManager.getEconomy().depositPlayer(player, 30);
+            logger.send(player, MATCH_CLEAN_SHEET_BONUS);
+          }
         } else {
           if (matchPlayer.getTeamColor() == winner) {
             if (shouldCount) {
@@ -491,6 +509,11 @@ public class MatchManager {
             fcManager.getEconomy().depositPlayer(player, 100);
             logger.send(player, MATCH_TIMES_UP, winningTeam);
             logger.send(player, MATCH_WIN_CREDITS);
+
+            if (cleanSheet) {
+              fcManager.getEconomy().depositPlayer(player, 30);
+              logger.send(player, MATCH_CLEAN_SHEET_BONUS);
+            }
           } else {
             if (shouldCount) {
               data.set("winstreak", 0);
@@ -515,6 +538,7 @@ public class MatchManager {
         player.teleport(lobby);
       }
       clearPlayer(player);
+      teamManager.forceDisbandTeam(player);
 
       scoreboardManager.removeScoreboard(player);
       scoreboardManager.unregisterScoreboard(match.getMatchScoreboard());

@@ -51,7 +51,9 @@ public class PhysicsConstants {
 
   // --- Distance & Collision Thresholds ---
   public static final double HIT_RADIUS = 1.2;
+  public static final double HIT_RADIUS_SQUARED = HIT_RADIUS * HIT_RADIUS;
   public static final double MIN_RADIUS = 0.8;
+  public static final double MIN_RADIUS_SQUARED = MIN_RADIUS * MIN_RADIUS;
   public static final double BOUNCE_THRESHOLD = 0.3;
 
   // --- Physics Multipliers ---

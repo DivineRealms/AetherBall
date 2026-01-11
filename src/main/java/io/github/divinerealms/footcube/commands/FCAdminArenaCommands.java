@@ -11,9 +11,12 @@ import static io.github.divinerealms.footcube.configs.Lang.SET_BLOCK_SUCCESS;
 import static io.github.divinerealms.footcube.configs.Lang.SET_BLOCK_TOO_FAR;
 import static io.github.divinerealms.footcube.configs.Lang.UNDO;
 import static io.github.divinerealms.footcube.configs.Lang.USAGE;
+import static io.github.divinerealms.footcube.matchmaking.util.MatchConstants.FIVE_V_FIVE;
 import static io.github.divinerealms.footcube.matchmaking.util.MatchConstants.FOUR_V_FOUR;
+import static io.github.divinerealms.footcube.matchmaking.util.MatchConstants.ONE_V_ONE;
 import static io.github.divinerealms.footcube.matchmaking.util.MatchConstants.THREE_V_THREE;
 import static io.github.divinerealms.footcube.matchmaking.util.MatchConstants.TWO_V_TWO;
+import static io.github.divinerealms.footcube.utils.Permissions.PERM_ADMIN;
 import static io.github.divinerealms.footcube.utils.Permissions.PERM_CLEAR_ARENAS;
 import static io.github.divinerealms.footcube.utils.Permissions.PERM_SETBUTON;
 import static io.github.divinerealms.footcube.utils.Permissions.PERM_SETUP_ARENA;
@@ -25,6 +28,7 @@ import co.aikar.commands.annotation.CommandAlias;
 import co.aikar.commands.annotation.CommandCompletion;
 import co.aikar.commands.annotation.CommandPermission;
 import co.aikar.commands.annotation.Description;
+import co.aikar.commands.annotation.Optional;
 import co.aikar.commands.annotation.Subcommand;
 import co.aikar.commands.annotation.Syntax;
 import io.github.divinerealms.footcube.core.FCManager;
@@ -37,6 +41,7 @@ import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
+import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.material.Button;
@@ -61,12 +66,15 @@ public class FCAdminArenaCommands extends BaseCommand {
 
   @Subcommand("setuparena")
   @CommandPermission(PERM_SETUP_ARENA)
-  @Syntax("<2v2|3v3|4v4>")
-  @CommandCompletion("2v2|3v3|4v4")
+  @Syntax("<1v1|2v2|3v3|4v4|5v5>")
+  @CommandCompletion("1v1|2v2|3v3|4v4|5v5")
   @Description("Start arena setup wizard")
   public void onSetupArena(Player player, String type) {
     int arenaType;
     switch (type.toLowerCase()) {
+      case "1v1":
+        arenaType = ONE_V_ONE;
+        break;
       case "2v2":
         arenaType = TWO_V_TWO;
         break;
@@ -76,13 +84,36 @@ public class FCAdminArenaCommands extends BaseCommand {
       case "4v4":
         arenaType = FOUR_V_FOUR;
         break;
+      case "5v5":
+        arenaType = FIVE_V_FIVE;
+        break;
       default:
-        logger.send(player, "&cInvalid type. Use 2v2, 3v3, or 4v4.");
+        logger.send(player, "&cInvalid type. Use 1v1, 2v2, 3v3, 4v4 or 5v5.");
         return;
     }
 
     arenaManager.getSetupWizards().put(player, new ArenaManager.ArenaSetup(arenaType));
     logger.send(player, SETUP_ARENA_START);
+  }
+
+  @Subcommand("arenas info")
+  @CommandPermission(PERM_ADMIN)
+  @Description("Show arena statistics")
+  public void onArenasInfo(CommandSender sender) {
+    int total = arenaManager.getArenas().size();
+    int twoVTwo = arenaManager.getArenaCountType(TWO_V_TWO);
+    int threeVThree = arenaManager.getArenaCountType(THREE_V_THREE);
+    int fourVFour = arenaManager.getArenaCountType(FOUR_V_FOUR);
+
+    logger.send(sender, "{prefix-admin}&6Arena Statistics:");
+    logger.send(sender, "{prefix-admin}&e2v2 Arenas: &f" + twoVTwo);
+    logger.send(sender, "{prefix-admin}&e3v3 Arenas: &f" + threeVThree);
+    logger.send(sender, "{prefix-admin}&e4v4 Arenas: &f" + fourVFour);
+    logger.send(sender, "{prefix-admin}&eTotal Arenas: &f" + total);
+
+    if (total == 0) {
+      logger.send(sender, "{prefix-admin}&c⚠ WARNING: No arenas configured! Players cannot play.");
+    }
   }
 
   @Subcommand("set")
@@ -118,34 +149,40 @@ public class FCAdminArenaCommands extends BaseCommand {
 
   @Subcommand("clear arenas")
   @CommandPermission(PERM_CLEAR_ARENAS)
-  @Description("Clear all arenas")
-  public void onClearArenas(Player player) {
-    arenaManager.clearArenas();
-    logger.send(player, CLEAR_ARENAS_SUCCESS);
-  }
+  @CommandCompletion("1v1|2v2|3v3|4v4|5v5")
+  @Syntax("[1v1|2v2|3v3|4v4|5v5]")
+  @Description("Clear arenas (optionally by type)")
+  public void onClearArenas(Player player, @Optional String type) {
+    if (type == null) {
+      arenaManager.clearArenas();
+      logger.send(player, CLEAR_ARENAS_SUCCESS);
+      return;
+    }
 
-  @Subcommand("clear arenas 2v2")
-  @CommandPermission(PERM_CLEAR_ARENAS)
-  @Description("Clear all 2v2 arenas")
-  public void onClearArenas2v2(Player player) {
-    arenaManager.clearArenaType(2);
-    logger.send(player, CLEAR_ARENAS_TYPE_SUCCESS, "2v2");
-  }
+    int arenaType;
+    switch (type.toLowerCase()) {
+      case "1v1":
+        arenaType = ONE_V_ONE;
+        break;
+      case "2v2":
+        arenaType = TWO_V_TWO;
+        break;
+      case "3v3":
+        arenaType = THREE_V_THREE;
+        break;
+      case "4v4":
+        arenaType = FOUR_V_FOUR;
+        break;
+      case "5v5":
+        arenaType = FIVE_V_FIVE;
+        break;
+      default:
+        logger.send(player, "&cInvalid type. Use 1v1, 2v2, 3v3, 4v4, or 5v5.");
+        return;
+    }
 
-  @Subcommand("clear arenas 3v3")
-  @CommandPermission(PERM_CLEAR_ARENAS)
-  @Description("Clear all 3v3 arenas")
-  public void onClearArenas3v3(Player player) {
-    arenaManager.clearArenaType(3);
-    logger.send(player, CLEAR_ARENAS_TYPE_SUCCESS, "3v3");
-  }
-
-  @Subcommand("clear arenas 4v4")
-  @CommandPermission(PERM_CLEAR_ARENAS)
-  @Description("Clear all 4v4 arenas")
-  public void onClearArenas4v4(Player player) {
-    arenaManager.clearArenaType(4);
-    logger.send(player, CLEAR_ARENAS_TYPE_SUCCESS, "4v4");
+    arenaManager.clearArenaType(arenaType);
+    logger.send(player, CLEAR_ARENAS_TYPE_SUCCESS, type);
   }
 
   @Subcommand("setlobby")

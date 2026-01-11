@@ -17,6 +17,7 @@ import static io.github.divinerealms.footcube.configs.Lang.TOGGLES_GOAL;
 import static io.github.divinerealms.footcube.configs.Lang.TOGGLES_HIT_DEBUG;
 import static io.github.divinerealms.footcube.configs.Lang.TOGGLES_KICK;
 import static io.github.divinerealms.footcube.configs.Lang.TOGGLES_PARTICLES;
+import static io.github.divinerealms.footcube.configs.Lang.USAGE;
 import static io.github.divinerealms.footcube.utils.Permissions.PERM_SET_GOAL_CELEBRATION;
 import static io.github.divinerealms.footcube.utils.Permissions.PERM_SET_PARTICLE;
 import static io.github.divinerealms.footcube.utils.Permissions.PERM_SET_SOUND;
@@ -33,7 +34,6 @@ import io.github.divinerealms.footcube.configs.PlayerData;
 import io.github.divinerealms.footcube.core.FCManager;
 import io.github.divinerealms.footcube.managers.PlayerDataManager;
 import io.github.divinerealms.footcube.physics.PhysicsData;
-import io.github.divinerealms.footcube.physics.utilities.PhysicsSystem;
 import io.github.divinerealms.footcube.utils.Logger;
 import io.github.divinerealms.footcube.utils.PlayerSettings;
 import java.util.List;
@@ -49,163 +49,133 @@ public class FCSettingsCommands extends BaseCommand {
   private final Logger logger;
   private final PlayerDataManager dataManager;
   private final PhysicsData physicsData;
-  private final PhysicsSystem system;
 
   public FCSettingsCommands(FCManager fcManager) {
     this.fcManager = fcManager;
     this.logger = fcManager.getLogger();
     this.dataManager = fcManager.getDataManager();
     this.physicsData = fcManager.getPhysicsData();
-    this.system = fcManager.getPhysicsSystem();
   }
 
-  @Subcommand("toggles kick|ts kick")
-  @Description("Toggle kick sound effects")
-  @CommandAlias("toggles kick|ts kick")
-  public void onToggleKick(Player player) {
-    PlayerData playerData = dataManager.get(player);
-    if (playerData == null) {
+  @CommandAlias("fctoggle|fct")
+  @Subcommand("toggle|tg")
+  @Syntax("<kick|goal|particles|hits>")
+  @CommandCompletion("kick|goal|particles|hits")
+  @Description("Toggle FootCube Settings")
+  public void onToggle(Player player, String toggleType) {
+    PlayerData data = dataManager.get(player);
+    if (data == null) {
+      return;
+    }
+
+    String toggleTypeLower = toggleType.toLowerCase();
+    PlayerSettings settings = fcManager.getPlayerSettings(player);
+
+    switch (toggleTypeLower) {
+      case "kick":
+        settings.setKickSoundEnabled(!settings.isKickSoundEnabled());
+        data.set("sounds.kick.enabled", settings.isKickSoundEnabled());
+        logger.send(player, TOGGLES_KICK,
+            settings.isKickSoundEnabled() ? ON.toString() : OFF.toString());
+        break;
+
+      case "goal":
+        settings.setGoalSoundEnabled(!settings.isGoalSoundEnabled());
+        data.set("sounds.goal.enabled", settings.isGoalSoundEnabled());
+        logger.send(player, TOGGLES_GOAL,
+            settings.isGoalSoundEnabled() ? ON.toString() : OFF.toString());
+        break;
+
+      case "particles":
+        settings.setParticlesEnabled(!settings.isParticlesEnabled());
+        data.set("particles.enabled", settings.isParticlesEnabled());
+        logger.send(player, TOGGLES_PARTICLES,
+            settings.isParticlesEnabled() ? ON.toString() : OFF.toString());
+        break;
+
+      case "hits":
+        boolean status = physicsData.getCubeHits().contains(player.getUniqueId());
+        if (status) {
+          physicsData.getCubeHits().remove(player.getUniqueId());
+        } else {
+          physicsData.getCubeHits().add(player.getUniqueId());
+        }
+        logger.send(player, TOGGLES_HIT_DEBUG, !status ? ON.toString() : OFF.toString());
+        break;
+
+      default:
+        logger.send(player, USAGE, getExecSubcommand());
+        break;
+    }
+  }
+
+  @CommandAlias("fcsetsound|fcss")
+  @Subcommand("setsound")
+  @CommandPermission(PERM_SET_SOUND)
+  @Syntax("<kick|goal> <soundName|list>")
+  @CommandCompletion("kick|goal list")
+  @Description("Set sounds")
+  public void onSetSound(Player player, String soundType, String soundName) {
+    String soundTypeLower = soundType.toLowerCase();
+
+    if (!soundTypeLower.equals("kick") && !soundTypeLower.equals("goal")) {
+      logger.send(player, USAGE, getExecSubcommand());
+      return;
+    }
+
+    List<Sound> allowedSounds = soundTypeLower.equals("kick")
+        ? PlayerSettings.ALLOWED_KICK_SOUNDS
+        : PlayerSettings.ALLOWED_GOAL_SOUNDS;
+
+    if (soundName.equalsIgnoreCase("list")) {
+      showAllowedSounds(player, allowedSounds);
+      return;
+    }
+
+    PlayerData data = dataManager.get(player);
+    if (data == null) {
+      return;
+    }
+
+    Sound sound = parseSound(player, soundName);
+    if (sound == null) {
+      return;
+    }
+
+    if (!allowedSounds.contains(sound)) {
+      logger.send(player, INVALID_TYPE, SOUND.toString());
+      showAllowedSounds(player, allowedSounds);
       return;
     }
 
     PlayerSettings settings = fcManager.getPlayerSettings(player);
-    settings.setKickSoundEnabled(!settings.isKickSoundEnabled());
-    playerData.set("sounds.kick.enabled", settings.isKickSoundEnabled());
-    logger.send(player, TOGGLES_KICK,
-        settings.isKickSoundEnabled() ? ON.toString() : OFF.toString());
-  }
 
-  @Subcommand("toggles goal|ts goal")
-  @Description("Toggle goal sound effects")
-  @CommandAlias("toggles goal|ts goal")
-  public void onToggleGoal(Player player) {
-    PlayerData playerData = dataManager.get(player);
-    if (playerData == null) {
-      return;
-    }
-
-    PlayerSettings settings = fcManager.getPlayerSettings(player);
-    settings.setGoalSoundEnabled(!settings.isGoalSoundEnabled());
-    playerData.set("sounds.goal.enabled", settings.isGoalSoundEnabled());
-    logger.send(player, TOGGLES_GOAL,
-        settings.isGoalSoundEnabled() ? ON.toString() : OFF.toString());
-  }
-
-  @Subcommand("toggles particles|ts particles")
-  @Description("Toggle particle effects")
-  @CommandAlias("toggles particles|ts particles")
-  public void onToggleParticles(Player player) {
-    PlayerData playerData = dataManager.get(player);
-    if (playerData == null) {
-      return;
-    }
-
-    PlayerSettings settings = fcManager.getPlayerSettings(player);
-    settings.setParticlesEnabled(!settings.isParticlesEnabled());
-    playerData.set("particles.enabled", settings.isParticlesEnabled());
-    logger.send(player, TOGGLES_PARTICLES,
-        settings.isParticlesEnabled() ? ON.toString() : OFF.toString());
-  }
-
-  @Subcommand("toggles hits|ts hits")
-  @Description("Toggle hit debug visualization")
-  @CommandAlias("toggles hits|ts hits")
-  public void onToggleHits(Player player) {
-    boolean wasEnabled = physicsData.getCubeHits().contains(player.getUniqueId());
-
-    if (wasEnabled) {
-      physicsData.getCubeHits().remove(player.getUniqueId());
+    if (soundTypeLower.equals("kick")) {
+      settings.setKickSound(sound);
+      data.set("sounds.kick.sound", sound.toString());
+      logger.send(player, SET_SOUND_KICK, sound.name());
     } else {
-      physicsData.getCubeHits().add(player.getUniqueId());
+      settings.setGoalSound(sound);
+      data.set("sounds.goal.sound", sound.toString());
+      logger.send(player, SET_SOUND_GOAL, sound.name());
     }
-
-    logger.send(player, TOGGLES_HIT_DEBUG, !wasEnabled ? ON.toString() : OFF.toString());
   }
 
-  @Subcommand("setsound kick")
-  @CommandPermission(PERM_SET_SOUND)
-  @Syntax("<soundName|list>")
-  @CommandCompletion("list")
-  @Description("Set kick sound effect")
-  @CommandAlias("setsound kick")
-  public void onSetSoundKick(Player player, String soundName) {
-    if (soundName.equalsIgnoreCase("list")) {
-      showAllowedSounds(player, PlayerSettings.ALLOWED_KICK_SOUNDS);
-      return;
-    }
-
-    PlayerData playerData = dataManager.get(player);
-    if (playerData == null) {
-      return;
-    }
-
-    Sound sound = parseSound(player, soundName);
-    if (sound == null) {
-      return;
-    }
-
-    if (!PlayerSettings.ALLOWED_KICK_SOUNDS.contains(sound)) {
-      logger.send(player, INVALID_TYPE, SOUND.toString());
-      showAllowedSounds(player, PlayerSettings.ALLOWED_KICK_SOUNDS);
-      return;
-    }
-
-    PlayerSettings settings = fcManager.getPlayerSettings(player);
-    settings.setKickSound(sound);
-    playerData.set("sounds.kick.sound", sound.toString());
-    logger.send(player, SET_SOUND_KICK, sound.name());
-  }
-
-  @Subcommand("setsound goal")
-  @CommandPermission(PERM_SET_SOUND)
-  @Syntax("<soundName|list>")
-  @CommandCompletion("list")
-  @Description("Set goal sound effect")
-  @CommandAlias("setsound goal")
-  public void onSetSoundGoal(Player player, String soundName) {
-    if (soundName.equalsIgnoreCase("list")) {
-      showAllowedSounds(player, PlayerSettings.ALLOWED_GOAL_SOUNDS);
-      return;
-    }
-
-    PlayerData playerData = dataManager.get(player);
-    if (playerData == null) {
-      return;
-    }
-
-    Sound sound = parseSound(player, soundName);
-    if (sound == null) {
-      return;
-    }
-
-    if (!PlayerSettings.ALLOWED_GOAL_SOUNDS.contains(sound)) {
-      logger.send(player, INVALID_TYPE, SOUND.toString());
-      showAllowedSounds(player, PlayerSettings.ALLOWED_GOAL_SOUNDS);
-      return;
-    }
-
-    PlayerSettings settings = fcManager.getPlayerSettings(player);
-    settings.setGoalSound(sound);
-    playerData.set("sounds.goal.sound", sound.toString());
-    logger.send(player, SET_SOUND_GOAL, sound.name());
-  }
-
+  @CommandAlias("fcsetparticle|fcsp")
   @Subcommand("setparticle")
   @CommandPermission(PERM_SET_PARTICLE)
   @Syntax("<particleName|list> [color]")
   @CommandCompletion("list|@particles @colors")
-  @Description("Set particle effect for ball trail")
-  @CommandAlias("setparticle")
+  @Description("Set particle trail effect for cubes")
   public void onSetParticle(Player player, String particleName, @Optional String color) {
     if (particleName.equalsIgnoreCase("list")) {
       logger.send(player, AVAILABLE_TYPE, PARTICLE.toString(),
           String.join(", ", PlayerSettings.getAllowedParticles()));
-      system.recordPlayerAction(player);
       return;
     }
 
-    PlayerData playerData = dataManager.get(player);
-    if (playerData == null) {
+    PlayerData data = dataManager.get(player);
+    if (data == null) {
       return;
     }
 
@@ -217,45 +187,43 @@ public class FCSettingsCommands extends BaseCommand {
     PlayerSettings settings = fcManager.getPlayerSettings(player);
 
     if (particle == EnumParticle.REDSTONE) {
-      handleRedstoneParticle(player, playerData, settings, particle, color);
+      handleRedstoneParticle(player, data, settings, particle, color);
       return;
     }
 
     settings.setParticle(particle);
-    playerData.set("particles.effect", particle.toString());
+    data.set("particles.effect", particle.toString());
     logger.send(player, SET_PARTICLE, particle.name());
   }
 
+  @CommandAlias("fcsetgoalcelebration|fcsgc")
   @Subcommand("setgoalcelebration|sgc")
   @CommandPermission(PERM_SET_GOAL_CELEBRATION)
-  @Syntax("<default|simple|epic|minimal|list>")
-  @CommandCompletion("default|simple|epic|minimal|list")
+  @Syntax("<default|minimal|simple|epic|list>")
+  @CommandCompletion("default|minimal|simple|epic|list")
   @Description("Set goal celebration style")
-  @CommandAlias("setgoalcelebration|sgc")
   public void onSetGoalCelebration(Player player, String celebrationType) {
     if (celebrationType.equalsIgnoreCase("list")) {
-      logger.send(player, AVAILABLE_TYPE, "goal celebrations", "default, simple, epic, minimal");
-      system.recordPlayerAction(player);
+      logger.send(player, AVAILABLE_TYPE, "goal celebrations", "default, minimal, simple, epic");
       return;
     }
 
-    PlayerData playerData = dataManager.get(player);
-    if (playerData == null) {
+    PlayerData data = dataManager.get(player);
+    if (data == null) {
       return;
     }
 
     String type = celebrationType.toLowerCase();
-    if (!type.equals("default") && !type.equals("simple") &&
-        !type.equals("epic") && !type.equals("minimal")) {
+    if (!type.equals("default") && !type.equals("minimal") && !type.equals("simple")
+        && !type.equals("epic")) {
       logger.send(player, INVALID_TYPE, "goal celebrations");
-      logger.send(player, AVAILABLE_TYPE, "goal celebrations", "default, simple, epic, minimal");
-      system.recordPlayerAction(player);
+      logger.send(player, AVAILABLE_TYPE, "goal celebrations", "default, minimal, simple, epic");
       return;
     }
 
     PlayerSettings settings = fcManager.getPlayerSettings(player);
     settings.setGoalMessage(type);
-    playerData.set("goalcelebration", type);
+    data.set("goalcelebration", type);
     logger.send(player, SET_GOAL_CELEBRATION, type);
   }
 
@@ -272,7 +240,6 @@ public class FCSettingsCommands extends BaseCommand {
       return Sound.valueOf(soundName.toUpperCase());
     } catch (Exception e) {
       logger.send(player, INVALID_TYPE, SOUND.toString());
-      system.recordPlayerAction(player);
       return null;
     }
   }
@@ -285,7 +252,6 @@ public class FCSettingsCommands extends BaseCommand {
         logger.send(player, INVALID_TYPE, PARTICLE.toString());
         logger.send(player, AVAILABLE_TYPE, PARTICLE.toString(),
             String.join(", ", PlayerSettings.getAllowedParticles()));
-        system.recordPlayerAction(player);
         return null;
       }
 
@@ -294,7 +260,6 @@ public class FCSettingsCommands extends BaseCommand {
       logger.send(player, INVALID_TYPE, PARTICLE.toString());
       logger.send(player, AVAILABLE_TYPE, PARTICLE.toString(),
           String.join(", ", PlayerSettings.getAllowedParticles()));
-      system.recordPlayerAction(player);
       return null;
     }
   }
@@ -310,7 +275,6 @@ public class FCSettingsCommands extends BaseCommand {
       logger.send(player, INVALID_COLOR, colorName);
       logger.send(player, AVAILABLE_TYPE, COLOR.toString(),
           String.join(", ", PlayerSettings.getAllowedColorNames()));
-      system.recordPlayerAction(player);
       return;
     }
     settings.setParticle(EnumParticle.REDSTONE);

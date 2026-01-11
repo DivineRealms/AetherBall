@@ -9,14 +9,19 @@ import static io.github.divinerealms.footcube.configs.Lang.TASKS_REPORT_FOOTER;
 import static io.github.divinerealms.footcube.configs.Lang.TASKS_REPORT_HEADER;
 import static io.github.divinerealms.footcube.configs.Lang.TASKS_RESET_STATS;
 import static io.github.divinerealms.footcube.configs.Lang.TASKS_RESTART;
+import static io.github.divinerealms.footcube.configs.Lang.USAGE;
 import static io.github.divinerealms.footcube.utils.Permissions.PERM_ADMIN;
 import static io.github.divinerealms.footcube.utils.Permissions.PERM_TOGGLE;
 
 import co.aikar.commands.BaseCommand;
 import co.aikar.commands.annotation.CommandAlias;
+import co.aikar.commands.annotation.CommandCompletion;
 import co.aikar.commands.annotation.CommandPermission;
+import co.aikar.commands.annotation.Default;
 import co.aikar.commands.annotation.Description;
+import co.aikar.commands.annotation.Optional;
 import co.aikar.commands.annotation.Subcommand;
+import co.aikar.commands.annotation.Syntax;
 import io.github.divinerealms.footcube.core.FCManager;
 import io.github.divinerealms.footcube.managers.TaskManager;
 import io.github.divinerealms.footcube.matchmaking.MatchManager;
@@ -41,74 +46,80 @@ public class FCAdminSystemCommands extends BaseCommand {
     this.arenaManager = fcManager.getArenaManager();
   }
 
-  @Subcommand("reload configs")
+  @Subcommand("reload")
   @CommandPermission(PERM_ADMIN)
-  @Description("Reload all configuration files")
-  public void onReloadConfigs(CommandSender sender) {
-    fcManager.getConfigManager().reloadAllConfigs();
-    logger.send(sender, RELOAD, getExecSubcommand().substring("reload ".length()).toUpperCase());
-  }
+  @CommandCompletion("all|configs|arenas")
+  @Syntax("[all|configs|arenas]")
+  @Description("Reload plugin components")
+  public void onReload(CommandSender sender, @Default("all") String type) {
+    String typeUpper = type.toUpperCase();
 
-  @Subcommand("reload all")
-  @CommandPermission(PERM_ADMIN)
-  @Description("Reload everything (configs, arenas, etc)")
-  public void onReloadAll(CommandSender sender) {
-    fcManager.reload();
-    logger.send(sender, RELOAD, getExecSubcommand().substring("reload ".length()).toUpperCase());
-  }
+    switch (type.toLowerCase()) {
+      case "configs":
+        fcManager.getConfigManager().reloadAllConfigs();
+        break;
+      case "arenas":
+        arenaManager.reloadArenas();
+        break;
+      case "all":
+      default:
+        fcManager.reload();
+        typeUpper = "ALL";
+        break;
+    }
 
-  @Subcommand("reload arenas")
-  @CommandPermission(PERM_ADMIN)
-  @Description("Reload arena configurations")
-  public void onReloadArenas(CommandSender sender) {
-    arenaManager.reloadArenas();
-    logger.send(sender, RELOAD, getExecSubcommand().substring("reload ".length()).toUpperCase());
+    logger.send(sender, RELOAD, typeUpper);
   }
 
   @Subcommand("tasks")
   @CommandPermission(PERM_ADMIN)
-  @Description("Show task performance report")
-  public void onTasks(CommandSender sender) {
+  @CommandCompletion("restart|reset|@nothing")
+  @Syntax("[restart|reset]")
+  @Description("Manage plugin tasks")
+  public void onTasks(CommandSender sender, @Optional String action) {
     TaskManager taskManager = fcManager.getTaskManager();
 
-    logger.send(sender, TASKS_REPORT_HEADER,
-        String.valueOf(taskManager.getRunningTaskCount()),
-        String.valueOf(taskManager.getTaskCount())
-    );
-
-    for (BaseTask task : taskManager.getTasks()) {
-      double average = task.getAverageExecutionTime();
-      String status = task.isRunning() ? "&a✔" : "&c✘";
-      String timeColor = getColorForTime(average);
-
-      logger.send(sender, TASKS_REPORT_ENTRY,
-          status, task.getTaskName(),
-          timeColor + String.format("%.3f", average),
-          String.valueOf(task.getTotalExecutions())
+    if (action == null) {
+      logger.send(sender, TASKS_REPORT_HEADER,
+          String.valueOf(taskManager.getRunningTaskCount()),
+          String.valueOf(taskManager.getTaskCount())
       );
+
+      for (BaseTask task : taskManager.getTasks()) {
+        double average = task.getAverageExecutionTime();
+        String status = task.isRunning() ? "&a✔" : "&c✘";
+        String timeColor = getColorForTime(average);
+
+        logger.send(sender, TASKS_REPORT_ENTRY,
+            status, task.getTaskName(),
+            timeColor + String.format("%.3f", average),
+            String.valueOf(task.getTotalExecutions())
+        );
+      }
+
+      TaskStats stats = taskManager.getStats();
+      double totalAverage = stats.getAveragePerTask();
+      logger.send(sender, TASKS_REPORT_FOOTER,
+          getColorForTime(totalAverage) + String.format("%.3f", totalAverage)
+      );
+      return;
     }
 
-    TaskStats stats = taskManager.getStats();
-    double totalAverage = stats.getAveragePerTask();
-    logger.send(sender, TASKS_REPORT_FOOTER,
-        getColorForTime(totalAverage) + String.format("%.3f", totalAverage)
-    );
-  }
+    switch (action.toLowerCase()) {
+      case "restart":
+        taskManager.restart();
+        logger.send(sender, TASKS_RESTART);
+        break;
 
-  @Subcommand("tasks restart")
-  @CommandPermission(PERM_ADMIN)
-  @Description("Restart all tasks")
-  public void onTasksRestart(CommandSender sender) {
-    fcManager.getTaskManager().restart();
-    logger.send(sender, TASKS_RESTART);
-  }
+      case "reset":
+        taskManager.resetAllStats();
+        logger.send(sender, TASKS_RESET_STATS);
+        break;
 
-  @Subcommand("tasks reset")
-  @CommandPermission(PERM_ADMIN)
-  @Description("Reset task statistics")
-  public void onTasksReset(CommandSender sender) {
-    fcManager.getTaskManager().resetAllStats();
-    logger.send(sender, TASKS_RESET_STATS);
+      default:
+        logger.send(sender, USAGE, "fca tasks [restart|reset]");
+        break;
+    }
   }
 
   @Subcommand("toggle")

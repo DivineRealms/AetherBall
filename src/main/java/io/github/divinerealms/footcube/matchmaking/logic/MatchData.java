@@ -1,6 +1,8 @@
 package io.github.divinerealms.footcube.matchmaking.logic;
 
+import static io.github.divinerealms.footcube.matchmaking.util.MatchConstants.FIVE_V_FIVE;
 import static io.github.divinerealms.footcube.matchmaking.util.MatchConstants.FOUR_V_FOUR;
+import static io.github.divinerealms.footcube.matchmaking.util.MatchConstants.ONE_V_ONE;
 import static io.github.divinerealms.footcube.matchmaking.util.MatchConstants.THREE_V_THREE;
 import static io.github.divinerealms.footcube.matchmaking.util.MatchConstants.TWO_V_TWO;
 
@@ -30,10 +32,10 @@ public class MatchData {
   private boolean matchesEnabled = true;
 
   public MatchData() {
-    // playerQueues.put(ONE_V_ONE, new ConcurrentLinkedQueue<>());
+    playerQueues.put(ONE_V_ONE, new ConcurrentLinkedQueue<>());
     playerQueues.put(TWO_V_TWO, new ConcurrentLinkedQueue<>());
     playerQueues.put(THREE_V_THREE, new ConcurrentLinkedQueue<>());
     playerQueues.put(FOUR_V_FOUR, new ConcurrentLinkedQueue<>());
-    // playerQueues.put(FIVE_V_FIVE, new ConcurrentLinkedQueue<>());
+    playerQueues.put(FIVE_V_FIVE, new ConcurrentLinkedQueue<>());
   }
 }

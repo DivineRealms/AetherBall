@@ -21,6 +21,9 @@ public class Match {
   private boolean takePlaceNeeded;
 
   public Match(Arena arena, List<MatchPlayer> players) {
+    if (arena == null) {
+      throw new IllegalArgumentException("Cannot create match with null arena!");
+    }
     this.arena = arena;
     this.players = players;
     this.phase = MatchPhase.LOBBY;

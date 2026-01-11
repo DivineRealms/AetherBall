@@ -182,6 +182,25 @@ public class ArenaManager {
     logger.info("&a✔ &2Cleared all " + typeString + " arenas!");
   }
 
+  public boolean hasArenaForType(int matchType) {
+    for (Arena arena : arenas) {
+      if (arena.getType() == matchType) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  public int getArenaCountType(int matchType) {
+    int count = 0;
+    for (Arena arena : arenas) {
+      if (arena.getType() == matchType) {
+        count++;
+      }
+    }
+    return count;
+  }
+
   private void reassignArenaIds() {
     List<Arena> newArenas = new ArrayList<>();
     for (int i = 0; i < arenas.size(); i++) {

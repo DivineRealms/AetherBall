@@ -1,22 +1,28 @@
 package io.github.divinerealms.footcube.commands;
 
 import static io.github.divinerealms.footcube.configs.Lang.BANNER_PLAYER;
+import static io.github.divinerealms.footcube.configs.Lang.HELP_CATEGORIZED;
+import static io.github.divinerealms.footcube.configs.Lang.HELP_CATEGORY_1;
+import static io.github.divinerealms.footcube.configs.Lang.HELP_CATEGORY_2;
+import static io.github.divinerealms.footcube.configs.Lang.HELP_CATEGORY_3;
+import static io.github.divinerealms.footcube.configs.Lang.HELP_CATEGORY_4;
+import static io.github.divinerealms.footcube.configs.Lang.HELP_CATEGORY_UNKNOWN;
+import static io.github.divinerealms.footcube.configs.Lang.HELP_FOOTER;
+import static io.github.divinerealms.footcube.configs.Lang.HELP_HEADER;
 
 import co.aikar.commands.BaseCommand;
-import co.aikar.commands.CommandHelp;
 import co.aikar.commands.annotation.CatchUnknown;
 import co.aikar.commands.annotation.CommandAlias;
+import co.aikar.commands.annotation.CommandCompletion;
 import co.aikar.commands.annotation.Default;
 import co.aikar.commands.annotation.Description;
-import co.aikar.commands.annotation.HelpCommand;
+import co.aikar.commands.annotation.Optional;
 import co.aikar.commands.annotation.Subcommand;
+import co.aikar.commands.annotation.Syntax;
 import io.github.divinerealms.footcube.core.FCManager;
 import io.github.divinerealms.footcube.utils.Logger;
-import java.util.List;
-import java.util.StringJoiner;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.Plugin;
 
 @CommandAlias("fc|footcube")
 @Description("FootCube base command.")
@@ -33,29 +39,49 @@ public class FCCommand extends BaseCommand {
   @Default
   @CatchUnknown
   public void onDefault(CommandSender sender) {
-    Plugin plugin = fcManager.getPlugin();
-
     if (sender instanceof Player) {
-      StringJoiner joiner = new StringJoiner(", ");
-      List<String> authors = plugin.getDescription().getAuthors();
-      if (authors != null) {
-        for (String author : authors) {
-          joiner.add(author);
-        }
-      }
-
-      logger.send(sender, BANNER_PLAYER, plugin.getName(),
-          plugin.getDescription().getVersion(), joiner.toString());
+      logger.send(sender, BANNER_PLAYER,
+          fcManager.getPlugin().getName(),
+          fcManager.getPlugin().getDescription().getVersion(),
+          String.join(", ", fcManager.getPlugin().getDescription().getAuthors())
+      );
     } else {
       fcManager.sendBanner();
-      logger.send(sender, "&aKucajte &e/fc help &aza listu dostupnih komandi.");
     }
   }
 
   @Subcommand("help|h")
-  @HelpCommand
-  @Description("This page.")
-  public void onHelp(CommandSender sender, CommandHelp help) {
-    help.showHelp();
+  @Description("Show help menu")
+  @Syntax("[category]")
+  @CommandCompletion("gameplay|teams|settings|utility")
+  public void onHelp(CommandSender sender, @Optional String category) {
+    if (category == null) {
+      logger.send(sender, HELP_CATEGORIZED);
+    } else {
+      showCategoryHelp(sender, category);
+    }
+  }
+
+  private void showCategoryHelp(CommandSender sender, String category) {
+    logger.send(sender, HELP_HEADER);
+
+    switch (category) {
+      case "gameplay":
+        logger.send(sender, HELP_CATEGORY_1);
+        break;
+      case "teams":
+        logger.send(sender, HELP_CATEGORY_2);
+        break;
+      case "settings":
+        logger.send(sender, HELP_CATEGORY_3);
+        break;
+      case "utility":
+        logger.send(sender, HELP_CATEGORY_4);
+        break;
+      default:
+        logger.send(sender, HELP_CATEGORY_UNKNOWN);
+    }
+
+    logger.send(sender, HELP_FOOTER);
   }
 }

@@ -248,10 +248,12 @@ public class PhysicsSystem {
       // NMS Hack to prevent the ball from trying to reach the player.
       EntitySlime nmsSlime = ((CraftSlime) cube).getHandle();
       try {
-        Field bField = PathfinderGoalSelector.class.getDeclaredField("b");
-        bField.setAccessible(true);
-        bField.set(nmsSlime.goalSelector, new LinkedList<>());
-        bField.set(nmsSlime.targetSelector, new LinkedList<>());
+        for (String fieldName : new String[]{"b", "c"}) {
+          Field field = PathfinderGoalSelector.class.getDeclaredField(fieldName);
+          field.setAccessible(true);
+          field.set(nmsSlime.goalSelector, new LinkedList<>());
+          field.set(nmsSlime.targetSelector, new LinkedList<>());
+        }
       } catch (Exception exception) {
         plugin.getLogger().log(Level.SEVERE, "Error injecting NMS Pathfinder Goals:", exception);
       }
@@ -455,5 +457,23 @@ public class PhysicsSystem {
    */
   public void setButtonCooldown(Player player) {
     data.getButtonCooldowns().put(player.getUniqueId(), System.currentTimeMillis());
+  }
+
+  public static boolean isGrounded(Location loc) {
+    double y = loc.getY();
+    int blockY = (int) Math.floor(y - 0.01);
+
+    // Distance from feet to top of block
+    double dy = y - (blockY + 1);
+
+    // Typical 1.8 tolerance range
+    if (dy < -0.2 || dy > 0.3) {
+      return false;
+    }
+
+    return loc.getWorld()
+        .getBlockAt(loc.getBlockX(), blockY, loc.getBlockZ())
+        .getType()
+        .isSolid();
   }
 }

@@ -3,6 +3,7 @@ package io.github.divinerealms.footcube.commands;
 import static io.github.divinerealms.footcube.configs.Lang.FC_DISABLED;
 import static io.github.divinerealms.footcube.configs.Lang.JOIN_ALREADYINGAME;
 import static io.github.divinerealms.footcube.configs.Lang.JOIN_INVALIDTYPE;
+import static io.github.divinerealms.footcube.configs.Lang.JOIN_NOARENA;
 import static io.github.divinerealms.footcube.configs.Lang.LEAVE_LOSING;
 import static io.github.divinerealms.footcube.configs.Lang.LEAVE_NOT_INGAME;
 import static io.github.divinerealms.footcube.configs.Lang.LEAVE_QUEUE_ACTIONBAR;
@@ -13,7 +14,9 @@ import static io.github.divinerealms.footcube.configs.Lang.TAKEPLACE_AVAILABLE_E
 import static io.github.divinerealms.footcube.configs.Lang.TAKEPLACE_AVAILABLE_HEADER;
 import static io.github.divinerealms.footcube.configs.Lang.TAKEPLACE_INGAME;
 import static io.github.divinerealms.footcube.configs.Lang.TAKEPLACE_NOPLACE;
+import static io.github.divinerealms.footcube.matchmaking.util.MatchConstants.FIVE_V_FIVE;
 import static io.github.divinerealms.footcube.matchmaking.util.MatchConstants.FOUR_V_FOUR;
+import static io.github.divinerealms.footcube.matchmaking.util.MatchConstants.ONE_V_ONE;
 import static io.github.divinerealms.footcube.matchmaking.util.MatchConstants.THREE_V_THREE;
 import static io.github.divinerealms.footcube.matchmaking.util.MatchConstants.TWO_V_TWO;
 import static io.github.divinerealms.footcube.utils.Permissions.PERM_PLAY;
@@ -30,6 +33,7 @@ import io.github.divinerealms.footcube.core.FCManager;
 import io.github.divinerealms.footcube.matchmaking.Match;
 import io.github.divinerealms.footcube.matchmaking.MatchManager;
 import io.github.divinerealms.footcube.matchmaking.MatchPhase;
+import io.github.divinerealms.footcube.matchmaking.arena.ArenaManager;
 import io.github.divinerealms.footcube.matchmaking.player.MatchPlayer;
 import io.github.divinerealms.footcube.matchmaking.player.TeamColor;
 import io.github.divinerealms.footcube.matchmaking.team.TeamManager;
@@ -46,22 +50,28 @@ public class FCGameCommands extends BaseCommand {
   private final Logger logger;
   private final MatchManager matchManager;
   private final TeamManager teamManager;
+  private final ArenaManager arenaManager;
 
   public FCGameCommands(FCManager fcManager) {
     this.fcManager = fcManager;
     this.logger = fcManager.getLogger();
     this.matchManager = fcManager.getMatchManager();
     this.teamManager = fcManager.getTeamManager();
+    this.arenaManager = fcManager.getArenaManager();
   }
 
-  @Subcommand("join")
+  @CommandAlias("fcjoin|fcj")
+  @Subcommand("join|j")
   @CommandPermission(PERM_PLAY)
-  @Syntax("<2v2|3v3|4v4>")
-  @CommandCompletion("2v2|3v3|4v4")
+  @Syntax("<1v1|2v2|3v3|4v4|5v5>")
+  @CommandCompletion("1v1|2v2|3v3|4v4|5v5")
   @Description("Join a matchmaking queue")
   public void onJoin(Player player, String matchType) {
     int type;
     switch (matchType.toLowerCase()) {
+      case "1v1":
+        type = ONE_V_ONE;
+        break;
       case "2v2":
         type = TWO_V_TWO;
         break;
@@ -71,12 +81,22 @@ public class FCGameCommands extends BaseCommand {
       case "4v4":
         type = FOUR_V_FOUR;
         break;
+      case "5v5":
+        type = FIVE_V_FIVE;
+        break;
       default:
         logger.send(player, JOIN_INVALIDTYPE, matchType, OR.toString());
         return;
     }
 
     joinQueue(player, type);
+  }
+
+  @CommandAlias("1v1")
+  @CommandPermission(PERM_PLAY)
+  @Description("Join 1v1 matchmaking queue")
+  public void on1v1(Player player) {
+    joinQueue(player, ONE_V_ONE);
   }
 
   @CommandAlias("2v2")
@@ -100,10 +120,17 @@ public class FCGameCommands extends BaseCommand {
     joinQueue(player, FOUR_V_FOUR);
   }
 
-  @Subcommand("leave")
+  @CommandAlias("5v5")
+  @CommandPermission(PERM_PLAY)
+  @Description("Join 5v5 matchmaking queue")
+  public void on5v5(Player player) {
+    joinQueue(player, FIVE_V_FIVE);
+  }
+
+  @CommandAlias("fcleave|fcl|leave")
+  @Subcommand("leave|l")
   @CommandPermission(PERM_PLAY)
   @Description("Leave current match or queue")
-  @CommandAlias("leave")
   public void onLeave(Player player) {
     java.util.Optional<Match> matchOpt = matchManager.getMatch(player);
 
@@ -124,11 +151,11 @@ public class FCGameCommands extends BaseCommand {
     }
   }
 
+  @CommandAlias("takeplace|tkp")
   @Subcommand("takeplace|tkp")
   @CommandPermission(PERM_PLAY)
   @Syntax("[matchId|list]")
   @Description("Take an open spot in an ongoing match")
-  @CommandAlias("takeplace|tkp")
   public void onTakePlace(Player player, @Optional String arg) {
     if (!matchManager.getData().isMatchesEnabled()) {
       logger.send(player, FC_DISABLED);
@@ -170,19 +197,19 @@ public class FCGameCommands extends BaseCommand {
     }
   }
 
+  @CommandAlias("teamchat|tc")
   @Subcommand("teamchat|tc")
   @Syntax("<message>")
   @Description("Send a message to your team")
-  @CommandAlias("teamchat|tc")
   public void onTeamChat(Player player, String message) {
     matchManager.teamChat(player, message);
   }
 
+  @CommandAlias("stats")
   @Subcommand("stats")
   @Syntax("[player]")
   @CommandCompletion("@players")
   @Description("View player statistics")
-  @CommandAlias("stats")
   public void onStats(CommandSender sender, @Optional String targetName) {
     if (sender instanceof Player) {
       Player p = (Player) sender;
@@ -196,9 +223,9 @@ public class FCGameCommands extends BaseCommand {
     }
   }
 
+  @CommandAlias("highscores|best")
   @Subcommand("highscores|best")
   @Description("View top players leaderboard")
-  @CommandAlias("highscores|best")
   public void onHighScores(CommandSender sender) {
     fcManager.getHighscoreManager().showHighScores(sender);
   }
@@ -215,6 +242,11 @@ public class FCGameCommands extends BaseCommand {
 
     if (matchManager.getMatch(player).isPresent()) {
       logger.send(player, JOIN_ALREADYINGAME);
+      return;
+    }
+
+    if (!arenaManager.hasArenaForType(type)) {
+      logger.send(player, JOIN_NOARENA);
       return;
     }
 

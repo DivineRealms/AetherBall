@@ -15,6 +15,8 @@ import static io.github.divinerealms.footcube.configs.Lang.TEAM_NOT_ONLINE;
 import static io.github.divinerealms.footcube.configs.Lang.TEAM_NO_REQUEST;
 import static io.github.divinerealms.footcube.configs.Lang.TEAM_WANTS_TO_TEAM_OTHER;
 import static io.github.divinerealms.footcube.configs.Lang.TEAM_WANTS_TO_TEAM_SELF;
+import static io.github.divinerealms.footcube.configs.Lang.USAGE;
+import static io.github.divinerealms.footcube.matchmaking.util.MatchConstants.FIVE_V_FIVE;
 import static io.github.divinerealms.footcube.matchmaking.util.MatchConstants.FOUR_V_FOUR;
 import static io.github.divinerealms.footcube.matchmaking.util.MatchConstants.THREE_V_THREE;
 import static io.github.divinerealms.footcube.matchmaking.util.MatchConstants.TWO_V_TWO;
@@ -26,6 +28,7 @@ import co.aikar.commands.annotation.CommandCompletion;
 import co.aikar.commands.annotation.CommandPermission;
 import co.aikar.commands.annotation.Description;
 import co.aikar.commands.annotation.Flags;
+import co.aikar.commands.annotation.Optional;
 import co.aikar.commands.annotation.Subcommand;
 import co.aikar.commands.annotation.Syntax;
 import io.github.divinerealms.footcube.core.FCManager;
@@ -49,15 +52,50 @@ public class FCTeamCommands extends BaseCommand {
     this.teamManager = matchManager.getTeamManager();
   }
 
-  @Subcommand("team accept|t accept")
+  @Subcommand("team|t")
   @CommandPermission(PERM_PLAY)
-  @Description("Accept a team invitation")
-  public void onTeamAccept(Player player) {
-    if (!matchManager.getData().isMatchesEnabled()) {
-      logger.send(player, FC_DISABLED);
+  @Syntax("<accept|decline|2v2|3v3|4v4> [player]")
+  @CommandCompletion("accept|decline|2v2|3v3|4v4 @players")
+  @Description("Team management: accept/decline invites or invite players")
+  public void onTeam(Player player, String action, @Optional @Flags("other") Player target) {
+    if (!checkMatchesEnabled(player)) {
       return;
     }
 
+    String actionLower = action.toLowerCase();
+    switch (actionLower) {
+      case "accept":
+        handleAccept(player);
+        break;
+      case "decline":
+        handleDecline(player);
+        break;
+      case "1v1":
+      case "2v2":
+      case "3v3":
+      case "4v4":
+      case "5v5":
+        if (target == null) {
+          logger.send(player, USAGE, getExecSubcommand());
+          return;
+        }
+        handleInvite(player, actionLower, target);
+        break;
+      default:
+        logger.send(player, JOIN_INVALIDTYPE, action, OR.toString());
+        break;
+    }
+  }
+
+  private boolean checkMatchesEnabled(Player player) {
+    if (!matchManager.getData().isMatchesEnabled()) {
+      logger.send(player, FC_DISABLED);
+      return false;
+    }
+    return true;
+  }
+
+  private void handleAccept(Player player) {
     if (teamManager.isInTeam(player)) {
       logger.send(player, TEAM_ALREADY_IN_TEAM);
       return;
@@ -68,8 +106,13 @@ public class FCTeamCommands extends BaseCommand {
       return;
     }
 
+    if (isInQueueOrMatch(player)) {
+      logger.send(player, JOIN_ALREADYINGAME);
+      return;
+    }
+
     Player target = teamManager.getInviter(player);
-    String targetName = target != null && target.isOnline() ? target.getName() : "";
+    String targetName = target != null && target.isOnline() ? target.getDisplayName() : "";
 
     if (target == null || !target.isOnline()) {
       logger.send(player, TEAM_NOT_ONLINE, targetName);
@@ -77,29 +120,26 @@ public class FCTeamCommands extends BaseCommand {
     }
 
     if (teamManager.isInTeam(target)) {
-      logger.send(player, TEAM_ALREADY_IN_TEAM_2, target.getName());
+      logger.send(player, TEAM_ALREADY_IN_TEAM_2, target.getDisplayName());
       teamManager.removeInvite(player);
+      return;
+    }
+
+    if (isInQueueOrMatch(target)) {
+      logger.send(player, TEAM_ALREADY_IN_GAME, target.getDisplayName());
       return;
     }
 
     int mType = teamManager.getInviteMatchType(player);
     teamManager.createTeam(target, player, mType);
-    logger.send(player, TEAM_ACCEPT_SELF, target.getName());
-    logger.send(target, TEAM_ACCEPT_OTHER, player.getName());
+    logger.send(player, TEAM_ACCEPT_SELF, target.getDisplayName());
+    logger.send(target, TEAM_ACCEPT_OTHER, player.getDisplayName());
 
     matchManager.joinQueue(player, mType);
     teamManager.removeInvite(player);
   }
 
-  @Subcommand("team decline|t decline")
-  @CommandPermission(PERM_PLAY)
-  @Description("Decline a team invitation")
-  public void onTeamDecline(Player player) {
-    if (!matchManager.getData().isMatchesEnabled()) {
-      logger.send(player, FC_DISABLED);
-      return;
-    }
-
+  private void handleDecline(Player player) {
     if (teamManager.noInvite(player)) {
       logger.send(player, TEAM_NO_REQUEST);
       return;
@@ -107,77 +147,56 @@ public class FCTeamCommands extends BaseCommand {
 
     Player target = teamManager.getInviter(player);
     if (target != null && target.isOnline()) {
-      logger.send(target, TEAM_DECLINE_OTHER, player.getName());
+      logger.send(target, TEAM_DECLINE_OTHER, player.getDisplayName());
     }
 
     logger.send(player, TEAM_DECLINE_SELF);
     teamManager.removeInvite(player);
   }
 
-  @Subcommand("team|t")
-  @CommandPermission(PERM_PLAY)
-  @Syntax("<2v2|3v3|4v4> <player>")
-  @CommandCompletion("2v2|3v3|4v4 @players")
-  @Description("Invite a player to team up")
-  public void onTeamInvite(Player player, String matchType, @Flags("other") Player target) {
-    if (!matchManager.getData().isMatchesEnabled()) {
-      logger.send(player, FC_DISABLED);
-      return;
-    }
-
+  private void handleInvite(Player player, String matchType, Player target) {
     if (teamManager.isInTeam(player)) {
       logger.send(player, TEAM_ALREADY_IN_TEAM);
       return;
     }
 
-    if (target == null) {
-      logger.send(player, TEAM_NOT_ONLINE, matchType);
-      return;
-    }
-
     if (teamManager.isInTeam(target)) {
-      logger.send(player, TEAM_ALREADY_IN_TEAM_2, target.getName());
+      logger.send(player, TEAM_ALREADY_IN_TEAM_2, target.getDisplayName());
       return;
     }
 
-    if (fcManager.getMatchSystem().isInAnyQueue(player)) {
+    if (isInQueueOrMatch(player)) {
       logger.send(player, JOIN_ALREADYINGAME);
       return;
     }
 
-    if (fcManager.getMatchSystem().isInAnyQueue(target)) {
-      logger.send(player, TEAM_ALREADY_IN_GAME, target.getName());
+    if (isInQueueOrMatch(target)) {
+      logger.send(player, TEAM_ALREADY_IN_GAME, target.getDisplayName());
       return;
     }
 
-    if (matchManager.getMatch(player).isPresent()) {
-      logger.send(player, JOIN_ALREADYINGAME);
-      return;
-    }
-
-    if (matchManager.getMatch(target).isPresent()) {
-      logger.send(player, TEAM_ALREADY_IN_GAME, target.getName());
-      return;
-    }
-
-    int inviteType;
-    switch (matchType.toLowerCase()) {
-      case "2v2":
-        inviteType = TWO_V_TWO;
-        break;
-      case "3v3":
-        inviteType = THREE_V_THREE;
-        break;
-      case "4v4":
-        inviteType = FOUR_V_FOUR;
-        break;
-      default:
-        logger.send(player, JOIN_INVALIDTYPE, matchType, OR.toString());
-        return;
-    }
-
+    int inviteType = getMatchType(matchType);
     teamManager.invite(player, target, inviteType);
-    logger.send(player, TEAM_WANTS_TO_TEAM_SELF, target.getName(), matchType);
-    logger.send(target, TEAM_WANTS_TO_TEAM_OTHER, player.getName(), matchType);
+    logger.send(player, TEAM_WANTS_TO_TEAM_SELF, target.getDisplayName(), matchType);
+    logger.send(target, TEAM_WANTS_TO_TEAM_OTHER, player.getDisplayName(), matchType);
+  }
+
+  private boolean isInQueueOrMatch(Player player) {
+    return fcManager.getMatchSystem().isInAnyQueue(player)
+        || matchManager.getMatch(player).isPresent();
+  }
+
+  private int getMatchType(String matchType) {
+    switch (matchType) {
+      case "3v3":
+        return THREE_V_THREE;
+      case "4v4":
+        return FOUR_V_FOUR;
+      case "5v5":
+        return FIVE_V_FIVE;
+      case "2v2":
+      default:
+        return TWO_V_TWO;
+    }
   }
 }
