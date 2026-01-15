@@ -17,6 +17,7 @@ import static io.github.divinerealms.footcube.physics.PhysicsConstants.DEBUG_ON_
 import static io.github.divinerealms.footcube.physics.PhysicsConstants.JUMP_POTION_AMPLIFIER;
 import static io.github.divinerealms.footcube.physics.PhysicsConstants.JUMP_POTION_DURATION;
 import static io.github.divinerealms.footcube.physics.PhysicsConstants.KICK_POWER_SPEED_MULTIPLIER;
+import static io.github.divinerealms.footcube.physics.PhysicsConstants.MAX_SOUND_QUEUE_SIZE;
 import static io.github.divinerealms.footcube.physics.PhysicsConstants.MIN_SPEED_FOR_DAMPENING;
 import static io.github.divinerealms.footcube.physics.PhysicsConstants.REGULAR_BASE_POWER;
 import static io.github.divinerealms.footcube.physics.PhysicsConstants.REGULAR_KICK_COOLDOWN;
@@ -124,12 +125,20 @@ public class PhysicsSystem {
     Set<Slime> toRemove = new HashSet<>(data.getCubesToRemove());
     data.getCubesToRemove().clear();
 
-    scheduler.runTaskLater(plugin, () -> toRemove.forEach(cube -> {
-      data.getCubes().remove(cube);
-      if (!cube.isDead()) {
-        cube.remove();
+    scheduler.runTaskLater(plugin, () -> {
+      for (Slime cube : toRemove) {
+        UUID cubeId = cube.getUniqueId();
+
+        data.getCubes().remove(cube);
+        data.getVelocities().remove(cubeId);
+        data.getRaised().remove(cubeId);
+        data.getPreviousCubeLocations().remove(cubeId);
+
+        if (!cube.isDead()) {
+          cube.remove();
+        }
       }
-    }), CUBE_REMOVAL_DELAY_TICKS);
+    }, CUBE_REMOVAL_DELAY_TICKS);
   }
 
   /**
@@ -142,6 +151,11 @@ public class PhysicsSystem {
     if (location == null || sound == null) {
       return;
     }
+
+    if (data.getSoundQueue().size() >= MAX_SOUND_QUEUE_SIZE) {
+      data.getSoundQueue().poll();
+    }
+
     data.getSoundQueue().offer(new CubeSoundAction(location, null, sound, volume, pitch));
   }
 
@@ -161,6 +175,11 @@ public class PhysicsSystem {
     if (player == null || sound == null) {
       return;
     }
+
+    if (data.getSoundQueue().size() >= MAX_SOUND_QUEUE_SIZE) {
+      data.getSoundQueue().poll();
+    }
+
     data.getSoundQueue().offer(new CubeSoundAction(null, player, sound, volume, pitch));
   }
 
@@ -228,12 +247,40 @@ public class PhysicsSystem {
   }
 
   /**
-   * Spawns a new ball at the given location and disables its AI.
+   * Spawns a new ball at the given location.
    *
    * @param location The location to spawn the cube.
    * @return The spawned entity.
    */
   public Slime spawnCube(Location location) {
+    long start = System.nanoTime();
+    try {
+      Slime cube = (Slime) location.getWorld().spawnEntity(location, EntityType.SLIME);
+      cube.setRemoveWhenFarAway(false);
+      cube.setSize(SLIME_SIZE);
+      // Permanent jump effect that stops the cube from hopping.
+      cube.addPotionEffect(
+          new PotionEffect(PotionEffectType.JUMP, JUMP_POTION_DURATION, JUMP_POTION_AMPLIFIER,
+              true),
+          true);
+      data.getCubes().add(cube);
+      return cube;
+    } finally {
+      long ms = (System.nanoTime() - start) / 1_000_000;
+      if (ms > DEBUG_ON_MS) {
+        logger.send(PERM_HIT_DEBUG,
+            "{prefix-admin}&dPhysicsSystem#spawnCube() &ftook &e" + ms + "ms");
+      }
+    }
+  }
+
+  /**
+   * Spawns a new ball at the given location and disables its AI.
+   *
+   * @param location The location to spawn the cube.
+   * @return The spawned entity.
+   */
+  public Slime _spawnCube(Location location) {
     long start = System.nanoTime();
     try {
       Slime cube = (Slime) location.getWorld().spawnEntity(location, EntityType.SLIME);
@@ -457,23 +504,5 @@ public class PhysicsSystem {
    */
   public void setButtonCooldown(Player player) {
     data.getButtonCooldowns().put(player.getUniqueId(), System.currentTimeMillis());
-  }
-
-  public static boolean isGrounded(Location loc) {
-    double y = loc.getY();
-    int blockY = (int) Math.floor(y - 0.01);
-
-    // Distance from feet to top of block
-    double dy = y - (blockY + 1);
-
-    // Typical 1.8 tolerance range
-    if (dy < -0.2 || dy > 0.3) {
-      return false;
-    }
-
-    return loc.getWorld()
-        .getBlockAt(loc.getBlockX(), blockY, loc.getBlockZ())
-        .getType()
-        .isSolid();
   }
 }

@@ -537,6 +537,7 @@ public class MatchManager {
       if (lobby != null) {
         player.teleport(lobby);
       }
+
       clearPlayer(player);
       teamManager.forceDisbandTeam(player);
 

@@ -36,14 +36,11 @@ public class PhysicsConstants {
   public static final double CHARGED_BASE_POWER = 0.375;
   public static final double REGULAR_BASE_POWER = 0.65;
   public static final double CHARGE_BASE_VALUE = 1;
-  public static final double CHARGE_RECOVERY_RATE = 0.945;
+  public static final double CHARGE_RECOVERY_RATE = 0.95;
 
   // --- Velocity & Motion Modifiers ---
   public static final double MIN_SPEED_FOR_DAMPENING = 0.5;
   public static final double DRIBBLE_SPEED_LIMIT = 0.5;
-  public static final double LOW_VELOCITY_THRESHOLD = 0.2;
-  public static final double LOW_VELOCITY_PUSH_MULTIPLIER = 1.2;
-  public static final double MIN_BOUNCE_VELOCITY_Y = 0.15;
   public static final double WALL_BOUNCE_FACTOR = 0.8;
   public static final double AIR_DRAG_FACTOR = 0.98;
   public static final double CUBE_JUMP_RIGHT_CLICK = 0.7;
@@ -52,6 +49,7 @@ public class PhysicsConstants {
   // --- Distance & Collision Thresholds ---
   public static final double HIT_RADIUS = 1.2;
   public static final double HIT_RADIUS_SQUARED = HIT_RADIUS * HIT_RADIUS;
+  public static final double HIT_RADIUS_SQUARED_3X = (HIT_RADIUS * 3) * (HIT_RADIUS * 3);
   public static final double MIN_RADIUS = 0.8;
   public static final double MIN_RADIUS_SQUARED = MIN_RADIUS * MIN_RADIUS;
   public static final double BOUNCE_THRESHOLD = 0.3;
@@ -63,7 +61,7 @@ public class PhysicsConstants {
   public static final double PLAYER_SPEED_TOUCH_DIVISOR = 3;
   public static final double CUBE_SPEED_TOUCH_DIVISOR = 6;
   public static final double PROXIMITY_THRESHOLD_MULTIPLIER = 1.3;
-  public static final double ANTI_CLIP_DOT_THRESHOLD = 0.5;
+  public static final double ANTI_CLIP_DOT_THRESHOLD = 0;
 
   // --- Physics Math Thresholds ---
   public static final double VECTOR_CHANGE_THRESHOLD = 0.1;
@@ -90,18 +88,7 @@ public class PhysicsConstants {
   public static final float GENERIC_PARTICLE_SPEED = 0.1F;
   public static final int GENERIC_PARTICLE_COUNT = 10;
 
-  // --- Anticipatory Hop Effect Constants ---
-  public static final int HOP_CHECK_INTERVAL = 3;
-  public static final int HOP_IDLE_CHECK_INTERVAL = 15;
-  public static final double HOP_BLOCK_CHECK_OFFSET = 0.3;
-  public static final double HOP_MAX_GROUND_DISTANCE = 0.3;
-  public static final double HOP_MIN_GROUND_DISTANCE = -0.15;
-  public static final double HOP_SETTLED_VELOCITY_THRESHOLD = 0.18;
-  public static final double HOP_PLAYER_RANGE = 2;
-  public static final double HOP_FORCE_MULTIPLIER = 2.5;
-  public static final double HOP_MIN_BOUNCE_MULTIPLIER = 1.25;
-  public static final double HOP_IDLE_FORCE_MULTIPLIER = 0.4;
-
   // --- Utility ---
   public static final ThreadLocalRandom RANDOM = ThreadLocalRandom.current();
+  public static final int MAX_SOUND_QUEUE_SIZE = 200;
 }

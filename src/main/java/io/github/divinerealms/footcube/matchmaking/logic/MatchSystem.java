@@ -15,7 +15,6 @@ import static io.github.divinerealms.footcube.configs.Lang.MATCH_STARTED_ACTIONB
 import static io.github.divinerealms.footcube.configs.Lang.MATCH_STARTING_ACTIONBAR;
 import static io.github.divinerealms.footcube.configs.Lang.MATCH_STARTING_SUBTITLE;
 import static io.github.divinerealms.footcube.configs.Lang.MATCH_STARTING_TITLE;
-import static io.github.divinerealms.footcube.configs.Lang.MATCH_TIMES_UP;
 import static io.github.divinerealms.footcube.configs.Lang.RED;
 import static io.github.divinerealms.footcube.configs.Lang.STARTING;
 import static io.github.divinerealms.footcube.configs.Lang.STATS;
@@ -431,42 +430,24 @@ public class MatchSystem {
 
       case CONTINUING:
         if (shouldUpdateScoreboard(match)) {
-          match.setCountdown(match.getCountdown() - 1);
-          scoreboardManager.updateScoreboard(match);
+          if (match.getCountdown() <= 0) {
+            handleCountdownComplete(match, players);
+          } else {
+            match.setCountdown(match.getCountdown() - 1);
+            scoreboardManager.updateScoreboard(match);
 
-          for (MatchPlayer mp : players) {
-            if (mp == null || mp.getPlayer() == null) {
-              continue;
+            for (MatchPlayer mp : players) {
+              if (mp == null || mp.getPlayer() == null) {
+                continue;
+              }
+
+              Player player = mp.getPlayer();
+              player.setLevel(match.getCountdown());
+              player.playSound(player.getLocation(), Sound.NOTE_STICKS, 1, 1);
             }
-            Player player = mp.getPlayer();
-            player.setLevel(match.getCountdown());
-            player.playSound(player.getLocation(), Sound.NOTE_STICKS, 1, 1);
-          }
 
-          if (match.getCountdown() <= 1) {
-            long matchDuration = match.getArena().getType() == TWO_V_TWO ? 120 : 300;
-            long elapsedSeconds = TimeUnit.MILLISECONDS.toSeconds(
-                System.currentTimeMillis() - match.getStartTime()
-            );
-
-            if (elapsedSeconds >= matchDuration) {
-              match.setPhase(MatchPhase.ENDED);
-              for (MatchPlayer mp : players) {
-                if (mp == null || mp.getPlayer() == null) {
-                  continue;
-                }
-                logger.send(mp.getPlayer(), MATCH_TIMES_UP,
-                    match.getScoreRed() > match.getScoreBlue() ? RED.toString() : BLUE.toString());
-              }
-            } else {
-              match.setPhase(MatchPhase.IN_PROGRESS);
-              for (MatchPlayer mp : players) {
-                if (mp == null || mp.getPlayer() == null) {
-                  continue;
-                }
-                logger.send(mp.getPlayer(), MATCH_PROCEED);
-              }
-              startRound(match);
+            if (match.getCountdown() <= 0) {
+              handleCountdownComplete(match, players);
             }
           }
         }
@@ -487,6 +468,28 @@ public class MatchSystem {
             && match.getPhase() != MatchPhase.LOBBY);
     if (match.isTakePlaceNeeded()) {
       announceTakePlace(match);
+    }
+  }
+
+  private void handleCountdownComplete(Match match, List<MatchPlayer> players) {
+    long matchDuration = match.getArena().getType() == TWO_V_TWO ? 120 : 300;
+    long elapsedSeconds = TimeUnit.MILLISECONDS.toSeconds(
+        System.currentTimeMillis() - match.getStartTime()
+    );
+
+    if (elapsedSeconds >= matchDuration) {
+      match.setPhase(MatchPhase.ENDED);
+    } else {
+      match.setPhase(MatchPhase.IN_PROGRESS);
+
+      for (MatchPlayer mp : players) {
+        if (mp == null || mp.getPlayer() == null) {
+          continue;
+        }
+        logger.send(mp.getPlayer(), MATCH_PROCEED);
+      }
+
+      startRound(match);
     }
   }
 

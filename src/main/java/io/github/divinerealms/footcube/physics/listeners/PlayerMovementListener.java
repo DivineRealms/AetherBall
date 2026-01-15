@@ -45,15 +45,16 @@ public class PlayerMovementListener implements Listener {
       }
 
       Player player = event.getPlayer();
-      if (system.notAllowedToInteract(player) || system.isAFK(player)) {
+      if (system.notAllowedToInteract(player)) {
         return;
       }
+
       UUID playerId = player.getUniqueId();
 
       // Compute normalized velocity components.
-      double dx = to.getX() - from.getX();
-      double dy = to.getY() - from.getY();
-      double dz = to.getZ() - from.getZ();
+      double dx = Math.abs(to.getX() - from.getX());
+      double dy = Math.abs(to.getY() - from.getY());
+      double dz = Math.abs(to.getZ() - from.getZ());
       double scaledDy = dy / PLAYER_HEAD_LEVEL;
       double speed = Math.sqrt(dx * dx + scaledDy * scaledDy + dz * dz);
 

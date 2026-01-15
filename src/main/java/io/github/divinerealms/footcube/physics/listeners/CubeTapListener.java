@@ -49,6 +49,7 @@ public class CubeTapListener implements Listener {
       if (!(event.getRightClicked() instanceof Slime)) {
         return;
       }
+
       if (!data.getCubes().contains((Slime) event.getRightClicked())) {
         return;
       }
@@ -65,7 +66,13 @@ public class CubeTapListener implements Listener {
       // Enforce cooldown.
       Map<CubeTouchType, CubeTouchInfo> touches = data.getLastTouches().get(playerId);
       if (touches != null && touches.containsKey(CubeTouchType.RISE)) {
-        return;
+        CubeTouchInfo lastTouch = touches.get(CubeTouchType.RISE);
+        long elapsed = System.currentTimeMillis() - lastTouch.getTimestamp();
+
+        if (elapsed < CubeTouchType.RISE.getCooldown()) {
+          return; // Still on cooldown
+        }
+        // Cooldown expired, allow tap and update below.
       }
 
       // Apply vertical boost and play sound.
@@ -77,8 +84,10 @@ public class CubeTapListener implements Listener {
       data.getLastTouches().computeIfAbsent(playerId, k -> new ConcurrentHashMap<>())
           .put(CubeTouchType.RISE,
               new CubeTouchInfo(System.currentTimeMillis(), CubeTouchType.RISE));
+
       data.getRaised().put(cube.getUniqueId(), System.currentTimeMillis());
 
+      // Record interaction.
       system.recordPlayerAction(player);
       fcManager.getMatchManager().kick(player);
 

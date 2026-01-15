@@ -48,7 +48,7 @@ public class FCAdminDebugCommands extends BaseCommand {
   @Description("Toggle global hit debug visualization")
   public void onHitsDebug(CommandSender sender) {
     boolean status = physicsData.isHitDebugEnabled();
-    physicsData.hitDebugEnabled = !status;
+    physicsData.setHitDebugEnabled(!status);
     logger.send(sender, TOGGLES_HIT_DEBUG, status ? OFF.toString() : ON.toString());
   }
 

@@ -21,7 +21,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import org.bukkit.GameMode;
-import org.bukkit.Location;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Slime;
@@ -65,12 +64,15 @@ public class CubeKickListener implements Listener {
       if (!(event.getEntity() instanceof Slime)) {
         return;
       }
+
       if (!(event.getDamager() instanceof Player)) {
         return;
       }
+
       if (event.getCause() != EntityDamageEvent.DamageCause.ENTITY_ATTACK) {
         return;
       }
+
       if (!data.getCubes().contains((Slime) event.getEntity())) {
         return;
       }
@@ -95,28 +97,37 @@ public class CubeKickListener implements Listener {
       CubeTouchType kickType = player.isSneaking()
           ? CubeTouchType.CHARGED_KICK
           : CubeTouchType.REGULAR_KICK;
+
       Map<CubeTouchType, CubeTouchInfo> touches = data.getLastTouches().get(playerId);
       if (touches != null && touches.containsKey(kickType)) {
-        return;
+        CubeTouchInfo lastTouch = touches.get(kickType);
+        long elapsed = System.currentTimeMillis() - lastTouch.getTimestamp();
+
+        if (elapsed < kickType.getCooldown()) {
+          event.setCancelled(true);
+          return; // Still on cooldown.
+        }
+        // Cooldown expired, allow kick and update below.
       }
 
       // Calculate kick result.
       PlayerKickResult kickResult = system.calculateKickPower(player);
 
       // Compute final kick direction and apply impulse.
-      Location playerLocation = player.getLocation();
       Vector kick = player.getLocation().getDirection().normalize()
-          .multiply(kickResult.getFinalKickPower()).setY(
-              KICK_VERTICAL_BOOST);
+          .multiply(kickResult.getFinalKickPower())
+          .setY(KICK_VERTICAL_BOOST);
       cube.setVelocity(cube.getVelocity().add(kick));
 
-      // Register player hit cooldown and record interaction.
+      // Update cooldown entry (overwrites old one if exists).
       data.getLastTouches().computeIfAbsent(playerId, k -> new ConcurrentHashMap<>())
           .put(kickType, new CubeTouchInfo(System.currentTimeMillis(), kickType));
+
+      // Record interaction.
       system.recordPlayerAction(player);
       fcManager.getMatchManager().kick(player);
 
-      // Register player hit cooldown and record interaction.
+      // Sound effects.
       system.queueSound(cube.getLocation(), Sound.SLIME_WALK, 0.75F, 1.0F);
 
       // Schedule post-processing for player sound feedback and debug info.
@@ -125,10 +136,12 @@ public class CubeKickListener implements Listener {
         if (settings != null && settings.isKickSoundEnabled()) {
           system.queueSound(player, settings.getKickSound(), SOUND_VOLUME, SOUND_PITCH);
         }
+
         if (data.isHitDebugEnabled()) {
-          logger.send(PERM_HIT_DEBUG, playerLocation, 100, HITDEBUG_WHOLE,
+          logger.send(PERM_HIT_DEBUG, player.getLocation(), 100, HITDEBUG_WHOLE,
               system.onHitDebug(player, kickResult));
         }
+
         if (data.getCubeHits().contains(playerId)) {
           system.showHits(player, kickResult);
         }

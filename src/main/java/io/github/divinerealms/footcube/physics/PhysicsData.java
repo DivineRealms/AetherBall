@@ -10,6 +10,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import lombok.Getter;
+import lombok.Setter;
 import org.bukkit.Location;
 import org.bukkit.entity.Slime;
 import org.bukkit.util.Vector;
@@ -34,7 +35,7 @@ public class PhysicsData {
 
   private final Map<UUID, Location> previousCubeLocations = new ConcurrentHashMap<>();
 
-  public boolean hitDebugEnabled = false;
+  @Setter private boolean hitDebugEnabled = false;
 
   public long tickRate = 0;
 
