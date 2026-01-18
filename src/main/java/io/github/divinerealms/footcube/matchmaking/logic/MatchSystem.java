@@ -78,7 +78,6 @@ public class MatchSystem {
   private final MatchData data;
   private final ArenaManager arenaManager;
   private final TeamManager teamManager;
-  private final Utilities utilities;
 
   public MatchSystem(FCManager fcManager) {
     this.fcManager = fcManager;
@@ -87,7 +86,6 @@ public class MatchSystem {
     this.data = fcManager.getMatchData();
     this.arenaManager = fcManager.getArenaManager();
     this.teamManager = fcManager.getTeamManager();
-    this.utilities = fcManager.getUtilities();
 
     int[] initialQueueOrder = {ONE_V_ONE, TWO_V_TWO, THREE_V_THREE, FOUR_V_FOUR, FIVE_V_FIVE};
     for (int t : initialQueueOrder) {
@@ -256,7 +254,7 @@ public class MatchSystem {
     }
     Location goalLoc = getGoalLocation(match, scoringTeam);
     playGoalEffects(match, goalLoc, fcManager);
-    broadcastGoalMessage(match, scoringResult, goalLoc, utilities, fcManager, logger);
+    broadcastGoalMessage(match, scoringResult, goalLoc, fcManager, logger);
     prepareMatchContinuation(match, scoreboardManager);
   }
 
@@ -430,9 +428,27 @@ public class MatchSystem {
         break;
 
       case CONTINUING:
+        long matchDuration = match.getArena().getType() == TWO_V_TWO ? 120 : 300;
+        long totalActiveElapsedMillis = (System.currentTimeMillis() - match.getStartTime());
+        long elapsedSeconds = TimeUnit.MILLISECONDS.toSeconds(totalActiveElapsedMillis);
+
+        if (elapsedSeconds >= matchDuration) {
+          match.setPhase(MatchPhase.ENDED);
+          break;
+        }
+
         if (shouldUpdateScoreboard(match)) {
           if (match.getCountdown() <= 0) {
-            handleCountdownComplete(match, players);
+            match.setPhase(MatchPhase.IN_PROGRESS);
+
+            for (MatchPlayer mp : players) {
+              if (mp == null || mp.getPlayer() == null) {
+                continue;
+              }
+              logger.send(mp.getPlayer(), MATCH_PROCEED);
+            }
+
+            startRound(match);
           } else {
             match.setCountdown(match.getCountdown() - 1);
             scoreboardManager.updateScoreboard(match);
@@ -445,10 +461,6 @@ public class MatchSystem {
               Player player = mp.getPlayer();
               player.setLevel(match.getCountdown());
               player.playSound(player.getLocation(), Sound.NOTE_STICKS, 1, 1);
-            }
-
-            if (match.getCountdown() <= 0) {
-              handleCountdownComplete(match, players);
             }
           }
         }
@@ -469,28 +481,6 @@ public class MatchSystem {
             && match.getPhase() != MatchPhase.LOBBY);
     if (match.isTakePlaceNeeded()) {
       announceTakePlace(match);
-    }
-  }
-
-  private void handleCountdownComplete(Match match, List<MatchPlayer> players) {
-    long matchDuration = match.getArena().getType() == TWO_V_TWO ? 120 : 300;
-    long elapsedSeconds = TimeUnit.MILLISECONDS.toSeconds(
-        System.currentTimeMillis() - match.getStartTime()
-    );
-
-    if (elapsedSeconds >= matchDuration) {
-      match.setPhase(MatchPhase.ENDED);
-    } else {
-      match.setPhase(MatchPhase.IN_PROGRESS);
-
-      for (MatchPlayer mp : players) {
-        if (mp == null || mp.getPlayer() == null) {
-          continue;
-        }
-        logger.send(mp.getPlayer(), MATCH_PROCEED);
-      }
-
-      startRound(match);
     }
   }
 

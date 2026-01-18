@@ -502,25 +502,26 @@ public class MatchUtils {
   }
 
   public static void broadcastGoalMessage(Match match, MatchSystem.ScoringResult result,
-      Location goalLoc, Utilities utilities,
-      FCManager fcManager, Logger logger) {
+      Location goalLoc, FCManager fcManager, Logger logger) {
     String prefixedScorer = NOBODY.toString();
     String prefixedAssister = null;
 
     if (result.getScorer() != null && result.getScorer().getPlayer() != null) {
       Player scorer = result.getScorer().getPlayer();
-      prefixedScorer = utilities.getCachedPrefixedName(
-          scorer.getUniqueId(),
-          scorer.getName()
-      );
+      prefixedScorer = fcManager.getPrefixedName(scorer.getUniqueId());
+      if (prefixedScorer == null) {
+        prefixedScorer = scorer.getName();
+        fcManager.cachePrefixedName(scorer);
+      }
     }
 
     if (result.getAssister() != null && result.getAssister().getPlayer() != null) {
       Player assister = result.getAssister().getPlayer();
-      prefixedAssister = utilities.getCachedPrefixedName(
-          assister.getUniqueId(),
-          assister.getName()
-      );
+      prefixedAssister = fcManager.getPrefixedName(assister.getUniqueId());
+      if (prefixedAssister == null) {
+        prefixedAssister = assister.getName();
+        fcManager.cachePrefixedName(assister);
+      }
     }
 
     sendGoalMessages(match, result, prefixedScorer, prefixedAssister, goalLoc, fcManager, logger);

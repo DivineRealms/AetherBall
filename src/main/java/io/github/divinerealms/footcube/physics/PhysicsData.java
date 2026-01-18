@@ -34,10 +34,9 @@ public class PhysicsData {
   private final Map<UUID, Long> buttonCooldowns = new ConcurrentHashMap<>();
 
   private final Map<UUID, Location> previousCubeLocations = new ConcurrentHashMap<>();
-
-  @Setter private boolean hitDebugEnabled = false;
-
   public long tickRate = 0;
+  @Setter
+  private boolean hitDebugEnabled = false;
 
   public void cleanup() {
     cubes.clear();

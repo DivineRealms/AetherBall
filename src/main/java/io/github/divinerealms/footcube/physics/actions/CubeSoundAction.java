@@ -15,8 +15,8 @@ import org.bukkit.entity.Player;
  * </p>
  *
  * <p>This design allows flexible and fine-grained control over sound feedback, ensuring that
- * auditory cues
- * are consistent with the player's experience and interaction with physics objects.</p>
+ * auditory cues are consistent with the player's experience and interaction with physics
+ * objects.</p>
  *
  * @see Sound
  */

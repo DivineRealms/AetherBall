@@ -69,7 +69,8 @@ public class FCPlaceholders extends PlaceholderExpansion {
 
     if (identifier.equals("active_lobbies_all")) {
       int count = 0;
-      for (int type : Arrays.asList(ONE_V_ONE, TWO_V_TWO, THREE_V_THREE, FOUR_V_FOUR, FIVE_V_FIVE)) {
+      for (int type : Arrays.asList(ONE_V_ONE, TWO_V_TWO, THREE_V_THREE, FOUR_V_FOUR,
+          FIVE_V_FIVE)) {
         count += matchManager.countActiveLobbies(type);
       }
 

@@ -68,8 +68,8 @@ public class PhysicsConstants {
   public static final double VERTICAL_BOUNCE_THRESHOLD = 0.05;
 
   // --- Player / Location Offsets ---
-  public static final int PLAYER_HEAD_LEVEL = 2;
-  public static final int PLAYER_FOOT_LEVEL = 1;
+  public static final double PLAYER_HEAD_LEVEL = 1.8;
+  public static final double PLAYER_FOOT_LEVEL = 0;
 
   // --- Sound Defaults ---
   public static final double MIN_SOUND_POWER = 0.15;

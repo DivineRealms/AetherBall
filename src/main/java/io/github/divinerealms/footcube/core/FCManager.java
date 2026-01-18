@@ -455,7 +455,8 @@ public class FCManager {
       Field knownCommandsField = commandMap.getClass().getDeclaredField("knownCommands");
       knownCommandsField.setAccessible(true);
       //noinspection unchecked
-      Map<String, Command> knownCommands = (Map<String, Command>) knownCommandsField.get(commandMap);
+      Map<String, Command> knownCommands = (Map<String, Command>) knownCommandsField.get(
+          commandMap);
 
       knownCommands.entrySet().removeIf(entry -> {
         Command cmd = entry.getValue();

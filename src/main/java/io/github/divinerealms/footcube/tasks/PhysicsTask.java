@@ -236,7 +236,8 @@ public class PhysicsTask extends BaseTask {
                   && projectedNextPos.getY() > playerLocationY - PLAYER_FOOT_LEVEL);
 
           // If vertically aligned, check if the cube's path intersects player's collision radius.
-          if (withinY && formulae.getPerpendicularDistanceSquared(newVelocity, cubePos, interaction.player)
+          if (withinY
+              && formulae.getPerpendicularDistanceSquared(newVelocity, cubePos, interaction.player)
               < MIN_RADIUS_SQUARED) {
             // Horizontal vector to player.
             Vector toPlayer = interaction.toPlayer;

@@ -33,9 +33,8 @@ import org.bukkit.entity.Slime;
  * </p>
  *
  * <p><b>Performance considerations:</b> Particle effects are sent only to players who are
- * sufficiently far from the
- * cube, reducing unnecessary network and client load. The method is optimized through caching of
- * player locations and settings to minimize per-interval lookups.</p>
+ * sufficiently far from the cube, reducing unnecessary network and client load. The method is
+ * optimized through caching of player locations and settings to minimize per-interval lookups.</p>
  *
  * @implNote This task is executed periodically every X ticks (default 10). The interval balances
  * visual responsiveness and server performance.

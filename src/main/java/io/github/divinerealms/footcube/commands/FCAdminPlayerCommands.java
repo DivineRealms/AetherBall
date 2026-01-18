@@ -52,7 +52,8 @@ public class FCAdminPlayerCommands extends BaseCommand {
   @Syntax("<player> <stat> <amount|clear>")
   @CommandCompletion("@players wins|matches|ties|goals|assists|owngoals|winstreak|bestwinstreak|all")
   @Description("Set player statistics")
-  public void onStatSet(CommandSender sender, @Flags("other") Player target, String stat, String amountStr) {
+  public void onStatSet(CommandSender sender, @Flags("other") Player target, String stat,
+      String amountStr) {
     PlayerData playerData = dataManager.get(target);
     if (playerData == null) {
       logger.send(sender, PLAYER_NOT_FOUND);
