@@ -45,6 +45,7 @@ import io.github.divinerealms.footcube.matchmaking.MatchPhase;
 import io.github.divinerealms.footcube.matchmaking.arena.Arena;
 import io.github.divinerealms.footcube.matchmaking.arena.ArenaManager;
 import io.github.divinerealms.footcube.matchmaking.player.MatchPlayer;
+import io.github.divinerealms.footcube.matchmaking.player.StatsHelper;
 import io.github.divinerealms.footcube.matchmaking.player.TeamColor;
 import io.github.divinerealms.footcube.matchmaking.scoreboard.ScoreManager;
 import io.github.divinerealms.footcube.matchmaking.team.Team;
@@ -624,110 +625,22 @@ public class MatchSystem {
       return;
     }
 
-    int matches = (int) data.get("matches");
-    int wins = (int) data.get("wins");
-    int ties = (int) data.get("ties");
-    int bestWinStreak = (int) data.get("bestwinstreak");
-    int losses = (int) data.get("losses");
-
-    double winsPerMatch = (matches > 0)
-        ? (double) wins / matches
-        : 0;
-
-    int goals = (int) data.get("goals");
-    int assists = (int) data.get("assists");
-    int ownGoals = (int) data.get("owngoals");
-    double goalsPerMatch = (matches > 0)
-        ? (double) goals / matches
-        : 0;
-    double multiplier = 1.0 - Math.pow(0.9, matches);
-    double goalBonus = matches > 0
-        ? (goals == matches
-        ? 1.0
-        : Math.min(1.0, 1 - multiplier * Math.pow(0.2, (double) goals / matches)))
-        : 0.5;
-
-    double addition = 0.0;
-    if (matches > 0 && wins + ties > 0) {
-      addition = 8.0 * (1.0 / ((100.0 * matches) / (wins + 0.5 * ties) / 100.0)) - 4.0;
-    } else {
-      if (matches > 0) {
-        addition = -4.0;
-      }
-    }
-
-    double skillLevel = Math.min(5.0 + goalBonus + addition * multiplier, 10.0);
-    int rank = (int) (skillLevel * 2.0 - 0.5);
-    String rang;
-
-    switch (rank) {
-      case 1:
-        rang = "Nub";
-        break;
-      case 2:
-        rang = "Luzer";
-        break;
-      case 3:
-        rang = "Beba";
-        break;
-      case 4:
-        rang = "Učenik";
-        break;
-      case 5:
-        rang = "Loš";
-        break;
-      case 6:
-        rang = ":(";
-        break;
-      case 7:
-        rang = "Eh";
-        break;
-      case 8:
-        rang = "Igrač";
-        break;
-      case 9:
-        rang = "Ok";
-        break;
-      case 10:
-        rang = "Prosečan";
-        break;
-      case 11:
-        rang = "Dobar";
-        break;
-      case 12:
-        rang = "Odličan";
-        break;
-      case 13:
-        rang = "Kralj";
-        break;
-      case 14:
-        rang = "Super";
-        break;
-      case 15:
-        rang = "Pro";
-        break;
-      case 16:
-        rang = "Maradona";
-        break;
-      case 17:
-        rang = "Supermen";
-        break;
-      case 18:
-        rang = "Bog";
-        break;
-      case 19:
-        rang = "h4x0r";
-        break;
-      default:
-        rang = "Nema";
-        break;
-    }
+    StatsHelper stats = new StatsHelper(data);
 
     logger.send(asker, STATS,
-        playerName, String.valueOf(matches), String.valueOf(wins), String.valueOf(losses),
-        String.valueOf(ties), String.format("%.2f", winsPerMatch), String.valueOf(bestWinStreak),
-        String.valueOf(goals), String.format("%.2f", goalsPerMatch), String.valueOf(assists),
-        String.format("%.2f", skillLevel), rang, String.valueOf(ownGoals)
+        playerName,
+        String.valueOf(stats.getMatches()),
+        String.valueOf(stats.getWins()),
+        String.valueOf(stats.getLosses()),
+        String.valueOf(stats.getTies()),
+        String.format("%.2f", stats.getWinsPerMatch()),
+        String.valueOf(stats.getBestWinStreak()),
+        String.valueOf(stats.getGoals()),
+        String.format("%.2f", stats.getGoalsPerMatch()),
+        String.valueOf(stats.getAssists()),
+        String.format("%.2f", stats.getSkillLevel()),
+        stats.getRankName(),
+        String.valueOf(stats.getOwnGoals())
     );
   }
 

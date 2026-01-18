@@ -117,8 +117,7 @@ public class TaskManager {
         cubeCleanerTask.getAverageExecutionTime(),
         matchmakingTask.getAverageExecutionTime(),
         cacheCleanupTask.getAverageExecutionTime(),
-        queueStatusTask.getAverageExecutionTime(),
-        highScoresTask.getAverageExecutionTime()
+        queueStatusTask.getAverageExecutionTime()
     );
   }
 

@@ -15,6 +15,7 @@ import io.github.divinerealms.footcube.configs.PlayerData;
 import io.github.divinerealms.footcube.core.FCManager;
 import io.github.divinerealms.footcube.managers.PlayerDataManager;
 import io.github.divinerealms.footcube.managers.Utilities;
+import io.github.divinerealms.footcube.matchmaking.player.StatsHelper;
 import io.github.divinerealms.footcube.utils.Logger;
 import java.io.File;
 import java.util.ArrayList;
@@ -27,6 +28,7 @@ import org.bukkit.plugin.Plugin;
 
 public class HighScoreManager {
 
+  private static final int TOP_SCORES_SIZE = 5;
   private final FCManager fcManager;
   private final Plugin plugin;
   private final Logger logger;
@@ -53,7 +55,12 @@ public class HighScoreManager {
   private boolean isUpdating;
   @Getter
   private boolean hasInitialData = false;
-  private static final int TOP_SCORES_SIZE = 5;
+  @Getter
+  private int totalPlayerFiles = 0;
+  @Getter
+  private int skippedCount = 0;
+  @Getter
+  private int processedCount = 0;
 
   public HighScoreManager(FCManager fcManager) {
     this.fcManager = fcManager;
@@ -145,6 +152,7 @@ public class HighScoreManager {
   public void startUpdate() {
     File playerFolder = new File(plugin.getDataFolder(), "players");
     File[] files = playerFolder.listFiles((dir, name) -> name.endsWith(".yml"));
+    totalPlayerFiles = files != null ? files.length : 0;
     participants = new String[files != null
         ? files.length
         : 0];
@@ -161,6 +169,8 @@ public class HighScoreManager {
   private void clearArrays() {
     synchronized (highScoreLock) {
       String nobody = NOBODY.toString();
+      skippedCount = 0;
+      processedCount = 0;
 
       for (int i = 0; i < 5; i++) {
         bestRatings[i] = 0.0;
@@ -199,30 +209,14 @@ public class HighScoreManager {
 
     for (String playerName : participants) {
       PlayerData data = playerDataManager.get(playerName);
-      if (data == null) {
+      if (data == null || (int) data.get("matches") == 0) {
+        skippedCount++;
         continue;
       }
 
-      int matches = (int) data.get("matches");
-      int wins = (int) data.get("wins");
-      int ties = (int) data.get("ties");
-      int goals = (int) data.get("goals");
-      int assists = (int) data.get("assists");
-      int ownGoals = (int) data.get("owngoals");
-      int bestWinStreak = (int) data.get("bestwinstreak");
+      processedCount++;
 
-      double multiplier = 1 - Math.pow(0.9, matches);
-      double goalBonus = matches > 0
-          ? (goals == matches
-          ? 1
-          : Math.min(1, 1 - multiplier * Math.pow(0.2, (double) goals / matches)))
-          : 0.5;
-      double addition = (matches > 0 && wins + ties > 0)
-          ? 8 * (1 / ((100 * matches) / (wins + 0.5 * ties) / 100)) - 4
-          : (matches > 0
-              ? -4
-              : 0);
-      double skillLevel = Math.min(5 + goalBonus + addition * multiplier, 10);
+      StatsHelper stats = new StatsHelper(data);
 
       UUID uuid = playerDataManager.getUUID(playerName);
       if (uuid == null) {
@@ -233,21 +227,21 @@ public class HighScoreManager {
       String cachedPrefixedName = fcManager.getPrefixedName(uuid);
 
       if (cachedPrefixedName != null) {
-        insertTop5(bestRatings, topSkillNames, skillLevel, cachedPrefixedName);
-        insertTop5(mostGoals, topGoalsNames, goals, cachedPrefixedName);
-        insertTop5(mostAssists, topAssistsNames, assists, cachedPrefixedName);
-        insertTop5(mostOwnGoals, topOwnGoalsNames, ownGoals, cachedPrefixedName);
-        insertTop5(mostWins, topWinsNames, wins, cachedPrefixedName);
-        insertTop5(longestStreak, topStreakNames, bestWinStreak, cachedPrefixedName);
+        insertTop5(bestRatings, topSkillNames, stats.getSkillLevel(), cachedPrefixedName);
+        insertTop5(mostGoals, topGoalsNames, stats.getGoals(), cachedPrefixedName);
+        insertTop5(mostAssists, topAssistsNames, stats.getAssists(), cachedPrefixedName);
+        insertTop5(mostOwnGoals, topOwnGoalsNames, stats.getOwnGoals(), cachedPrefixedName);
+        insertTop5(mostWins, topWinsNames, stats.getWins(), cachedPrefixedName);
+        insertTop5(longestStreak, topStreakNames, stats.getBestWinStreak(), cachedPrefixedName);
       } else {
         CompletableFuture<Void> playerFuture = utilities.getPrefixedName(uuid, playerName)
             .thenAccept(prefixedName -> {
-              insertTop5(bestRatings, topSkillNames, skillLevel, prefixedName);
-              insertTop5(mostGoals, topGoalsNames, goals, prefixedName);
-              insertTop5(mostAssists, topAssistsNames, assists, prefixedName);
-              insertTop5(mostOwnGoals, topOwnGoalsNames, ownGoals, prefixedName);
-              insertTop5(mostWins, topWinsNames, wins, prefixedName);
-              insertTop5(longestStreak, topStreakNames, bestWinStreak, prefixedName);
+              insertTop5(bestRatings, topSkillNames, stats.getSkillLevel(), prefixedName);
+              insertTop5(mostGoals, topGoalsNames, stats.getGoals(), prefixedName);
+              insertTop5(mostAssists, topAssistsNames, stats.getAssists(), prefixedName);
+              insertTop5(mostOwnGoals, topOwnGoalsNames, stats.getOwnGoals(), prefixedName);
+              insertTop5(mostWins, topWinsNames, stats.getWins(), prefixedName);
+              insertTop5(longestStreak, topStreakNames, stats.getBestWinStreak(), prefixedName);
             });
 
         nameFutures.add(playerFuture);

@@ -2,7 +2,6 @@ package io.github.divinerealms.footcube.tasks;
 
 import io.github.divinerealms.footcube.core.FCManager;
 import io.github.divinerealms.footcube.matchmaking.highscore.HighScoreManager;
-import java.io.File;
 import org.bukkit.Bukkit;
 
 public class HighScoresTask extends BaseTask {
@@ -35,16 +34,17 @@ public class HighScoresTask extends BaseTask {
       return;
     }
 
-    int totalPlayers = 0;
-    File playerFolder = new File(plugin.getDataFolder(), "players");
-    File[] files = playerFolder.listFiles((dir, name) -> name.endsWith(".yml"));
-    if (files != null) {
-      totalPlayers = files.length;
-    }
-
-    logger.info("&a✔ &2Started &d" + getTaskName() + " &2update (&e" + totalPlayers
-        + " &2players to process)");
+    long startTime = System.currentTimeMillis();
     highScoreManager.startUpdate();
-    logger.info("&a✔ &d" + getTaskName() + " &2update completed!");
+    long duration = System.currentTimeMillis() - startTime;
+
+    int totalPlayers = highScoreManager.getTotalPlayerFiles();
+    logger.info("&a✔ &2Started &d" + getTaskName() + " &2update (&e" + totalPlayers
+        + " &2total player files)");
+
+    int processedCount = highScoreManager.getProcessedCount();
+    int skippedCount = highScoreManager.getSkippedCount();
+    logger.info("&a✔ &d" + getTaskName() + " &2update completed in &e" + duration + "ms &afor &e"
+        + processedCount + " players (skipped " + skippedCount + ")");
   }
 }

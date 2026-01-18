@@ -56,7 +56,7 @@ public class ArenaManager {
       return;
     }
 
-    for (String type : new String[]{"2v2", "3v3", "4v4"}) {
+    for (String type : new String[]{"1v1", "2v2", "3v3", "4v4", "5v5"}) {
       int amount = config.getInt("arenas." + type + ".amount", 0);
       for (int i = 1; i <= amount; i++) {
         String bluePath = "arenas." + type + "." + i + ".blue.";
@@ -182,6 +182,7 @@ public class ArenaManager {
     logger.info("&a✔ &2Cleared all " + typeString + " arenas!");
   }
 
+  @SuppressWarnings("BooleanMethodIsAlwaysInverted")
   public boolean hasArenaForType(int matchType) {
     for (Arena arena : arenas) {
       if (arena.getType() == matchType) {

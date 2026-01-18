@@ -11,15 +11,15 @@ import lombok.Getter;
 public class TaskStats {
 
   private final double physicsAvgMs, touchCleanupAvgMs, playerUpdateAvgMs, particleTrailAvgMs,
-      cubeCleanerAvgMs, matchmakingAvgMs, cacheCleanupAvgMs, queueStatusAvgMs, highScoresAvgMs;
+      cubeCleanerAvgMs, matchmakingAvgMs, cacheCleanupAvgMs, queueStatusAvgMs;
 
   public double getTotalAverageMs() {
     return physicsAvgMs + touchCleanupAvgMs + playerUpdateAvgMs
         + particleTrailAvgMs + cubeCleanerAvgMs + matchmakingAvgMs
-        + cacheCleanupAvgMs + queueStatusAvgMs + highScoresAvgMs;
+        + cacheCleanupAvgMs + queueStatusAvgMs;
   }
 
   public double getAveragePerTask() {
-    return getTotalAverageMs() / 9;
+    return getTotalAverageMs() / 8;
   }
 }

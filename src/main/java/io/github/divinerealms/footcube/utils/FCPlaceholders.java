@@ -1,6 +1,8 @@
 package io.github.divinerealms.footcube.utils;
 
+import static io.github.divinerealms.footcube.matchmaking.util.MatchConstants.FIVE_V_FIVE;
 import static io.github.divinerealms.footcube.matchmaking.util.MatchConstants.FOUR_V_FOUR;
+import static io.github.divinerealms.footcube.matchmaking.util.MatchConstants.ONE_V_ONE;
 import static io.github.divinerealms.footcube.matchmaking.util.MatchConstants.THREE_V_THREE;
 import static io.github.divinerealms.footcube.matchmaking.util.MatchConstants.TWO_V_TWO;
 
@@ -10,6 +12,7 @@ import io.github.divinerealms.footcube.managers.PlayerDataManager;
 import io.github.divinerealms.footcube.matchmaking.Match;
 import io.github.divinerealms.footcube.matchmaking.MatchManager;
 import io.github.divinerealms.footcube.matchmaking.highscore.HighScoreManager;
+import io.github.divinerealms.footcube.matchmaking.player.StatsHelper;
 import java.util.Arrays;
 import java.util.Queue;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
@@ -66,7 +69,7 @@ public class FCPlaceholders extends PlaceholderExpansion {
 
     if (identifier.equals("active_lobbies_all")) {
       int count = 0;
-      for (int type : Arrays.asList(TWO_V_TWO, THREE_V_THREE, FOUR_V_FOUR)) {
+      for (int type : Arrays.asList(ONE_V_ONE, TWO_V_TWO, THREE_V_THREE, FOUR_V_FOUR, FIVE_V_FIVE)) {
         count += matchManager.countActiveLobbies(type);
       }
 
@@ -141,7 +144,7 @@ public class FCPlaceholders extends PlaceholderExpansion {
         return null;
       }
 
-      if (rank < 0 || rank > 2) {
+      if (rank < 0 || rank > 4) {
         return null;
       }
 
@@ -205,130 +208,33 @@ public class FCPlaceholders extends PlaceholderExpansion {
         return "---";
       }
 
-      int matches = (int) data.get("matches");
-      int wins = (int) data.get("wins");
-      int ties = (int) data.get("ties");
-      int losses = (int) data.get("losses");
-      int goals = (int) data.get("goals");
-      int ownGoals = (int) data.get("owngoals");
-      int assists = (int) data.get("assists");
-      int bestWinStreak = (int) data.get("bestwinstreak");
-
-      double winsPerMatch = matches > 0
-          ? (double) wins / matches
-          : 0;
-      double goalsPerMatch = matches > 0
-          ? (double) goals / matches
-          : 0;
-
-      double multiplier = 1.0 - Math.pow(0.9, matches);
-      double goalBonus = matches > 0
-          ? (goals == matches
-          ? 1.0
-          : Math.min(1.0, 1 - multiplier * Math.pow(0.2, (double) goals / matches)))
-          : 0.5;
-
-      double addition = 0.0;
-      if (matches > 0 && wins + ties > 0) {
-        addition = 8.0 * (1.0 / ((100.0 * matches) / (wins + 0.5 * ties) / 100.0)) - 4.0;
-      } else {
-        if (matches > 0) {
-          addition = -4.0;
-        }
-      }
-
-      double skillLevel = Math.min(5.0 + goalBonus + addition * multiplier, 10.0);
-
-      int rank = (int) (skillLevel * 2.0 - 0.5);
-      String rankName;
-      switch (rank) {
-        case 1:
-          rankName = "Nub";
-          break;
-        case 2:
-          rankName = "Luzer";
-          break;
-        case 3:
-          rankName = "Beba";
-          break;
-        case 4:
-          rankName = "Učenik";
-          break;
-        case 5:
-          rankName = "Loš";
-          break;
-        case 6:
-          rankName = ":(";
-          break;
-        case 7:
-          rankName = "Eh";
-          break;
-        case 8:
-          rankName = "Igrač";
-          break;
-        case 9:
-          rankName = "Ok";
-          break;
-        case 10:
-          rankName = "Prosečan";
-          break;
-        case 11:
-          rankName = "Dobar";
-          break;
-        case 12:
-          rankName = "Odličan";
-          break;
-        case 13:
-          rankName = "Kralj";
-          break;
-        case 14:
-          rankName = "Super";
-          break;
-        case 15:
-          rankName = "Pro";
-          break;
-        case 16:
-          rankName = "Maradona";
-          break;
-        case 17:
-          rankName = "Supermen";
-          break;
-        case 18:
-          rankName = "Bog";
-          break;
-        case 19:
-          rankName = "h4x0r";
-          break;
-        default:
-          rankName = "Nema";
-          break;
-      }
+      StatsHelper stats = new StatsHelper(data);
 
       switch (statKey) {
         case "matches":
-          return String.valueOf(matches);
+          return String.valueOf(stats.getMatches());
         case "wins":
-          return String.valueOf(wins);
+          return String.valueOf(stats.getWins());
         case "losses":
-          return String.valueOf(losses);
+          return String.valueOf(stats.getLosses());
         case "ties":
-          return String.valueOf(ties);
+          return String.valueOf(stats.getTies());
         case "winspermatch":
-          return String.format("%.2f", winsPerMatch);
+          return String.format("%.2f", stats.getWinsPerMatch());
         case "goals":
-          return String.valueOf(goals);
+          return String.valueOf(stats.getGoals());
         case "owngoals":
-          return String.valueOf(ownGoals);
+          return String.valueOf(stats.getOwnGoals());
         case "assists":
-          return String.valueOf(assists);
+          return String.valueOf(stats.getAssists());
         case "goalspermatch":
-          return String.format("%.2f", goalsPerMatch);
+          return String.format("%.2f", stats.getGoalsPerMatch());
         case "bestwinstreak":
-          return String.valueOf(bestWinStreak);
+          return String.valueOf(stats.getBestWinStreak());
         case "skill":
-          return String.format("%.2f", skillLevel);
+          return String.format("%.2f", stats.getSkillLevel());
         case "rank":
-          return rankName;
+          return stats.getRankName();
         default:
           return "---";
       }
