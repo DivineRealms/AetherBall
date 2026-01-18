@@ -69,7 +69,9 @@ public class PhysicsConstants {
 
   // --- Player / Location Offsets ---
   public static final double PLAYER_HEAD_LEVEL = 1.8;
+  public static final double PLAYER_HEIGHT_SCALE = 2.0;
   public static final double PLAYER_FOOT_LEVEL = 0;
+  public static final double VERTICAL_INTERACTION_OFFSET = 0.25;
 
   // --- Sound Defaults ---
   public static final double MIN_SOUND_POWER = 0.15;

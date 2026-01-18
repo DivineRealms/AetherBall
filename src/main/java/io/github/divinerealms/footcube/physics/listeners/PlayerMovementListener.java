@@ -1,7 +1,7 @@
 package io.github.divinerealms.footcube.physics.listeners;
 
 import static io.github.divinerealms.footcube.physics.PhysicsConstants.DEBUG_ON_MS;
-import static io.github.divinerealms.footcube.physics.PhysicsConstants.PLAYER_HEAD_LEVEL;
+import static io.github.divinerealms.footcube.physics.PhysicsConstants.PLAYER_HEIGHT_SCALE;
 import static io.github.divinerealms.footcube.utils.Permissions.PERM_HIT_DEBUG;
 
 import io.github.divinerealms.footcube.core.FCManager;
@@ -55,7 +55,7 @@ public class PlayerMovementListener implements Listener {
       double dx = Math.abs(to.getX() - from.getX());
       double dy = Math.abs(to.getY() - from.getY());
       double dz = Math.abs(to.getZ() - from.getZ());
-      double scaledDy = dy / PLAYER_HEAD_LEVEL;
+      double scaledDy = dy / PLAYER_HEIGHT_SCALE;
       double speed = Math.sqrt(dx * dx + scaledDy * scaledDy + dz * dz);
 
       // Record recent motion and mark player as active.

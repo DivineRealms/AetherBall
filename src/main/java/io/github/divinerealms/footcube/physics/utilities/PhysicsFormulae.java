@@ -6,6 +6,7 @@ import static io.github.divinerealms.footcube.physics.PhysicsConstants.DEBUG_ON_
 import static io.github.divinerealms.footcube.physics.PhysicsConstants.MAX_KP;
 import static io.github.divinerealms.footcube.physics.PhysicsConstants.RANDOM;
 import static io.github.divinerealms.footcube.physics.PhysicsConstants.SOFT_CAP_MIN_FACTOR;
+import static io.github.divinerealms.footcube.physics.PhysicsConstants.VERTICAL_INTERACTION_OFFSET;
 import static io.github.divinerealms.footcube.utils.Permissions.PERM_HIT_DEBUG;
 
 import io.github.divinerealms.footcube.utils.Logger;
@@ -48,9 +49,10 @@ public class PhysicsFormulae {
   public double getDistance(Location locA, Location locB) {
     long start = System.nanoTime();
     try {
-      Location locAnew = locA.clone().add(0, -1, 0);
+      Location locAnew = locA.clone().add(0, -BALL_TOUCH_Y_OFFSET, 0);
       double dx = Math.abs(locAnew.getX() - locB.getX());
-      double dy = Math.abs(locAnew.getY() - locB.getY() - 0.25) - 1.25;
+      double dy = Math.abs(locAnew.getY() - locB.getY() - VERTICAL_INTERACTION_OFFSET) - (
+          CUBE_HITBOX_ADJUSTMENT - VERTICAL_INTERACTION_OFFSET);
       if (dy < 0) {
         dy = 0;
       }
@@ -77,12 +79,14 @@ public class PhysicsFormulae {
   public double getDistanceSquared(Location locA, Location locB) {
     long start = System.nanoTime();
     try {
-      double dx = locA.getX() - locB.getX();
-      double dy = (locA.getY() - BALL_TOUCH_Y_OFFSET) - locB.getY() - CUBE_HITBOX_ADJUSTMENT;
+      Location locAnew = locA.clone().add(0, -BALL_TOUCH_Y_OFFSET, 0);
+      double dx = Math.abs(locAnew.getX() - locB.getX());
+      double dy = Math.abs(locAnew.getY() - locB.getY() - VERTICAL_INTERACTION_OFFSET) - (
+          CUBE_HITBOX_ADJUSTMENT - VERTICAL_INTERACTION_OFFSET);
       if (dy < 0) {
         dy = 0;
       }
-      double dz = locA.getZ() - locB.getZ();
+      double dz = Math.abs(locAnew.getZ() - locB.getZ());
 
       return dx * dx + dy * dy + dz * dz;
     } finally {

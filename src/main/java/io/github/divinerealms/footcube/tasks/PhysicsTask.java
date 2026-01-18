@@ -230,10 +230,10 @@ public class PhysicsTask extends BaseTask {
           Vector projectedNextPos = cubePos.clone().add(newVelocity);
 
           // Check if the cube's vertical position aligns with player's height.
-          boolean withinY = (cubePos.getY() < playerLocationY + PLAYER_HEAD_LEVEL
-              && cubePos.getY() > playerLocationY - PLAYER_FOOT_LEVEL) && (
-              projectedNextPos.getY() < playerLocationY + PLAYER_HEAD_LEVEL
-                  && projectedNextPos.getY() > playerLocationY - PLAYER_FOOT_LEVEL);
+          boolean withinY = (cubePos.getY() >= playerLocationY + PLAYER_FOOT_LEVEL
+              && cubePos.getY() <= playerLocationY + PLAYER_HEAD_LEVEL) && (
+              projectedNextPos.getY() >= playerLocationY + PLAYER_FOOT_LEVEL
+                  && projectedNextPos.getY() <= playerLocationY + PLAYER_HEAD_LEVEL);
 
           // If vertically aligned, check if the cube's path intersects player's collision radius.
           if (withinY
