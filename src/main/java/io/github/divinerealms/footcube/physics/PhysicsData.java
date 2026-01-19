@@ -1,14 +1,11 @@
 package io.github.divinerealms.footcube.physics;
 
-import io.github.divinerealms.footcube.physics.actions.CubeSoundAction;
 import io.github.divinerealms.footcube.physics.touch.CubeTouchInfo;
 import io.github.divinerealms.footcube.physics.touch.CubeTouchType;
 import java.util.Map;
-import java.util.Queue;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.Location;
@@ -30,7 +27,6 @@ public class PhysicsData {
 
   private final Map<UUID, Long> lastAction = new ConcurrentHashMap<>();
   private final Set<UUID> cubeHits = ConcurrentHashMap.newKeySet();
-  private final Queue<CubeSoundAction> soundQueue = new ConcurrentLinkedQueue<>();
   private final Map<UUID, Long> buttonCooldowns = new ConcurrentHashMap<>();
 
   private final Map<UUID, Location> previousCubeLocations = new ConcurrentHashMap<>();
@@ -48,7 +44,6 @@ public class PhysicsData {
     raised.clear();
     lastAction.clear();
     cubeHits.clear();
-    soundQueue.clear();
     buttonCooldowns.clear();
     previousCubeLocations.clear();
     tickRate = 0;

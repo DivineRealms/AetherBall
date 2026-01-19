@@ -2,6 +2,8 @@ package io.github.divinerealms.footcube.physics.listeners;
 
 import static io.github.divinerealms.footcube.physics.PhysicsConstants.CUBE_JUMP_RIGHT_CLICK;
 import static io.github.divinerealms.footcube.physics.PhysicsConstants.DEBUG_ON_MS;
+import static io.github.divinerealms.footcube.physics.PhysicsConstants.SOUND_PITCH;
+import static io.github.divinerealms.footcube.physics.PhysicsConstants.SOUND_VOLUME;
 import static io.github.divinerealms.footcube.utils.Permissions.PERM_HIT_DEBUG;
 
 import io.github.divinerealms.footcube.core.FCManager;
@@ -13,6 +15,7 @@ import io.github.divinerealms.footcube.utils.Logger;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Slime;
 import org.bukkit.event.EventHandler;
@@ -92,7 +95,7 @@ public class CubeTapListener implements Listener {
       fcManager.getMatchManager().kick(player);
 
       // Play feedback sound.
-      system.queueSound(cube.getLocation());
+      cube.getWorld().playSound(cube.getLocation(), Sound.SLIME_WALK, SOUND_VOLUME, SOUND_PITCH);
     } finally {
       long ms = (System.nanoTime() - start) / 1_000_000;
       if (ms > DEBUG_ON_MS) {

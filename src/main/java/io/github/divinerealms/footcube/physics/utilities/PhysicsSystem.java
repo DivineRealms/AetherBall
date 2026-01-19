@@ -17,30 +17,24 @@ import static io.github.divinerealms.footcube.physics.PhysicsConstants.DEBUG_ON_
 import static io.github.divinerealms.footcube.physics.PhysicsConstants.JUMP_POTION_AMPLIFIER;
 import static io.github.divinerealms.footcube.physics.PhysicsConstants.JUMP_POTION_DURATION;
 import static io.github.divinerealms.footcube.physics.PhysicsConstants.KICK_POWER_SPEED_MULTIPLIER;
-import static io.github.divinerealms.footcube.physics.PhysicsConstants.MAX_SOUND_QUEUE_SIZE;
 import static io.github.divinerealms.footcube.physics.PhysicsConstants.MIN_SPEED_FOR_DAMPENING;
 import static io.github.divinerealms.footcube.physics.PhysicsConstants.REGULAR_BASE_POWER;
 import static io.github.divinerealms.footcube.physics.PhysicsConstants.REGULAR_KICK_COOLDOWN;
 import static io.github.divinerealms.footcube.physics.PhysicsConstants.SLIME_SIZE;
-import static io.github.divinerealms.footcube.physics.PhysicsConstants.SOUND_PITCH;
-import static io.github.divinerealms.footcube.physics.PhysicsConstants.SOUND_VOLUME;
 import static io.github.divinerealms.footcube.physics.PhysicsConstants.SPAWN_COOLDOWN_MS;
 import static io.github.divinerealms.footcube.utils.Permissions.PERM_BYPASS_COOLDOWN;
 import static io.github.divinerealms.footcube.utils.Permissions.PERM_HIT_DEBUG;
 
 import io.github.divinerealms.footcube.managers.Utilities;
 import io.github.divinerealms.footcube.physics.PhysicsData;
-import io.github.divinerealms.footcube.physics.actions.CubeSoundAction;
 import io.github.divinerealms.footcube.physics.touch.CubeTouchInfo;
 import io.github.divinerealms.footcube.physics.touch.CubeTouchType;
 import io.github.divinerealms.footcube.utils.Logger;
 import java.lang.reflect.Field;
-import java.util.ArrayDeque;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Queue;
 import java.util.Set;
 import java.util.UUID;
 import java.util.logging.Level;
@@ -48,7 +42,6 @@ import net.minecraft.server.v1_8_R3.EntitySlime;
 import net.minecraft.server.v1_8_R3.PathfinderGoalSelector;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
-import org.bukkit.Sound;
 import org.bukkit.craftbukkit.v1_8_R3.entity.CraftSlime;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
@@ -73,44 +66,6 @@ public class PhysicsSystem {
     this.scheduler = scheduler;
     this.plugin = plugin;
     this.formulae = new PhysicsFormulae(logger);
-  }
-
-  /**
-   * Schedules the playback of queued sound events after physics updates. Ensures that multiple
-   * cubes can trigger sounds in a single tick efficiently.
-   */
-  public void scheduleSound() {
-    Queue<CubeSoundAction> queue = data.getSoundQueue();
-    if (queue.isEmpty()) {
-      return;
-    }
-
-    Queue<CubeSoundAction> toPlay = new ArrayDeque<>(queue);
-    queue.clear();
-
-    scheduler.runTask(plugin, () -> toPlay.forEach(action -> {
-      Location location;
-      Sound sound = action.getSound();
-      float volume = action.getVolume();
-      float pitch = action.getPitch();
-
-      if (action.isPlayerTargeted()) {
-        Player player = action.getPlayer();
-        if (player == null || !player.isOnline()) {
-          return;
-        }
-
-        location = player.getLocation();
-        player.playSound(location, sound, volume, pitch);
-      } else {
-        location = action.getLocation();
-        if (location == null) {
-          return;
-        }
-
-        location.getWorld().playSound(location, sound, volume, pitch);
-      }
-    }));
   }
 
   /**
@@ -139,58 +94,6 @@ public class PhysicsSystem {
         }
       }
     }, CUBE_REMOVAL_DELAY_TICKS);
-  }
-
-  /**
-   * Adds the specified location to the sound queue for further processing. If the location is not
-   * null, it creates a clone of the location and queues it in the sound queue.
-   *
-   * @param location The location to be added to the sound queue. Must not be null.
-   */
-  public void queueSound(Location location, Sound sound, float volume, float pitch) {
-    if (location == null || sound == null) {
-      return;
-    }
-
-    if (data.getSoundQueue().size() >= MAX_SOUND_QUEUE_SIZE) {
-      data.getSoundQueue().poll();
-    }
-
-    data.getSoundQueue().offer(new CubeSoundAction(location, null, sound, volume, pitch));
-  }
-
-  /**
-   * Adds a sound action to the sound queue for a specific player. This method queues the specified
-   * sound to be played at the player's location with the given volume and pitch. If the player or
-   * sound is null, the method exits without queuing any action.
-   *
-   * @param player The player at whose location the sound will be played. Must not be null.
-   * @param sound  The sound to be played. Must not be null.
-   * @param volume The volume level of the sound. A float value where higher values indicate louder
-   *               sounds.
-   * @param pitch  The pitch of the sound. A float value where higher values indicate a higher
-   *               pitch.
-   */
-  public void queueSound(Player player, Sound sound, float volume, float pitch) {
-    if (player == null || sound == null) {
-      return;
-    }
-
-    if (data.getSoundQueue().size() >= MAX_SOUND_QUEUE_SIZE) {
-      data.getSoundQueue().poll();
-    }
-
-    data.getSoundQueue().offer(new CubeSoundAction(null, player, sound, volume, pitch));
-  }
-
-  /**
-   * Adds the specified location to the sound queue for further processing. This method queues a
-   * sound at the given location using default sound type, volume, and pitch values.
-   *
-   * @param location The location where the sound will be queued. Must not be null.
-   */
-  public void queueSound(Location location) {
-    queueSound(location, Sound.SLIME_WALK, SOUND_VOLUME, SOUND_PITCH);
   }
 
   /**
@@ -363,8 +266,10 @@ public class PhysicsSystem {
 
       data.getSpeed().remove(uuid);
       data.getCharges().remove(uuid);
+      data.getLastTouches().remove(uuid);
       data.getLastAction().remove(uuid);
       data.getCubeHits().remove(uuid);
+      data.getButtonCooldowns().remove(uuid);
     } finally {
       long ms = (System.nanoTime() - start) / 1_000_000;
       if (ms > DEBUG_ON_MS) {

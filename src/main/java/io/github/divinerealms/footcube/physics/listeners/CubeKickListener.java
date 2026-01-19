@@ -128,13 +128,14 @@ public class CubeKickListener implements Listener {
       fcManager.getMatchManager().kick(player);
 
       // Sound effects.
-      system.queueSound(cube.getLocation(), Sound.SLIME_WALK, 0.75F, 1.0F);
+      cube.getWorld().playSound(cube.getLocation(), Sound.SLIME_WALK, 0.75F, SOUND_PITCH);
 
       // Schedule post-processing for player sound feedback and debug info.
       scheduler.runTask(plugin, () -> {
         PlayerSettings settings = fcManager.getPlayerSettings(player);
         if (settings != null && settings.isKickSoundEnabled()) {
-          system.queueSound(player, settings.getKickSound(), SOUND_VOLUME, SOUND_PITCH);
+          player.playSound(player.getLocation(), settings.getKickSound(), SOUND_VOLUME,
+              SOUND_PITCH);
         }
 
         if (data.isHitDebugEnabled()) {

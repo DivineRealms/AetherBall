@@ -17,6 +17,8 @@ import static io.github.divinerealms.footcube.physics.PhysicsConstants.PLAYER_FO
 import static io.github.divinerealms.footcube.physics.PhysicsConstants.PLAYER_HEAD_LEVEL;
 import static io.github.divinerealms.footcube.physics.PhysicsConstants.PLAYER_SPEED_TOUCH_DIVISOR;
 import static io.github.divinerealms.footcube.physics.PhysicsConstants.PROXIMITY_THRESHOLD_MULTIPLIER;
+import static io.github.divinerealms.footcube.physics.PhysicsConstants.SOUND_PITCH;
+import static io.github.divinerealms.footcube.physics.PhysicsConstants.SOUND_VOLUME;
 import static io.github.divinerealms.footcube.physics.PhysicsConstants.VECTOR_CHANGE_THRESHOLD;
 import static io.github.divinerealms.footcube.physics.PhysicsConstants.VERTICAL_BOUNCE_THRESHOLD;
 import static io.github.divinerealms.footcube.physics.PhysicsConstants.WALL_BOUNCE_FACTOR;
@@ -33,6 +35,7 @@ import java.util.UUID;
 import java.util.logging.Level;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Slime;
 import org.bukkit.util.Vector;
@@ -141,8 +144,7 @@ public class PhysicsTask extends BaseTask {
               cache.speed / PLAYER_SPEED_TOUCH_DIVISOR + previousSpeed / CUBE_SPEED_TOUCH_DIVISOR;
 
           // Directional push vector from player to cube.
-          Vector push = cache.direction.clone().multiply(impactPower);
-          newVelocity.add(push);
+          newVelocity.add(cache.direction.clone().multiply(impactPower));
 
           // Register the touch interaction with the organization system.
           matchManager.kick(player);
@@ -167,7 +169,7 @@ public class PhysicsTask extends BaseTask {
         }
       } else {
         // If cube wasn't recently kicked and velocity change is small, apply gradual air drag slowdown.
-        if (!wasMoved && !cube.isOnGround()
+        if (!wasMoved
             && Math.abs(previousVelocity.getX() - newVelocity.getX()) < VECTOR_CHANGE_THRESHOLD) {
           newVelocity.setX(previousVelocity.getX() * AIR_DRAG_FACTOR); // Apply air drag.
         }
@@ -182,7 +184,7 @@ public class PhysicsTask extends BaseTask {
         }
       } else {
         // If cube wasn't recently kicked and velocity change is small, apply gradual air drag slowdown.
-        if (!wasMoved && !cube.isOnGround()
+        if (!wasMoved
             && Math.abs(previousVelocity.getZ() - newVelocity.getZ()) < VECTOR_CHANGE_THRESHOLD) {
           newVelocity.setZ(previousVelocity.getZ() * AIR_DRAG_FACTOR); // Apply air drag.
         }
@@ -201,7 +203,7 @@ public class PhysicsTask extends BaseTask {
 
       // Queue impact sound effect if any significant collision occurred.
       if (playSound) {
-        system.queueSound(cubeLocation);
+        cube.getWorld().playSound(cubeLocation, Sound.SLIME_WALK, SOUND_VOLUME, SOUND_PITCH);
       }
 
       // --- Anti-clipping / Proximity Logic ---
@@ -282,7 +284,6 @@ public class PhysicsTask extends BaseTask {
     }
 
     // Finalize scheduled physics actions.
-    system.scheduleSound(); // Dispatch queued sound events to players.
     system.scheduleCubeRemoval(); // Safely remove dead or invalid cube entities.
   }
 
@@ -330,15 +331,11 @@ public class PhysicsTask extends BaseTask {
     final double distance;
     final Vector toPlayer;
 
-    PlayerInteraction(Player player, PlayerPhysicsCache cache, double distance,
-        Vector cubePos) {
+    PlayerInteraction(Player player, PlayerPhysicsCache cache, double distance, Vector cubePos) {
       this.player = player;
       this.cache = cache;
       this.distance = distance;
-      this.toPlayer = cache.location.toVector()
-          .subtract(cubePos)
-          .setY(0)
-          .normalize();
+      this.toPlayer = cache.location.toVector().subtract(cubePos).setY(0).normalize();
     }
   }
 

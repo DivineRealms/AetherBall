@@ -92,5 +92,4 @@ public class PhysicsConstants {
 
   // --- Utility ---
   public static final ThreadLocalRandom RANDOM = ThreadLocalRandom.current();
-  public static final int MAX_SOUND_QUEUE_SIZE = 200;
 }
