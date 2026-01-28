@@ -6,13 +6,9 @@ import static io.github.divinerealms.footcube.utils.Permissions.PERM_HIT_DEBUG;
 import io.github.divinerealms.footcube.configs.Settings;
 import io.github.divinerealms.footcube.core.FCManager;
 import io.github.divinerealms.footcube.physics.PhysicsData;
-import io.github.divinerealms.footcube.physics.touch.CubeTouchInfo;
-import io.github.divinerealms.footcube.physics.touch.CubeTouchType;
 import io.github.divinerealms.footcube.physics.utilities.PhysicsSystem;
 import io.github.divinerealms.footcube.utils.Logger;
-import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Slime;
@@ -57,23 +53,20 @@ public class CubeTapListener implements Listener {
 
       Slime cube = (Slime) event.getRightClicked();
       Player player = event.getPlayer();
-      UUID playerId = player.getUniqueId();
+      UUID cubeId = cube.getUniqueId();
 
       // Prevent AFK or unauthorized players from interacting.
       if (system.notAllowedToInteract(player)) {
         return;
       }
 
-      // Enforce cooldown.
-      Map<CubeTouchType, CubeTouchInfo> touches = data.getLastTouches().get(playerId);
-      if (touches != null && touches.containsKey(CubeTouchType.RISE)) {
-        CubeTouchInfo lastTouch = touches.get(CubeTouchType.RISE);
-        long elapsed = System.currentTimeMillis() - lastTouch.getTimestamp();
-
-        if (elapsed < CubeTouchType.RISE.getCooldown()) {
-          return; // Still on cooldown
+      // Enforce per-cube cooldown.
+      Long lastRiseTime = data.getRaised().get(cubeId);
+      if (lastRiseTime != null) {
+        long elapsed = System.currentTimeMillis() - lastRiseTime;
+        if (elapsed < Settings.KICK_COOLDOWN_RISE.asLong()) {
+          return; // Cube still on cooldown.
         }
-        // Cooldown expired, allow tap and update below.
       }
 
       // Calculate and apply vertical boost.
@@ -81,11 +74,7 @@ public class CubeTapListener implements Listener {
       double newY = Math.max(previousVelocity.getY(), CUBE_JUMP_RIGHT_CLICK);
       cube.setVelocity(previousVelocity.setY(newY));
 
-      // Mark player action to prevent spamming.
-      data.getLastTouches().computeIfAbsent(playerId, k -> new ConcurrentHashMap<>())
-          .put(CubeTouchType.RISE,
-              new CubeTouchInfo(System.currentTimeMillis(), CubeTouchType.RISE));
-
+      // Mark cube as raised.
       data.getRaised().put(cube.getUniqueId(), System.currentTimeMillis());
 
       // Record interaction.

@@ -1,13 +1,13 @@
 package io.github.divinerealms.footcube.utils;
 
 import io.github.divinerealms.footcube.configs.PlayerData;
+import io.github.divinerealms.footcube.configs.Settings;
 import io.github.divinerealms.footcube.core.FCManager;
 import io.github.divinerealms.footcube.managers.PlayerDataManager;
 import io.github.divinerealms.footcube.matchmaking.Match;
 import io.github.divinerealms.footcube.matchmaking.MatchManager;
 import io.github.divinerealms.footcube.matchmaking.highscore.HighScoreManager;
 import io.github.divinerealms.footcube.matchmaking.player.StatsHelper;
-import java.util.Arrays;
 import java.util.Queue;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import org.bukkit.entity.Player;
@@ -61,7 +61,7 @@ public class Placeholders extends PlaceholderExpansion {
 
     if (identifier.equals("active_lobbies_all")) {
       int count = 0;
-      for (int type : Arrays.asList(1, 2, 3, 4, 5)) {
+      for (int type : Settings.getEnabledMatchTypes()) {
         count += matchManager.countActiveLobbies(type);
       }
 
@@ -86,12 +86,12 @@ public class Placeholders extends PlaceholderExpansion {
 
       int playersInQueues = 0;
       if (matchManager.getData().getPlayerQueues() != null) {
-        for (Queue<Player> q : matchManager.getData().getPlayerQueues().values()) {
-          if (q == null) {
+        for (Queue<Player> queue : matchManager.getData().getPlayerQueues().values()) {
+          if (queue == null) {
             continue;
           }
 
-          playersInQueues += q.size();
+          playersInQueues += queue.size();
         }
       }
 

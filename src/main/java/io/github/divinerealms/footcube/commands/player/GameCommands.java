@@ -8,12 +8,15 @@ import static io.github.divinerealms.footcube.configs.Lang.LEAVE_LOSING;
 import static io.github.divinerealms.footcube.configs.Lang.LEAVE_NOT_INGAME;
 import static io.github.divinerealms.footcube.configs.Lang.LEAVE_QUEUE_ACTIONBAR;
 import static io.github.divinerealms.footcube.configs.Lang.LEFT;
+import static io.github.divinerealms.footcube.configs.Lang.MATCH_TYPE_UNAVAILABLE;
 import static io.github.divinerealms.footcube.configs.Lang.OR;
 import static io.github.divinerealms.footcube.configs.Lang.STATSSET_IS_NOT_A_NUMBER;
 import static io.github.divinerealms.footcube.configs.Lang.TAKEPLACE_AVAILABLE_ENTRY;
 import static io.github.divinerealms.footcube.configs.Lang.TAKEPLACE_AVAILABLE_HEADER;
 import static io.github.divinerealms.footcube.configs.Lang.TAKEPLACE_INGAME;
 import static io.github.divinerealms.footcube.configs.Lang.TAKEPLACE_NOPLACE;
+import static io.github.divinerealms.footcube.matchmaking.util.MatchUtils.isPlayerOnline;
+import static io.github.divinerealms.footcube.matchmaking.util.MatchUtils.shouldPreventAbuse;
 import static io.github.divinerealms.footcube.utils.Permissions.PERM_PLAY;
 
 import co.aikar.commands.BaseCommand;
@@ -26,9 +29,9 @@ import co.aikar.commands.annotation.Subcommand;
 import co.aikar.commands.annotation.Syntax;
 import io.github.divinerealms.footcube.configs.Settings;
 import io.github.divinerealms.footcube.core.FCManager;
+import io.github.divinerealms.footcube.managers.Utilities;
 import io.github.divinerealms.footcube.matchmaking.Match;
 import io.github.divinerealms.footcube.matchmaking.MatchManager;
-import io.github.divinerealms.footcube.matchmaking.MatchPhase;
 import io.github.divinerealms.footcube.matchmaking.arena.ArenaManager;
 import io.github.divinerealms.footcube.matchmaking.player.MatchPlayer;
 import io.github.divinerealms.footcube.matchmaking.player.TeamColor;
@@ -36,6 +39,7 @@ import io.github.divinerealms.footcube.matchmaking.team.TeamManager;
 import io.github.divinerealms.footcube.utils.Logger;
 import java.util.List;
 import java.util.Queue;
+import java.util.concurrent.TimeUnit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -133,7 +137,7 @@ public class GameCommands extends BaseCommand {
     if (matchOpt.isPresent()) {
       Match match = matchOpt.get();
 
-      if (match.getPhase() == MatchPhase.IN_PROGRESS) {
+      if (shouldPreventAbuse(match.getPhase())) {
         handleInProgressLeave(player, match);
       }
 
@@ -158,7 +162,7 @@ public class GameCommands extends BaseCommand {
       return;
     }
 
-    if (matchManager.getBanManager().isBanned(player)) {
+    if (fcManager.getBanManager().isBanned(player)) {
       return;
     }
 
@@ -228,8 +232,8 @@ public class GameCommands extends BaseCommand {
 
   private void joinQueue(Player player, int type) {
     if (!Settings.isMatchTypeEnabled(type)) {
-      logger.send(player, "&c&l✘ &cThis match type is not available!");
-      logger.send(player, "&7Available types: " + matchManager.getAvailableTypesString());
+      logger.send(player, MATCH_TYPE_UNAVAILABLE, Settings.getMatchTypeName(type),
+          matchManager.getAvailableTypesString());
       return;
     }
 
@@ -238,7 +242,7 @@ public class GameCommands extends BaseCommand {
       return;
     }
 
-    if (matchManager.getBanManager().isBanned(player)) {
+    if (fcManager.getBanManager().isBanned(player)) {
       return;
     }
 
@@ -258,7 +262,7 @@ public class GameCommands extends BaseCommand {
   private void handleInProgressLeave(Player player, Match match) {
     MatchPlayer matchPlayer = null;
     for (MatchPlayer mp : match.getPlayers()) {
-      if (mp != null && mp.getPlayer() != null && mp.getPlayer().equals(player)) {
+      if (isPlayerOnline(mp) && mp.getPlayer().equals(player)) {
         matchPlayer = mp;
         break;
       }
@@ -271,9 +275,13 @@ public class GameCommands extends BaseCommand {
           matchPlayer.getTeamColor() == TeamColor.RED ? match.getScoreBlue() : match.getScoreRed();
 
       if (playerScore < opponentScore) {
-        fcManager.getEconomy().withdrawPlayer(player, 200);
-        matchManager.getBanManager().banPlayer(player, 30 * 60 * 1000);
-        logger.send(player, LEAVE_LOSING);
+        double rageQuitPenalty = Settings.BAN_RAGEQUIT_PENALTY.asDouble();
+        long rageQuitBanDuration = Settings.getRageQuitBanDuration();
+        fcManager.getEconomy().withdrawPlayer(player, rageQuitPenalty);
+        fcManager.getBanManager().banPlayer(player, rageQuitBanDuration);
+        long secondsLeft = TimeUnit.MILLISECONDS.toSeconds(rageQuitBanDuration);
+        logger.send(player, LEAVE_LOSING, String.format("%.0f", rageQuitPenalty),
+            Utilities.formatTime(secondsLeft));
       }
     }
   }

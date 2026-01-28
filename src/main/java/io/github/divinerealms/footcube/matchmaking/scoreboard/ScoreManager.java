@@ -13,6 +13,7 @@ import static io.github.divinerealms.footcube.configs.Lang.SCOREBOARD_LINES_LOBB
 import static io.github.divinerealms.footcube.configs.Lang.SCOREBOARD_LINES_MATCH;
 import static io.github.divinerealms.footcube.configs.Lang.SCOREBOARD_LINES_RED_PLAYERS_ENTRY;
 import static io.github.divinerealms.footcube.configs.Lang.SCOREBOARD_LINES_WAITING_PLAYERS_ENTRY;
+import static io.github.divinerealms.footcube.matchmaking.util.MatchUtils.isPlayerOnline;
 
 import io.github.divinerealms.footcube.configs.Settings;
 import io.github.divinerealms.footcube.core.FCManager;
@@ -104,6 +105,7 @@ public class ScoreManager {
     if (tabAPI == null) {
       return;
     }
+
     Scoreboard scoreboard;
     List<String> lines;
 
@@ -111,12 +113,14 @@ public class ScoreManager {
       if (match.getLobbyScoreboard() == null) {
         createLobbyScoreboard(match);
       }
+
       scoreboard = match.getLobbyScoreboard();
       lines = Arrays.asList(buildLobbyScoreboard(match).split(System.lineSeparator()));
     } else {
       if (match.getMatchScoreboard() == null) {
         createMatchScoreboard(match);
       }
+
       scoreboard = match.getMatchScoreboard();
       lines = Arrays.asList(buildMatchScoreboard(match).split(System.lineSeparator()));
     }
@@ -141,12 +145,14 @@ public class ScoreManager {
   }
 
   public void showLobbyScoreboard(Match match, Player player) {
-    if (tabAPI == null || match == null || player == null || !player.isOnline()) {
+    if (tabAPI == null || match == null || !isPlayerOnline(player)) {
       return;
     }
+
     if (match.getLobbyScoreboard() == null) {
       createLobbyScoreboard(match);
     }
+
     TabPlayer tabPlayer = tabAPI.getPlayer(player.getUniqueId());
     if (tabPlayer != null) {
       manager.showScoreboard(tabPlayer, match.getLobbyScoreboard());
@@ -154,12 +160,14 @@ public class ScoreManager {
   }
 
   public void showMatchScoreboard(Match match, Player player) {
-    if (tabAPI == null || match == null || player == null || !player.isOnline()) {
+    if (tabAPI == null || match == null || !isPlayerOnline(player)) {
       return;
     }
+
     if (match.getMatchScoreboard() == null) {
       createMatchScoreboard(match);
     }
+
     TabPlayer tabPlayer = tabAPI.getPlayer(player.getUniqueId());
     if (tabPlayer != null) {
       manager.showScoreboard(tabPlayer, match.getMatchScoreboard());
@@ -167,13 +175,15 @@ public class ScoreManager {
   }
 
   public void removeScoreboard(Player player) {
-    if (tabAPI == null) {
+    if (tabAPI == null || !isPlayerOnline(player)) {
       return;
     }
+
     TabPlayer tabPlayer = tabAPI.getPlayer(player.getUniqueId());
     if (tabPlayer == null) {
       return;
     }
+
     manager.resetScoreboard(tabPlayer);
   }
 
@@ -184,16 +194,16 @@ public class ScoreManager {
 
     List<MatchPlayer> matchPlayers = match.getPlayers();
     if (matchPlayers != null) {
-      for (MatchPlayer mp : matchPlayers) {
-        if (mp != null && mp.getPlayer() != null) {
-          if (mp.getTeamColor() == TeamColor.RED) {
-            redPlayers.add(mp.getPlayer());
+      for (MatchPlayer matchPlayer : matchPlayers) {
+        if (isPlayerOnline(matchPlayer)) {
+          if (matchPlayer.getTeamColor() == TeamColor.RED) {
+            redPlayers.add(matchPlayer.getPlayer());
           } else {
-            if (mp.getTeamColor() == TeamColor.BLUE) {
-              bluePlayers.add(mp.getPlayer());
+            if (matchPlayer.getTeamColor() == TeamColor.BLUE) {
+              bluePlayers.add(matchPlayer.getPlayer());
             } else {
-              if (mp.getTeamColor() == null) {
-                waitingPlayers.add(mp.getPlayer());
+              if (matchPlayer.getTeamColor() == null) {
+                waitingPlayers.add(matchPlayer.getPlayer());
               }
             }
           }

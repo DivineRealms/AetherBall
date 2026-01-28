@@ -2,6 +2,7 @@ package io.github.divinerealms.footcube.utils;
 
 import static io.github.divinerealms.footcube.configs.Lang.PRACTICE_AREAS_EMPTY;
 
+import io.github.divinerealms.footcube.configs.Settings;
 import io.github.divinerealms.footcube.core.FCManager;
 import io.github.divinerealms.footcube.managers.ConfigManager;
 import io.github.divinerealms.footcube.physics.PhysicsData;
@@ -56,7 +57,7 @@ public class CubeCleaner {
         continue;
       }
 
-      practiceAreas.add(new PracticeArea(location, 100));
+      practiceAreas.add(new PracticeArea(location, Settings.PRACTICE_AREA_RADIUS.asDouble()));
     }
   }
 

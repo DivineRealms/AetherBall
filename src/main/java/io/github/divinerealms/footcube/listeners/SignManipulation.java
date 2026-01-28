@@ -175,7 +175,7 @@ public class SignManipulation implements Listener {
             }
           }
 
-          if (slimeCount < 10) {
+          if (slimeCount < Settings.CUBE_MAX_PER_AREA.asInt()) {
             system.spawnCube(playerLocation.add(new Vector(0.5, 0.5, 0.5)));
             system.setButtonCooldown(player);
             logger.send(player, CUBE_SPAWN);
@@ -230,11 +230,11 @@ public class SignManipulation implements Listener {
             return;
           }
 
-          if (matchManager.getBanManager().isBanned(player)) {
+          if (fcManager.getBanManager().isBanned(player)) {
             return;
           }
 
-          if (matchManager.getBanManager().isBanned(player)) {
+          if (fcManager.getBanManager().isBanned(player)) {
             return;
           }
 
@@ -295,7 +295,7 @@ public class SignManipulation implements Listener {
             }
           }
 
-          if (slimeCount < 10) {
+          if (slimeCount < Settings.CUBE_MAX_PER_AREA.asInt()) {
             system.spawnCube(player.getLocation().add(new Vector(0.5, 0.5, 0.5)));
             system.setButtonCooldown(player);
             logger.send(player, CUBE_SPAWN);

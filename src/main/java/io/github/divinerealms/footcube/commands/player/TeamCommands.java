@@ -16,6 +16,7 @@ import static io.github.divinerealms.footcube.configs.Lang.TEAM_NO_REQUEST;
 import static io.github.divinerealms.footcube.configs.Lang.TEAM_WANTS_TO_TEAM_OTHER;
 import static io.github.divinerealms.footcube.configs.Lang.TEAM_WANTS_TO_TEAM_SELF;
 import static io.github.divinerealms.footcube.configs.Lang.USAGE;
+import static io.github.divinerealms.footcube.matchmaking.util.MatchUtils.isPlayerOnline;
 import static io.github.divinerealms.footcube.utils.Permissions.PERM_PLAY;
 
 import co.aikar.commands.BaseCommand;
@@ -110,7 +111,7 @@ public class TeamCommands extends BaseCommand {
     Player target = teamManager.getInviter(player);
     String targetName = target != null && target.isOnline() ? target.getDisplayName() : "";
 
-    if (target == null || !target.isOnline()) {
+    if (!isPlayerOnline(target)) {
       logger.send(player, TEAM_NOT_ONLINE, targetName);
       return;
     }
@@ -142,7 +143,7 @@ public class TeamCommands extends BaseCommand {
     }
 
     Player target = teamManager.getInviter(player);
-    if (target != null && target.isOnline()) {
+    if (isPlayerOnline(target)) {
       logger.send(target, TEAM_DECLINE_OTHER, player.getDisplayName());
     }
 

@@ -61,7 +61,8 @@ public class HighScoreManager {
   private int skippedCount = 0;
   @Getter
   private int processedCount = 0;
-  private static int TOP_SCORES_SIZE = 5;
+  @Getter
+  private int topScoresSize;
 
   public HighScoreManager(FCManager fcManager) {
     this.fcManager = fcManager;
@@ -69,27 +70,27 @@ public class HighScoreManager {
     this.logger = fcManager.getLogger();
     this.utilities = fcManager.getUtilities();
     this.playerDataManager = fcManager.getDataManager();
-    TOP_SCORES_SIZE = Settings.HIGHSCORE_TOP_PLAYERS.asInt();
-    initializeArrays();
   }
 
-  private void initializeArrays() {
-    bestRatings = new double[TOP_SCORES_SIZE];
-    mostGoals = new int[TOP_SCORES_SIZE];
-    mostAssists = new int[TOP_SCORES_SIZE];
-    mostOwnGoals = new int[TOP_SCORES_SIZE];
-    mostWins = new int[TOP_SCORES_SIZE];
-    longestStreak = new int[TOP_SCORES_SIZE];
+  public void initializeArrays() {
+    topScoresSize = Settings.HIGHSCORE_TOP_PLAYERS.asInt();
+
+    bestRatings = new double[topScoresSize];
+    mostGoals = new int[topScoresSize];
+    mostAssists = new int[topScoresSize];
+    mostOwnGoals = new int[topScoresSize];
+    mostWins = new int[topScoresSize];
+    longestStreak = new int[topScoresSize];
 
     String nobody = NOBODY.toString();
-    topSkillNames = new String[TOP_SCORES_SIZE];
-    topGoalsNames = new String[TOP_SCORES_SIZE];
-    topAssistsNames = new String[TOP_SCORES_SIZE];
-    topOwnGoalsNames = new String[TOP_SCORES_SIZE];
-    topWinsNames = new String[TOP_SCORES_SIZE];
-    topStreakNames = new String[TOP_SCORES_SIZE];
+    topSkillNames = new String[topScoresSize];
+    topGoalsNames = new String[topScoresSize];
+    topAssistsNames = new String[topScoresSize];
+    topOwnGoalsNames = new String[topScoresSize];
+    topWinsNames = new String[topScoresSize];
+    topStreakNames = new String[topScoresSize];
 
-    for (int i = 0; i < TOP_SCORES_SIZE; i++) {
+    for (int i = 0; i < topScoresSize; i++) {
       topSkillNames[i] = nobody;
       topGoalsNames[i] = nobody;
       topAssistsNames[i] = nobody;
@@ -132,7 +133,7 @@ public class HighScoreManager {
   }
 
   private void showTopCategory(CommandSender sender, String[] names, double[] values) {
-    for (int i = 0; i < TOP_SCORES_SIZE; i++) {
+    for (int i = 0; i < topScoresSize; i++) {
       logger.send(sender, BEST_ENTRY,
           String.valueOf(i + 1),
           names[i],
@@ -142,7 +143,7 @@ public class HighScoreManager {
   }
 
   private void showTopCategory(CommandSender sender, String[] names, int[] values) {
-    for (int i = 0; i < TOP_SCORES_SIZE; i++) {
+    for (int i = 0; i < topScoresSize; i++) {
       logger.send(sender, BEST_ENTRY,
           String.valueOf(i + 1),
           names[i],
@@ -174,32 +175,32 @@ public class HighScoreManager {
       skippedCount = 0;
       processedCount = 0;
 
-      for (int i = 0; i < TOP_SCORES_SIZE; i++) {
+      for (int i = 0; i < topScoresSize; i++) {
         bestRatings[i] = 0.0;
         topSkillNames[i] = nobody;
       }
 
-      for (int i = 0; i < TOP_SCORES_SIZE; i++) {
+      for (int i = 0; i < topScoresSize; i++) {
         mostGoals[i] = 0;
         topGoalsNames[i] = nobody;
       }
 
-      for (int i = 0; i < TOP_SCORES_SIZE; i++) {
+      for (int i = 0; i < topScoresSize; i++) {
         mostAssists[i] = 0;
         topAssistsNames[i] = nobody;
       }
 
-      for (int i = 0; i < TOP_SCORES_SIZE; i++) {
+      for (int i = 0; i < topScoresSize; i++) {
         mostOwnGoals[i] = 0;
         topOwnGoalsNames[i] = nobody;
       }
 
-      for (int i = 0; i < TOP_SCORES_SIZE; i++) {
+      for (int i = 0; i < topScoresSize; i++) {
         mostWins[i] = 0;
         topWinsNames[i] = nobody;
       }
 
-      for (int i = 0; i < TOP_SCORES_SIZE; i++) {
+      for (int i = 0; i < topScoresSize; i++) {
         longestStreak[i] = 0;
         topStreakNames[i] = nobody;
       }
@@ -269,7 +270,7 @@ public class HighScoreManager {
   private void insertIntoArray(double[] array, String[] names, double value, String prefixedName) {
     synchronized (highScoreLock) {
       int existingIndex = -1;
-      for (int i = 0; i < TOP_SCORES_SIZE; i++) {
+      for (int i = 0; i < topScoresSize; i++) {
         if (names[i] != null && names[i].equals(prefixedName)) {
           existingIndex = i;
           break;
@@ -281,17 +282,17 @@ public class HighScoreManager {
       }
 
       if (existingIndex != -1) {
-        for (int j = existingIndex; j < TOP_SCORES_SIZE - 1; j++) {
+        for (int j = existingIndex; j < topScoresSize - 1; j++) {
           array[j] = array[j + 1];
           names[j] = names[j + 1];
         }
-        array[TOP_SCORES_SIZE - 1] = 0;
-        names[TOP_SCORES_SIZE - 1] = NOBODY.toString();
+        array[topScoresSize - 1] = 0;
+        names[topScoresSize - 1] = NOBODY.toString();
       }
 
-      for (int i = 0; i < TOP_SCORES_SIZE; i++) {
+      for (int i = 0; i < topScoresSize; i++) {
         if (value > array[i]) {
-          for (int j = TOP_SCORES_SIZE - 1; j > i; j--) {
+          for (int j = topScoresSize - 1; j > i; j--) {
             array[j] = array[j - 1];
             names[j] = names[j - 1];
           }
@@ -307,7 +308,7 @@ public class HighScoreManager {
   private void insertIntoArray(int[] array, String[] names, int value, String prefixedName) {
     synchronized (highScoreLock) {
       int existingIndex = -1;
-      for (int i = 0; i < TOP_SCORES_SIZE; i++) {
+      for (int i = 0; i < topScoresSize; i++) {
         if (names[i] != null && names[i].equals(prefixedName)) {
           existingIndex = i;
           break;
@@ -319,17 +320,17 @@ public class HighScoreManager {
       }
 
       if (existingIndex != -1) {
-        for (int j = existingIndex; j < TOP_SCORES_SIZE - 1; j++) {
+        for (int j = existingIndex; j < topScoresSize - 1; j++) {
           array[j] = array[j + 1];
           names[j] = names[j + 1];
         }
-        array[TOP_SCORES_SIZE - 1] = 0;
-        names[TOP_SCORES_SIZE - 1] = NOBODY.toString();
+        array[topScoresSize - 1] = 0;
+        names[topScoresSize - 1] = NOBODY.toString();
       }
 
-      for (int i = 0; i < TOP_SCORES_SIZE; i++) {
+      for (int i = 0; i < topScoresSize; i++) {
         if (value > array[i]) {
-          for (int j = TOP_SCORES_SIZE - 1; j > i; j--) {
+          for (int j = topScoresSize - 1; j > i; j--) {
             array[j] = array[j - 1];
             names[j] = names[j - 1];
           }

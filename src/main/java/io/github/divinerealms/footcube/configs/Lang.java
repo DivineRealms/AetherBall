@@ -81,6 +81,7 @@ public enum Lang {
   TEAM_ALREADY_IN_GAME("team.already-in-game", "&c{0} is already in a game"),
   TEAM_NOT_ONLINE("team.not-online", "&c{0} is not online"),
   TEAM_DISBANDED("team.disbanded", "&cYour team was disbanded because {0} left."),
+  TEAM_INVITE_EXPIRED("team.invite-expired", "{prefix}&cZahtev za tim je istekao."),
 
   TAKEPLACE_SUCCESS("takeplace.success", "&b[Trener] Zauzeli ste mesto u meču #{0}"),
   TAKEPLACE_INGAME("takeplace.already-ingame", "&cYou are already in a match"),
@@ -110,7 +111,7 @@ public enum Lang {
   LEAVE_NOT_INGAME("leave.not-ingame", "&cYou are not even in a match"),
   LEFT("leave.left", "{prefix}&aYou left the match."),
   LEAVE_LOSING("leave.losing",
-      "{prefix}&cYou left while losing! You were fined $200 and cannot join for 30 minutes."),
+      "{prefix}&cYou left while losing! You were fined ${0} and cannot join for {1} minutes."),
 
   UNDO("undo", "{prefix}&aUndo successful"),
 
@@ -194,6 +195,10 @@ public enum Lang {
           "&aThe match will continue in 10 seconds")),
   MATCH_SCORE_OWN_GOAL_ANNOUNCE("match.score-own-goal-announce",
       "{prefix}&6&lOWN GOAL! &a{0} scored a goal for the opposing team"),
+  MATCH_PREVENT_ABUSE("match.prevent-abuse",
+      "{prefix}&cZabranjena zloupotreba komandi tokom igre."),
+  MATCH_TYPE_UNAVAILABLE("match.type-unavailable",
+      "{prefix}&e{0} &cmečevi nisu dostupni. Dostupno: &a{1}"),
   LEAVE_QUEUE_ACTIONBAR("match.leave-queue-actionbar", "&cIzašli ste iz {0} queue..."),
   PLAYER_PLACEHOLDERS("match.player-placeholders", "%luckperms_prefix%%player_name%"),
 

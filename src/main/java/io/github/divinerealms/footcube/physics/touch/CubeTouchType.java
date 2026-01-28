@@ -5,7 +5,7 @@ import lombok.Getter;
 
 @Getter
 public enum CubeTouchType {
-  REGULAR_KICK, CHARGED_KICK, RISE;
+  REGULAR_KICK, CHARGED_KICK;
 
   /**
    * Gets the cooldown for this touch type from the config.
@@ -18,8 +18,6 @@ public enum CubeTouchType {
         return Settings.KICK_COOLDOWN_REGULAR.asLong();
       case CHARGED_KICK:
         return Settings.KICK_COOLDOWN_CHARGED.asLong();
-      case RISE:
-        return Settings.KICK_COOLDOWN_RISE.asLong();
       default:
         throw new IllegalStateException("Unknown touch type: " + this);
     }

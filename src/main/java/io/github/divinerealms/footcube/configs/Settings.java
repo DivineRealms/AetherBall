@@ -2,6 +2,7 @@ package io.github.divinerealms.footcube.configs;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import lombok.Getter;
 import org.bukkit.configuration.file.FileConfiguration;
 
@@ -22,7 +23,7 @@ public enum Settings {
   KICK_BASE_POWER_REGULAR("Physics.Kick_Base_Power.Regular", 0.65),
   KICK_BASE_POWER_CHARGED("Physics.Kick_Base_Power.Charged", 0.375),
   KICK_VERTICAL_BOOST("Physics.Kick_Vertical_Boost", 0.3),
-  AFK_THRESHOLD("Physics.AFK_Threshold", 60),
+  AFK_THRESHOLD("Physics.AFK_Threshold", 2),
 
   // ==================== MATCHMAKING - MATCH TYPES ====================
   MATCH_1V1_ENABLED("Matchmaking.Match_Types.1v1.Enabled", true),
@@ -97,9 +98,6 @@ public enum Settings {
   // ==================== PRACTICE AREA SETTINGS ====================
   PRACTICE_AREA_RADIUS("Practice_Areas.Radius", 100),
   PRACTICE_AREA_CLEANUP("Practice_Areas.Cleanup_Interval", 5),
-
-  // ==================== LOBBY SETTINGS ====================
-  LOBBY_WORLD("Lobby.World", "world"),
 
   // ==================== FEATURE TOGGLES ====================
   FEATURES_SIGNS("Features.Signs_Enabled", true);
@@ -234,27 +232,47 @@ public enum Settings {
     return types;
   }
 
-  public static long getCacheCleanupTicks() {
-    return 20L * 60L * CACHE_CLEANUP_INTERVAL.asInt();
+  public static long getCacheCleanupInterval() {
+    return TimeUnit.MINUTES.toSeconds(CACHE_CLEANUP_INTERVAL.asInt()) * 20L;
   }
 
-  public static long getHighScoreUpdateTicks() {
-    return 20L * 60L * HIGHSCORE_UPDATE_INTERVAL.asInt();
+  public static long getHighScoreUpdateInterval() {
+    return TimeUnit.MINUTES.toSeconds(HIGHSCORE_UPDATE_INTERVAL.asInt()) * 20L;
   }
 
   public static long getAFKThreshold() {
-    return 20L * 60L * AFK_THRESHOLD.asInt();
+    return TimeUnit.MINUTES.toSeconds(AFK_THRESHOLD.asLong()) * 20L;
   }
 
   public static long getSpawnCooldown() {
-    return 20L * CUBE_SPAWN_COOLDOWN.asInt();
+    return CUBE_SPAWN_COOLDOWN.asLong() * 20L;
   }
 
-  public static long getTakePlaceAnnouncement() {
-    return 20L * TAKE_PLACE_ANNOUNCEMENT.asInt();
+  public static long getTakePlaceAnnouncementInterval() {
+    return TimeUnit.SECONDS.toSeconds(TAKE_PLACE_ANNOUNCEMENT.asLong()) * 20L;
   }
 
-  public static long getPracticeAreaCleanupTicks() {
-    return 20L * 60L * PRACTICE_AREA_CLEANUP.asInt();
+  public static long getPracticeAreaCleanupInterval() {
+    return TimeUnit.MINUTES.toSeconds(PRACTICE_AREA_CLEANUP.asLong()) * 20L;
+  }
+
+  public static long getTeamExpiry() {
+    return TimeUnit.MINUTES.toSeconds(TEAM_INVITE_EXPIRY.asLong()) * 20L;
+  }
+
+  public static long getPrefixExpiry() {
+    return TimeUnit.MINUTES.toSeconds(CACHE_PREFIX_EXPIRY.asLong()) * 20L;
+  }
+
+  public static long getAutoSaveInterval() {
+    return TimeUnit.MINUTES.toSeconds(PLAYER_DATA_AUTO_SAVE.asLong()) * 20L;
+  }
+
+  public static long getRageQuitBanDuration() {
+    return TimeUnit.MINUTES.toMillis(BAN_RAGEQUIT_DURATION.asLong());
+  }
+
+  public static long getDefaultBanDuration() {
+    return TimeUnit.MINUTES.toMillis(BAN_DEFAULT_DURATION.asLong());
   }
 }

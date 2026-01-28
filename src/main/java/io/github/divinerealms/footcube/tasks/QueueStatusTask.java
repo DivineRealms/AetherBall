@@ -3,6 +3,7 @@ package io.github.divinerealms.footcube.tasks;
 import static io.github.divinerealms.footcube.configs.Lang.MATCHES_LIST_LOBBY;
 import static io.github.divinerealms.footcube.configs.Lang.MATCHES_LIST_WAITING;
 import static io.github.divinerealms.footcube.configs.Lang.QUEUE_ACTIONBAR;
+import static io.github.divinerealms.footcube.matchmaking.util.MatchUtils.isPlayerOnline;
 
 import io.github.divinerealms.footcube.configs.Settings;
 import io.github.divinerealms.footcube.core.FCManager;
@@ -47,14 +48,12 @@ public class QueueStatusTask extends BaseTask {
           ? "&a"
           : "&e";
 
-      for (MatchPlayer mp : match.getPlayers()) {
-        if (mp == null) {
+      for (MatchPlayer matchPlayer : match.getPlayers()) {
+        if (!isPlayerOnline(matchPlayer)) {
           continue;
         }
-        Player player = mp.getPlayer();
-        if (player == null || !player.isOnline()) {
-          continue;
-        }
+
+        Player player = matchPlayer.getPlayer();
         logger.sendActionBar(player, QUEUE_ACTIONBAR,
             MATCHES_LIST_LOBBY.replace(
                 matchTypeString, String.valueOf(match.getArena().getId())

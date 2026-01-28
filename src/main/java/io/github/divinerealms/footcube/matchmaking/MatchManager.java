@@ -22,6 +22,7 @@ import static io.github.divinerealms.footcube.configs.Lang.TEAMCHAT_BLUE;
 import static io.github.divinerealms.footcube.configs.Lang.TEAMCHAT_RED;
 import static io.github.divinerealms.footcube.matchmaking.util.MatchUtils.clearPlayer;
 import static io.github.divinerealms.footcube.matchmaking.util.MatchUtils.giveArmor;
+import static io.github.divinerealms.footcube.matchmaking.util.MatchUtils.isPlayerOnline;
 
 import io.github.divinerealms.footcube.configs.PlayerData;
 import io.github.divinerealms.footcube.configs.Settings;
@@ -77,26 +78,17 @@ public class MatchManager {
   }
 
   public synchronized void joinQueue(Player player, int matchType) {
-    if (!Settings.isMatchTypeEnabled(matchType)) {
-      logger.send(player, "&c&l✘ &cThis match type is not available!");
-      logger.send(player, "&7Available types: " + getAvailableTypesString());
-      return;
-    }
-
-    if (banManager.isBanned(player)) {
-      return;
-    }
-
+    String matchTypeString = Settings.getMatchTypeName(matchType);
     Team team = teamManager.getTeam(player);
     List<Player> playersToQueue =
-        (team != null) ? new ArrayList<>(team.getMembers()) : Collections.singletonList(player);
-    String matchTypeString = Settings.getMatchTypeName(matchType);
+        team != null ? new ArrayList<>(team.getMembers()) : Collections.singletonList(player);
 
-    for (Player p : playersToQueue) {
-      if (p == null || !p.isOnline()) {
+    for (Player player1 : playersToQueue) {
+      if (!isPlayerOnline(player1)) {
         continue;
       }
-      if (getMatch(p).isPresent() || system.isInAnyQueue(p)) {
+
+      if (getMatch(player1).isPresent() || system.isInAnyQueue(player1)) {
         logger.send(player, JOIN_ALREADYINGAME);
         return;
       }
@@ -107,11 +99,12 @@ public class MatchManager {
       if (match.getPhase() == MatchPhase.LOBBY && match.getArena() != null
           && match.getArena().getType() == matchType) {
         int nullCount = 0;
-        for (MatchPlayer mp : match.getPlayers()) {
-          if (mp == null) {
+        for (MatchPlayer matchPlayer : match.getPlayers()) {
+          if (!isPlayerOnline(matchPlayer)) {
             nullCount++;
           }
         }
+
         if (nullCount >= playersToQueue.size()) {
           existingLobby = match;
           break;
@@ -119,34 +112,38 @@ public class MatchManager {
       }
     }
 
-    for (Player p : playersToQueue) {
-      if (p == null || !p.isOnline()) {
+    for (Player player1 : playersToQueue) {
+      if (!isPlayerOnline(player1)) {
         continue;
       }
+
       for (Queue<Player> otherQueue : data.getPlayerQueues().values()) {
-        otherQueue.remove(p);
+        otherQueue.remove(player1);
       }
-      logger.send(p, JOIN_SUCCESS, matchTypeString);
-      p.setLevel(0);
+
+      logger.send(player1, JOIN_SUCCESS, matchTypeString);
+      player1.setLevel(0);
     }
 
     if (existingLobby != null) {
-      for (Player p : playersToQueue) {
+      for (Player player1 : playersToQueue) {
         for (int i = 0; i < existingLobby.getPlayers().size(); i++) {
           if (existingLobby.getPlayers().get(i) == null) {
-            existingLobby.getPlayers().set(i, new MatchPlayer(p, null));
-            scoreboardManager.showLobbyScoreboard(existingLobby, p);
+            existingLobby.getPlayers().set(i, new MatchPlayer(player1, null));
+            scoreboardManager.showLobbyScoreboard(existingLobby, player1);
             break;
           }
         }
       }
+
       scoreboardManager.updateScoreboard(existingLobby);
     } else {
       Queue<Player> queue = data.getPlayerQueues()
           .computeIfAbsent(matchType, k -> new ConcurrentLinkedQueue<>());
-      for (Player p : playersToQueue) {
-        if (p != null && p.isOnline()) {
-          queue.add(p);
+
+      for (Player player1 : playersToQueue) {
+        if (isPlayerOnline(player1)) {
+          queue.add(player1);
         }
       }
     }
@@ -154,20 +151,18 @@ public class MatchManager {
     system.processQueues();
   }
 
-  /**
-   * Gets a formatted string of available match types for display.
-   */
   public String getAvailableTypesString() {
     List<Integer> types = Settings.getEnabledMatchTypes();
-    StringBuilder sb = new StringBuilder("&e");
+    StringBuilder stringBuilder = new StringBuilder("&e");
     for (int i = 0; i < types.size(); i++) {
       int type = types.get(i);
-      sb.append(Settings.getMatchTypeName(type));
+      stringBuilder.append(Settings.getMatchTypeName(type));
       if (i < types.size() - 1) {
-        sb.append("&7, &e");
+        stringBuilder.append("&7, &e");
       }
     }
-    return sb.toString();
+
+    return stringBuilder.toString();
   }
 
   public synchronized void leaveQueue(Player player, int matchType) {
@@ -176,6 +171,7 @@ public class MatchManager {
       queue.remove(player);
       player.setLevel(0);
     }
+
     leaveMatch(player);
   }
 
@@ -199,20 +195,21 @@ public class MatchManager {
     }
 
     List<MatchPlayer> playersInLobby = new ArrayList<>();
-    for (MatchPlayer mp : allPlayers) {
-      if (mp != null) {
-        playersInLobby.add(mp);
+    for (MatchPlayer matchPlayer : allPlayers) {
+      if (isPlayerOnline(matchPlayer)) {
+        playersInLobby.add(matchPlayer);
       }
     }
 
     if (playersInLobby.size() == 2) {
-      MatchPlayer p1 = playersInLobby.get(0), p2 = playersInLobby.get(1);
+      MatchPlayer player1 = playersInLobby.get(0);
+      MatchPlayer player2 = playersInLobby.get(1);
 
-      p1.setTeamColor(TeamColor.RED);
-      p2.setTeamColor(TeamColor.BLUE);
+      player1.setTeamColor(TeamColor.RED);
+      player2.setTeamColor(TeamColor.BLUE);
 
       targetMatch.getPlayers().clear();
-      targetMatch.getPlayers().addAll(Arrays.asList(p1, p2));
+      targetMatch.getPlayers().addAll(Arrays.asList(player1, player2));
 
       targetMatch.setPhase(MatchPhase.STARTING);
       targetMatch.setCountdown(15);
@@ -229,28 +226,30 @@ public class MatchManager {
     List<MatchPlayer> soloPlayers = new ArrayList<>();
 
     Team foundTeam = null;
-    for (MatchPlayer mp : playersInLobby) {
-      if (mp == null || mp.getPlayer() == null) {
+    for (MatchPlayer matchPlayer : playersInLobby) {
+      if (!isPlayerOnline(matchPlayer)) {
         continue;
       }
-      Team t = teamManager.getTeam(mp.getPlayer());
-      if (t != null) {
-        foundTeam = t;
+
+      Team team = teamManager.getTeam(matchPlayer.getPlayer());
+      if (team != null) {
+        foundTeam = team;
         break;
       }
     }
 
     if (foundTeam != null) {
       List<Player> teamMembers = foundTeam.getMembers();
-      for (MatchPlayer mp : playersInLobby) {
-        if (mp == null) {
+      for (MatchPlayer matchPlayer : playersInLobby) {
+        if (!isPlayerOnline(matchPlayer)) {
           continue;
         }
-        Player p = mp.getPlayer();
-        if (p != null && teamMembers != null && teamMembers.contains(p)) {
-          finalPlayerLineup.add(mp);
+
+        Player player1 = matchPlayer.getPlayer();
+        if (teamMembers != null && teamMembers.contains(player1)) {
+          finalPlayerLineup.add(matchPlayer);
         } else {
-          soloPlayers.add(mp);
+          soloPlayers.add(matchPlayer);
         }
       }
       teamManager.disbandTeam(foundTeam);
@@ -269,7 +268,7 @@ public class MatchManager {
 
     for (int i = 0; i < requiredPlayers; i++) {
       MatchPlayer matchPlayer = targetMatch.getPlayers().get(i);
-      if (matchPlayer != null) {
+      if (isPlayerOnline(matchPlayer)) {
         matchPlayer.setTeamColor(i < arenaSize ? TeamColor.RED : TeamColor.BLUE);
       }
     }
@@ -283,7 +282,7 @@ public class MatchManager {
   }
 
   public Optional<Match> getMatch(Player player) {
-    if (player == null || data.getMatches() == null) {
+    if (!isPlayerOnline(player) || data.getMatches() == null) {
       return Optional.empty();
     }
 
@@ -291,17 +290,19 @@ public class MatchManager {
       if (match == null) {
         continue;
       }
+
       List<MatchPlayer> matchPlayers = match.getPlayers();
       if (matchPlayers == null) {
         continue;
       }
 
-      for (MatchPlayer mp : matchPlayers) {
-        if (mp == null) {
+      for (MatchPlayer matchPlayer : matchPlayers) {
+        if (!isPlayerOnline(matchPlayer)) {
           continue;
         }
-        Player p = mp.getPlayer();
-        if (p != null && p.equals(player)) {
+
+        Player player1 = matchPlayer.getPlayer();
+        if (player1.equals(player)) {
           return Optional.of(match);
         }
       }
@@ -316,9 +317,11 @@ public class MatchManager {
         if (match.getPhase() != MatchPhase.LOBBY) {
           Location lobby = (Location) fcManager.getConfigManager().getConfig("config.yml")
               .get("lobby");
+
           if (lobby != null) {
             player.teleport(lobby);
           }
+
           clearPlayer(player);
         }
         scoreboardManager.removeScoreboard(player);
@@ -328,8 +331,7 @@ public class MatchManager {
       int playerIndex = -1;
       for (int i = 0; i < match.getPlayers().size(); i++) {
         MatchPlayer matchPlayer = match.getPlayers().get(i);
-        if (matchPlayer != null && matchPlayer.getPlayer() != null && matchPlayer.getPlayer()
-            .equals(player)) {
+        if (isPlayerOnline(matchPlayer) && matchPlayer.getPlayer().equals(player)) {
           playerIndex = i;
           break;
         }
@@ -340,8 +342,8 @@ public class MatchManager {
       }
 
       boolean allNull = true;
-      for (MatchPlayer mp : match.getPlayers()) {
-        if (mp != null) {
+      for (MatchPlayer matchPlayer : match.getPlayers()) {
+        if (isPlayerOnline(matchPlayer)) {
           allNull = false;
           break;
         }
@@ -353,15 +355,18 @@ public class MatchManager {
         if (match.getPhase() != MatchPhase.LOBBY && !data.getOpenMatches().contains(match)) {
           data.getOpenMatches().add(match);
         }
+
         scoreboardManager.updateScoreboard(match);
       }
 
       if (match.getPhase() != MatchPhase.LOBBY) {
         Location lobby = (Location) fcManager.getConfigManager().getConfig("config.yml")
             .get("lobby");
+
         if (lobby != null) {
           player.teleport(lobby);
         }
+
         clearPlayer(player);
       }
 
@@ -375,12 +380,13 @@ public class MatchManager {
     Optional<Match> matchOpt = Optional.empty();
     List<Match> openMatches = data.getOpenMatches();
     if (openMatches != null) {
-      for (Match m : openMatches) {
-        if (m == null || m.getArena() == null) {
+      for (Match match : openMatches) {
+        if (match == null || match.getArena() == null) {
           continue;
         }
-        if (m.getArena().getId() == matchId) {
-          matchOpt = Optional.of(m);
+
+        if (match.getArena().getId() == matchId) {
+          matchOpt = Optional.of(match);
           break;
         }
       }
@@ -395,15 +401,16 @@ public class MatchManager {
     long redTeamCount = 0, blueTeamCount = 0;
     List<MatchPlayer> players = match.getPlayers();
     if (players != null) {
-      for (MatchPlayer mp : players) {
-        if (mp == null) {
+      for (MatchPlayer matchPlayer : players) {
+        if (!isPlayerOnline(matchPlayer)) {
           continue;
         }
-        TeamColor tc = mp.getTeamColor();
-        if (tc == TeamColor.RED) {
+
+        TeamColor teamColor = matchPlayer.getTeamColor();
+        if (teamColor == TeamColor.RED) {
           redTeamCount++;
         } else {
-          if (tc == TeamColor.BLUE) {
+          if (teamColor == TeamColor.BLUE) {
             blueTeamCount++;
           }
         }
@@ -442,12 +449,13 @@ public class MatchManager {
       scoreboardManager.updateScoreboard(match);
 
       boolean hasNull = false;
-      for (MatchPlayer mp : match.getPlayers()) {
-        if (mp == null) {
+      for (MatchPlayer matchPlayer : match.getPlayers()) {
+        if (!isPlayerOnline(matchPlayer)) {
           hasNull = true;
           break;
         }
       }
+
       if (!hasNull) {
         data.getOpenMatches().remove(match);
       }
@@ -474,15 +482,11 @@ public class MatchManager {
     boolean shouldCount = Settings.shouldCountStats(match.getArena().getType());
 
     for (MatchPlayer matchPlayer : match.getPlayers()) {
-      if (matchPlayer == null) {
+      if (!isPlayerOnline(matchPlayer)) {
         continue;
       }
 
       Player player = matchPlayer.getPlayer();
-      if (player == null || !player.isOnline()) {
-        continue;
-      }
-
       if (match.getPhase() == MatchPhase.ENDED) {
         PlayerData data = fcManager.getDataManager().get(player);
 
@@ -569,6 +573,7 @@ public class MatchManager {
     if (match.getCube() != null) {
       match.getCube().setHealth(0);
     }
+
     match.setPhase(MatchPhase.ENDED);
     data.getMatches().remove(match);
     data.getOpenMatches().remove(match);
@@ -591,6 +596,7 @@ public class MatchManager {
       if (match == null) {
         continue;
       }
+
       try {
         system.updateMatch(match);
       } catch (Exception exception) {
@@ -610,27 +616,26 @@ public class MatchManager {
   }
 
   public void kick(Player player) {
-    Optional<Match> opt = getMatch(player);
-    if (opt.isEmpty()) {
+    Optional<Match> matchOpt = getMatch(player);
+    if (matchOpt.isEmpty()) {
       return;
     }
-    Match match = opt.get();
+
+    Match match = matchOpt.get();
     if (match.getPlayers() == null) {
       return;
     }
 
-    for (MatchPlayer mp : match.getPlayers()) {
-      if (mp == null) {
+    for (MatchPlayer matchPlayer : match.getPlayers()) {
+      if (!isPlayerOnline(matchPlayer)) {
         continue;
       }
-      Player p = mp.getPlayer();
-      if (p == null) {
-        continue;
-      }
-      if (p.equals(player)) {
-        if (match.getLastTouch() != mp) {
+
+      Player player1 = matchPlayer.getPlayer();
+      if (player1.equals(player)) {
+        if (match.getLastTouch() != matchPlayer) {
           match.setSecondLastTouch(match.getLastTouch());
-          match.setLastTouch(mp);
+          match.setLastTouch(matchPlayer);
         }
         break;
       }
@@ -642,13 +647,16 @@ public class MatchManager {
     if (data.getMatches() == null) {
       return 0;
     }
+
     for (Match match : data.getMatches()) {
       if (match == null) {
         continue;
       }
+
       if (match.getArena() == null) {
         continue;
       }
+
       int type = match.getArena().getType();
       if (type == matchType) {
         MatchPhase phase = match.getPhase();
@@ -665,13 +673,16 @@ public class MatchManager {
     if (data.getMatches() == null) {
       return 0;
     }
+
     for (Match match : data.getMatches()) {
       if (match == null || match.getArena() == null) {
         continue;
       }
+
       if (match.getArena().getType() != matchType) {
         continue;
       }
+
       List<MatchPlayer> players = match.getPlayers();
       total += (players == null) ? 0 : players.size();
     }
@@ -687,29 +698,32 @@ public class MatchManager {
     if (data.getMatches() == null) {
       return "";
     }
+
     boolean first = true;
     for (Match match : data.getMatches()) {
       if (match == null || match.getArena() == null) {
         continue;
       }
+
       if (match.getArena().getType() != matchType) {
         continue;
       }
+
       List<MatchPlayer> players = match.getPlayers();
       if (players == null) {
         continue;
       }
+
       for (MatchPlayer matchPlayer : players) {
-        if (matchPlayer == null) {
+        if (!isPlayerOnline(matchPlayer)) {
           continue;
         }
+
         Player player = matchPlayer.getPlayer();
-        if (player == null) {
-          continue;
-        }
         if (!first) {
           stringBuilder.append(", ");
         }
+
         stringBuilder.append(player.getName());
         first = false;
       }
@@ -720,9 +734,9 @@ public class MatchManager {
   public void forceLeaveAllPlayers() {
     Map<Integer, Queue<Player>> queues = data.getPlayerQueues();
     if (queues != null) {
-      for (Queue<Player> q : queues.values()) {
-        if (q != null) {
-          q.clear();
+      for (Queue<Player> queue : queues.values()) {
+        if (queue != null) {
+          queue.clear();
         }
       }
     }
@@ -730,11 +744,12 @@ public class MatchManager {
     List<Match> matches = data.getMatches();
     if (matches != null) {
       List<Match> snapshot = new ArrayList<>(matches);
-      for (Match m : snapshot) {
-        if (m == null) {
+      for (Match match : snapshot) {
+        if (match == null) {
           continue;
         }
-        endMatch(m);
+
+        endMatch(match);
       }
     }
   }
@@ -742,9 +757,9 @@ public class MatchManager {
   public void clearLobbiesAndQueues() {
     Map<Integer, Queue<Player>> queues = data.getPlayerQueues();
     if (queues != null) {
-      for (Queue<Player> q : queues.values()) {
-        if (q != null) {
-          q.clear();
+      for (Queue<Player> queue : queues.values()) {
+        if (queue != null) {
+          queue.clear();
         }
       }
     }
@@ -753,12 +768,14 @@ public class MatchManager {
     if (matches == null) {
       return;
     }
+
     List<Match> snapshot = new ArrayList<>(matches);
 
     for (Match match : snapshot) {
       if (match == null) {
         continue;
       }
+
       MatchPhase phase = match.getPhase();
       if (phase != MatchPhase.LOBBY && phase != MatchPhase.STARTING) {
         continue;
@@ -766,17 +783,16 @@ public class MatchManager {
 
       List<MatchPlayer> players = match.getPlayers();
       if (players != null) {
-        for (MatchPlayer mp : new ArrayList<>(players)) {
-          if (mp == null) {
+        for (MatchPlayer matchPlayer : new ArrayList<>(players)) {
+          if (!isPlayerOnline(matchPlayer)) {
             continue;
           }
-          Player p = mp.getPlayer();
-          if (p == null) {
-            continue;
-          }
-          clearPlayer(p);
-          scoreboardManager.removeScoreboard(p);
-          logger.send(p, MATCHMAN_FORCE_END, Settings.getMatchTypeName(match.getArena().getType()));
+
+          Player player = matchPlayer.getPlayer();
+          clearPlayer(player);
+          scoreboardManager.removeScoreboard(player);
+          logger.send(player, MATCHMAN_FORCE_END,
+              Settings.getMatchTypeName(match.getArena().getType()));
         }
       }
 
@@ -788,6 +804,7 @@ public class MatchManager {
     if (scoreboardManager == null) {
       return;
     }
+
     List<Match> matches = data.getMatches();
     if (matches == null) {
       return;
@@ -797,9 +814,11 @@ public class MatchManager {
       if (match == null) {
         continue;
       }
+
       if (match.getPhase() == MatchPhase.ENDED) {
         continue;
       }
+
       if (match.getPhase() == MatchPhase.LOBBY || match.getPhase() == MatchPhase.STARTING) {
         scoreboardManager.createLobbyScoreboard(match);
       } else {
@@ -816,31 +835,32 @@ public class MatchManager {
     }
 
     Match match = matchOpt.get();
-    MatchPlayer senderMP = null;
+    MatchPlayer senderMatchPlayer = null;
     List<MatchPlayer> matchPlayers = match.getPlayers();
     if (matchPlayers != null) {
-      for (MatchPlayer mp : matchPlayers) {
-        if (mp == null) {
+      for (MatchPlayer matchPlayer : matchPlayers) {
+        if (!isPlayerOnline(matchPlayer)) {
           continue;
         }
-        Player p = mp.getPlayer();
-        if (p != null && p.equals(sender)) {
-          senderMP = mp;
+
+        Player player = matchPlayer.getPlayer();
+        if (player.equals(sender)) {
+          senderMatchPlayer = matchPlayer;
           break;
         }
       }
     }
-    if (senderMP == null) {
+
+    if (senderMatchPlayer == null) {
       return;
     }
 
-    TeamColor teamColor = senderMP.getTeamColor();
+    TeamColor teamColor = senderMatchPlayer.getTeamColor();
     if (teamColor == null) {
       return;
     }
 
     String prefixedName = utilities.getCachedPrefixedName(sender.getUniqueId(), sender.getName());
-
     String formattedMessage = (teamColor == TeamColor.RED ? TEAMCHAT_RED.replace(prefixedName)
         : TEAMCHAT_BLUE.replace(prefixedName)) + message;
 
@@ -850,15 +870,11 @@ public class MatchManager {
     }
 
     for (MatchPlayer matchPlayer : players) {
-      if (matchPlayer == null) {
+      if (!isPlayerOnline(matchPlayer)) {
         continue;
       }
 
       Player player = matchPlayer.getPlayer();
-      if (player == null || !player.isOnline()) {
-        continue;
-      }
-
       if (matchPlayer.getTeamColor() == teamColor) {
         logger.send(player, formattedMessage);
       }

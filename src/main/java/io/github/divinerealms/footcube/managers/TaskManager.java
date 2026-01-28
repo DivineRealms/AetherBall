@@ -52,11 +52,12 @@ public class TaskManager {
     this.particleTrailTask = new ParticleTrailTask(fcManager);
 
     // Initialize general tasks.
-    this.cubeCleanerTask = new CubeCleanerTask(fcManager, Settings.getPracticeAreaCleanupTicks());
+    this.cubeCleanerTask = new CubeCleanerTask(fcManager,
+        Settings.getPracticeAreaCleanupInterval());
     this.matchmakingTask = new MatchmakingTask(fcManager);
-    this.cacheCleanupTask = new CacheCleanupTask(fcManager, Settings.getCacheCleanupTicks());
+    this.cacheCleanupTask = new CacheCleanupTask(fcManager, Settings.getCacheCleanupInterval());
     this.queueStatusTask = new QueueStatusTask(fcManager);
-    this.highScoresTask = new HighScoresTask(fcManager, Settings.getHighScoreUpdateTicks());
+    this.highScoresTask = new HighScoresTask(fcManager, Settings.getHighScoreUpdateInterval());
 
     tasks.add(physicsTask);
     tasks.add(touchCleanupTask);

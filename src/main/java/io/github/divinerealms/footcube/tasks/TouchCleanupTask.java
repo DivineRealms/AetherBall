@@ -76,6 +76,7 @@ public class TouchCleanupTask extends BaseTask {
       for (CubeTouchType type : touchesToRemove) {
         playerTouches.remove(type);
       }
+
       if (playerTouches.isEmpty()) {
         playersToRemove.add(playerId);
       }
@@ -91,12 +92,14 @@ public class TouchCleanupTask extends BaseTask {
     if (raised.isEmpty()) {
       return;
     }
+
     cubesToRemove.clear();
     for (Map.Entry<UUID, Long> entry : raised.entrySet()) {
-      if ((now - entry.getValue()) > Settings.KICK_COOLDOWN_RISE.asInt()) {
+      if ((now - entry.getValue()) > Settings.KICK_COOLDOWN_RISE.asLong()) {
         cubesToRemove.add(entry.getKey());
       }
     }
+
     for (UUID cubeId : cubesToRemove) {
       raised.remove(cubeId);
     }

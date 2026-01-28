@@ -8,6 +8,7 @@ import static io.github.divinerealms.footcube.configs.Lang.ON;
 import static io.github.divinerealms.footcube.configs.Lang.SET_BUILD_MODE;
 import static io.github.divinerealms.footcube.configs.Lang.SET_BUILD_MODE_OTHER;
 import static io.github.divinerealms.footcube.configs.Lang.TEAM_ALREADY_IN_GAME;
+import static io.github.divinerealms.footcube.matchmaking.util.MatchUtils.shouldPreventAbuse;
 import static io.github.divinerealms.footcube.utils.Permissions.PERM_BUILD;
 import static io.github.divinerealms.footcube.utils.Permissions.PERM_BUILD_OTHER;
 
@@ -20,6 +21,7 @@ import co.aikar.commands.annotation.Flags;
 import co.aikar.commands.annotation.Optional;
 import co.aikar.commands.annotation.Syntax;
 import io.github.divinerealms.footcube.core.FCManager;
+import io.github.divinerealms.footcube.matchmaking.Match;
 import io.github.divinerealms.footcube.matchmaking.MatchManager;
 import io.github.divinerealms.footcube.utils.Logger;
 import io.github.divinerealms.footcube.utils.PlayerSettings;
@@ -57,7 +59,8 @@ public class BuildCommand extends BaseCommand {
       }
 
       Player player = (Player) sender;
-      if (matchManager.getMatch(player).isPresent()) {
+      java.util.Optional<Match> matchOpt = matchManager.getMatch(player);
+      if (matchOpt.isPresent() && shouldPreventAbuse(matchOpt.get().getPhase())) {
         logger.send(player, COMMAND_DISABLER_CANT_USE);
         return;
       }

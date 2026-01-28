@@ -1,6 +1,7 @@
 package io.github.divinerealms.footcube.tasks;
 
 import static io.github.divinerealms.footcube.configs.Lang.HITDEBUG_VELOCITY_CAP;
+import static io.github.divinerealms.footcube.matchmaking.util.MatchUtils.isPlayerOnline;
 import static io.github.divinerealms.footcube.physics.PhysicsConstants.AIR_DRAG_FACTOR;
 import static io.github.divinerealms.footcube.physics.PhysicsConstants.ANTI_CLIP_DOT_THRESHOLD;
 import static io.github.divinerealms.footcube.physics.PhysicsConstants.BOUNCE_THRESHOLD;
@@ -301,7 +302,7 @@ public class PhysicsTask extends BaseTask {
 
     for (Player player : fcManager.getCachedPlayers()) {
       // Validate player is in a processable state.
-      if (player == null || !player.isOnline() || !player.isValid()) {
+      if (!isPlayerOnline(player)) {
         continue;
       }
 

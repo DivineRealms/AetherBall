@@ -2,9 +2,12 @@ package io.github.divinerealms.footcube.listeners;
 
 import static io.github.divinerealms.footcube.configs.Lang.COMMAND_DISABLER_CANT_USE;
 import static io.github.divinerealms.footcube.configs.Lang.TEAM_DISBANDED;
+import static io.github.divinerealms.footcube.matchmaking.util.MatchUtils.isPlayerOnline;
 import static io.github.divinerealms.footcube.utils.Permissions.PERM_BYPASS_DISABLED_COMMANDS;
+import static io.github.divinerealms.footcube.matchmaking.util.MatchUtils.shouldPreventAbuse;
 
 import io.github.divinerealms.footcube.configs.PlayerData;
+import io.github.divinerealms.footcube.configs.Settings;
 import io.github.divinerealms.footcube.core.FCManager;
 import io.github.divinerealms.footcube.managers.PlayerDataManager;
 import io.github.divinerealms.footcube.matchmaking.Match;
@@ -71,7 +74,12 @@ public class PlayerEvents implements Listener {
       return;
     }
 
-    if (matchManager.getMatch(player).isEmpty()) {
+    Optional<Match> matchOpt = matchManager.getMatch(player);
+    if (matchOpt.isEmpty()) {
+      return;
+    }
+
+    if (!shouldPreventAbuse(matchOpt.get().getPhase())) {
       return;
     }
 
@@ -102,7 +110,7 @@ public class PlayerEvents implements Listener {
 
     plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
       Player asyncPlayer = plugin.getServer().getPlayer(playerUuid);
-      if (asyncPlayer == null || !asyncPlayer.isOnline()) {
+      if (!isPlayerOnline(asyncPlayer)) {
         return;
       }
 
@@ -117,7 +125,7 @@ public class PlayerEvents implements Listener {
   @EventHandler
   public void onQuit(PlayerQuitEvent event) {
     Player player = event.getPlayer();
-    if (player == null) {
+    if (!isPlayerOnline(player)) {
       return;
     }
 
@@ -140,9 +148,8 @@ public class PlayerEvents implements Listener {
         if (match != null && match.getPhase() == MatchPhase.LOBBY) {
           List<MatchPlayer> players = match.getPlayers();
           if (players != null) {
-            players.removeIf(mp -> mp == null
-                || mp.getPlayer() == null
-                || mp.getPlayer().equals(player));
+            players.removeIf(matchPlayer -> !isPlayerOnline(matchPlayer)
+                || matchPlayer.getPlayer().equals(player));
           }
         }
         fcManager.getScoreboardManager().updateScoreboard(match);
@@ -152,9 +159,9 @@ public class PlayerEvents implements Listener {
     if (teamManager.isInTeam(player)) {
       Team team = teamManager.getTeam(player);
       if (team != null && team.getMembers() != null) {
-        for (Player p : team.getMembers()) {
-          if (p != null && p.isOnline() && !p.equals(player)) {
-            logger.send(p, TEAM_DISBANDED, player.getName());
+        for (Player player1 : team.getMembers()) {
+          if (isPlayerOnline(player1) && !player1.equals(player)) {
+            logger.send(player1, TEAM_DISBANDED, player.getName());
           }
         }
         teamManager.disbandTeam(team);
@@ -167,10 +174,10 @@ public class PlayerEvents implements Listener {
       MatchPlayer matchPlayer = null;
       List<MatchPlayer> players = match.getPlayers();
       if (players != null) {
-        for (MatchPlayer mp : players) {
-          if (mp != null && mp.getPlayer() != null
-              && mp.getPlayer().equals(player)) {
-            matchPlayer = mp;
+        for (MatchPlayer matchPlayer1 : players) {
+          if (isPlayerOnline(matchPlayer1)
+              && matchPlayer1.getPlayer().equals(player)) {
+            matchPlayer = matchPlayer1;
             break;
           }
         }
@@ -185,8 +192,8 @@ public class PlayerEvents implements Listener {
             : match.getScoreRed();
 
         if (match.getPhase() == MatchPhase.IN_PROGRESS && playerScore < opponentScore) {
-          fcManager.getEconomy().withdrawPlayer(player, 200);
-          matchManager.getBanManager().banPlayer(player, 30 * 60 * 1000);
+          fcManager.getEconomy().withdrawPlayer(player, Settings.BAN_RAGEQUIT_PENALTY.asDouble());
+          fcManager.getBanManager().banPlayer(player, Settings.getRageQuitBanDuration());
         }
       }
       matchManager.leaveMatch(player);
@@ -196,7 +203,8 @@ public class PlayerEvents implements Listener {
   @EventHandler
   public void onItemDrop(PlayerDropItemEvent event) {
     Player player = event.getPlayer();
-    if (matchManager.getMatch(player).isPresent()) {
+    Optional<Match> matchOpt = matchManager.getMatch(player);
+    if (matchOpt.isPresent() && shouldPreventAbuse(matchOpt.get().getPhase())) {
       event.setCancelled(true);
     }
   }
@@ -204,7 +212,8 @@ public class PlayerEvents implements Listener {
   @EventHandler
   public void onItemPickup(PlayerPickupItemEvent event) {
     Player player = event.getPlayer();
-    if (matchManager.getMatch(player).isPresent()) {
+    Optional<Match> matchOpt = matchManager.getMatch(player);
+    if (matchOpt.isPresent() && shouldPreventAbuse(matchOpt.get().getPhase())) {
       event.setCancelled(true);
     }
   }
@@ -216,8 +225,8 @@ public class PlayerEvents implements Listener {
     }
 
     Player player = (Player) event.getWhoClicked();
-
-    if (matchManager.getMatch(player).isPresent()) {
+    Optional<Match> matchOpt = matchManager.getMatch(player);
+    if (matchOpt.isPresent() && shouldPreventAbuse(matchOpt.get().getPhase())) {
       event.setCancelled(true);
     }
   }
@@ -230,7 +239,8 @@ public class PlayerEvents implements Listener {
   @EventHandler
   public void onBlockPlace(BlockPlaceEvent event) {
     Player player = event.getPlayer();
-    if (matchManager.getMatch(player).isPresent()) {
+    Optional<Match> matchOpt = matchManager.getMatch(player);
+    if (matchOpt.isPresent() && shouldPreventAbuse(matchOpt.get().getPhase())) {
       event.setCancelled(true);
       return;
     }
@@ -244,7 +254,8 @@ public class PlayerEvents implements Listener {
   @EventHandler
   public void onBlockBreak(BlockBreakEvent event) {
     Player player = event.getPlayer();
-    if (matchManager.getMatch(player).isPresent()) {
+    Optional<Match> matchOpt = matchManager.getMatch(player);
+    if (matchOpt.isPresent() && shouldPreventAbuse(matchOpt.get().getPhase())) {
       event.setCancelled(true);
       return;
     }

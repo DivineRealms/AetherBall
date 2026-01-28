@@ -1,7 +1,10 @@
 package io.github.divinerealms.footcube.matchmaking.team;
 
 import static io.github.divinerealms.footcube.configs.Lang.TEAM_DISBANDED;
+import static io.github.divinerealms.footcube.configs.Lang.TEAM_INVITE_EXPIRED;
+import static io.github.divinerealms.footcube.matchmaking.util.MatchUtils.isPlayerOnline;
 
+import io.github.divinerealms.footcube.configs.Settings;
 import io.github.divinerealms.footcube.core.FCManager;
 import io.github.divinerealms.footcube.matchmaking.Match;
 import io.github.divinerealms.footcube.matchmaking.MatchPhase;
@@ -15,23 +18,31 @@ import java.util.Optional;
 import java.util.Queue;
 import java.util.UUID;
 import lombok.Getter;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.Plugin;
 
 @Getter
 public class TeamManager {
 
   private final FCManager fcManager;
+  private final Plugin plugin;
   private final Logger logger;
   private final Map<Player, Map<Player, Integer>> teamInvites = new HashMap<>();
   private final Map<UUID, Team> playerTeams = new HashMap<>();
 
   public TeamManager(FCManager fcManager) {
     this.fcManager = fcManager;
+    this.plugin = fcManager.getPlugin();
     this.logger = fcManager.getLogger();
   }
 
   public void invite(Player inviter, Player invited, int matchType) {
     teamInvites.put(invited, Collections.singletonMap(inviter, matchType));
+    Bukkit.getScheduler().runTaskLaterAsynchronously(plugin, () -> {
+      teamInvites.remove(invited);
+      logger.send(inviter, TEAM_INVITE_EXPIRED);
+    }, Settings.getTeamExpiry());
   }
 
   public Player getInviter(Player invited) {
@@ -94,6 +105,7 @@ public class TeamManager {
     boolean anyInQueue = false;
     Collection<Queue<Player>> playerQueues = fcManager.getMatchManager().getData().getPlayerQueues()
         .values();
+
     for (Queue<Player> queue : playerQueues) {
       if (queue != null && queue.contains(leaver)) {
         anyInQueue = true;
@@ -108,7 +120,7 @@ public class TeamManager {
     List<Player> members = team.getMembers();
     if (members != null) {
       for (Player player : members) {
-        if (player != null && player.isOnline() && !player.equals(leaver)) {
+        if (isPlayerOnline(player) && !player.equals(leaver)) {
           logger.send(player, TEAM_DISBANDED, leaver.getName());
         }
       }
@@ -124,7 +136,7 @@ public class TeamManager {
     }
 
     for (Player player : team.getMembers()) {
-      if (player != null && player.isOnline() && !player.equals(leaver)) {
+      if (isPlayerOnline(player) && !player.equals(leaver)) {
         logger.send(player, TEAM_DISBANDED, leaver.getName());
       }
     }

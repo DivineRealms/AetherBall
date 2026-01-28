@@ -1,6 +1,5 @@
 package io.github.divinerealms.footcube.commands.admin;
 
-import static io.github.divinerealms.footcube.configs.Lang.BAN_REMAINING;
 import static io.github.divinerealms.footcube.configs.Lang.NOT_BANNED;
 import static io.github.divinerealms.footcube.configs.Lang.PLAYER_BANNED;
 import static io.github.divinerealms.footcube.configs.Lang.PLAYER_UNBANNED;
@@ -20,7 +19,6 @@ import co.aikar.commands.annotation.Syntax;
 import io.github.divinerealms.footcube.configs.Settings;
 import io.github.divinerealms.footcube.core.FCManager;
 import io.github.divinerealms.footcube.managers.Utilities;
-import io.github.divinerealms.footcube.matchmaking.ban.BanManager;
 import io.github.divinerealms.footcube.utils.Logger;
 import java.util.concurrent.TimeUnit;
 import org.bukkit.command.CommandSender;
@@ -29,12 +27,12 @@ import org.bukkit.entity.Player;
 @CommandAlias("fca|fcadmin|footcubeadmin")
 public class BanCommands extends BaseCommand {
 
+  private final FCManager fcManager;
   private final Logger logger;
-  private final BanManager banManager;
 
   public BanCommands(FCManager fcManager) {
+    this.fcManager = fcManager;
     this.logger = fcManager.getLogger();
-    this.banManager = fcManager.getBanManager();
   }
 
   @Subcommand("ban")
@@ -45,11 +43,13 @@ public class BanCommands extends BaseCommand {
   public void onBan(CommandSender sender, @Flags("other") Player target, @Optional String timeStr) {
     try {
       long duration;
+      long secondsLeft;
       if (timeStr == null) {
-        int defaultDuration = Settings.BAN_DEFAULT_DURATION.asInt();
-        duration = TimeUnit.MINUTES.toMillis(defaultDuration);
+        duration = Settings.getDefaultBanDuration();
+        secondsLeft = TimeUnit.MILLISECONDS.toSeconds(duration);
       } else {
         duration = Utilities.parseTime(timeStr);
+        secondsLeft = duration;
       }
 
       if (duration <= 0) {
@@ -57,9 +57,9 @@ public class BanCommands extends BaseCommand {
         return;
       }
 
-      banManager.banPlayer(target, duration);
+      fcManager.getBanManager().banPlayer(target, duration);
       logger.send(sender, PLAYER_BANNED, target.getDisplayName(),
-          Utilities.formatTime(duration));
+          Utilities.formatTime(secondsLeft));
     } catch (NumberFormatException e) {
       logger.send(sender, USAGE, "fca ban <player> <time>");
     }
@@ -71,7 +71,7 @@ public class BanCommands extends BaseCommand {
   @CommandCompletion("@players")
   @Description("Unban a player")
   public void onUnban(CommandSender sender, @Flags("other") Player target) {
-    banManager.unbanPlayer(target);
+    fcManager.getBanManager().unbanPlayer(target);
     logger.send(sender, PLAYER_UNBANNED, target.getDisplayName());
   }
 
@@ -81,12 +81,7 @@ public class BanCommands extends BaseCommand {
   @CommandCompletion("@players")
   @Description("Check if a player is banned")
   public void onCheckBan(CommandSender sender, @Flags("other") Player target) {
-    if (banManager.isBanned(target)) {
-      long banTime = banManager.getBannedPlayers().get(target.getUniqueId());
-      long secondsLeft = (banTime - System.currentTimeMillis()) / 1000L;
-      logger.send(sender, BAN_REMAINING, target.getDisplayName(),
-          Utilities.formatTime(secondsLeft));
-    } else {
+    if (!fcManager.getBanManager().isBanned(target)) {
       logger.send(sender, NOT_BANNED, target.getDisplayName());
     }
   }

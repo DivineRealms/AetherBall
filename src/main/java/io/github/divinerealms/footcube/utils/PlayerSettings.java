@@ -1,5 +1,6 @@
 package io.github.divinerealms.footcube.utils;
 
+import io.github.divinerealms.footcube.configs.Settings;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumSet;
@@ -76,23 +77,23 @@ public class PlayerSettings {
     );
   }
 
-  private boolean kickSoundEnabled = true;
-  private boolean goalSoundEnabled = true;
-  private boolean particlesEnabled = true;
-  private boolean buildEnabled = false;
+  private boolean kickSoundEnabled = Settings.PLAYER_KICK_SOUND.asBoolean();
+  private boolean goalSoundEnabled = Settings.PLAYER_GOAL_SOUND.asBoolean();
+  private boolean particlesEnabled = Settings.PLAYER_PARTICLES.asBoolean();
+  private boolean buildEnabled = Settings.PLAYER_BUILD_MODE.asBoolean();
   private Sound kickSound = Sound.SUCCESSFUL_HIT;
   private Sound goalSound = Sound.FIREWORK_LARGE_BLAST;
   private EnumParticle particle = EnumParticle.VILLAGER_HAPPY;
   private Color redstoneColor = Color.WHITE;
-  private String goalMessage = "default"; // "default", "simple", "epic", "minimal"
+  private String goalMessage = Settings.PLAYER_GOAL_CELEBRATION.toString();
 
   public static List<String> getAllowedParticles() {
     List<String> allowed = new ArrayList<>();
     EnumParticle[] particles = EnumParticle.values();
 
-    for (EnumParticle p : particles) {
-      if (p != null && !DISALLOWED_PARTICLES.contains(p)) {
-        allowed.add(p.name());
+    for (EnumParticle particle : particles) {
+      if (particle != null && !DISALLOWED_PARTICLES.contains(particle)) {
+        allowed.add(particle.name());
       }
     }
 

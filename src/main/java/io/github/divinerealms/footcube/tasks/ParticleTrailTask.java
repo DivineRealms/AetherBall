@@ -61,9 +61,9 @@ public class ParticleTrailTask extends BaseTask {
     Map<UUID, Location> playerLocations = new HashMap<>();
     Map<UUID, PlayerSettings> playerSettings = new HashMap<>();
 
-    for (Player p : onlinePlayers) {
-      playerLocations.put(p.getUniqueId(), p.getLocation());
-      playerSettings.put(p.getUniqueId(), fcManager.getPlayerSettings(p));
+    for (Player player : onlinePlayers) {
+      playerLocations.put(player.getUniqueId(), player.getLocation());
+      playerSettings.put(player.getUniqueId(), fcManager.getPlayerSettings(player));
     }
 
     for (Slime cube : data.getCubes()) {

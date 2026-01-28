@@ -51,19 +51,20 @@ import io.github.divinerealms.footcube.core.FCManager;
 import io.github.divinerealms.footcube.managers.Utilities;
 import io.github.divinerealms.footcube.matchmaking.Match;
 import io.github.divinerealms.footcube.matchmaking.MatchPhase;
-import io.github.divinerealms.footcube.matchmaking.logic.MatchSystem;
+import io.github.divinerealms.footcube.matchmaking.arena.Arena;
 import io.github.divinerealms.footcube.matchmaking.player.MatchPlayer;
 import io.github.divinerealms.footcube.matchmaking.player.TeamColor;
-import io.github.divinerealms.footcube.matchmaking.scoreboard.ScoreManager;
 import io.github.divinerealms.footcube.utils.Logger;
 import io.github.divinerealms.footcube.utils.PlayerSettings;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.StringJoiner;
 import java.util.concurrent.TimeUnit;
+import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.Color;
 import org.bukkit.Effect;
+import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -75,6 +76,18 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.util.Vector;
 
 public class MatchUtils {
+
+  public static ItemStack createColoredArmor(Material material, org.bukkit.Color color) {
+    ItemStack itemStack = new ItemStack(material);
+    ItemMeta itemMeta = itemStack.getItemMeta();
+    if (itemMeta instanceof LeatherArmorMeta) {
+      LeatherArmorMeta leatherMeta = (LeatherArmorMeta) itemMeta;
+      leatherMeta.setColor(color);
+      itemStack.setItemMeta(leatherMeta);
+    }
+
+    return itemStack;
+  }
 
   public static void giveArmor(Player player, TeamColor color) {
     ItemStack chestplate = createColoredArmor(Material.LEATHER_CHESTPLATE, color == TeamColor.RED
@@ -89,21 +102,11 @@ public class MatchUtils {
     inventory.setLeggings(leggings);
   }
 
-  public static ItemStack createColoredArmor(Material material, org.bukkit.Color color) {
-    ItemStack is = new ItemStack(material);
-    ItemMeta meta = is.getItemMeta();
-    if (meta instanceof LeatherArmorMeta) {
-      LeatherArmorMeta leatherMeta = (LeatherArmorMeta) meta;
-      leatherMeta.setColor(color);
-      is.setItemMeta(leatherMeta);
-    }
-    return is;
-  }
-
   public static void clearPlayer(Player player) {
-    if (player == null) {
+    if (!isPlayerOnline(player)) {
       return;
     }
+
     player.getInventory().setArmorContents(null);
     player.getInventory().clear();
     player.setExp(0);
@@ -124,12 +127,13 @@ public class MatchUtils {
       }
 
       boolean allNull = true;
-      for (MatchPlayer mp : match.getPlayers()) {
-        if (mp != null) {
+      for (MatchPlayer matchPlayer : match.getPlayers()) {
+        if (!isPlayerOnline(matchPlayer)) {
           allNull = false;
           break;
         }
       }
+
       if (allNull) {
         continue;
       }
@@ -137,27 +141,27 @@ public class MatchUtils {
       if (!firstBlock) {
         output.add("");
       }
-      firstBlock = false;
 
+      firstBlock = false;
       String type = Settings.getMatchTypeName(match.getArena().getType());
 
       List<String> redPlayers = new ArrayList<>();
       List<String> bluePlayers = new ArrayList<>();
       List<String> waitingPlayers = new ArrayList<>();
 
-      for (MatchPlayer mp : match.getPlayers()) {
-        if (mp == null || mp.getPlayer() == null) {
+      for (MatchPlayer matchPlayer : match.getPlayers()) {
+        if (!isPlayerOnline(matchPlayer)) {
           continue;
         }
 
-        String name = mp.getPlayer().getName();
-        if (mp.getTeamColor() == TeamColor.RED) {
+        String name = matchPlayer.getPlayer().getName();
+        if (matchPlayer.getTeamColor() == TeamColor.RED) {
           redPlayers.add(name);
         } else {
-          if (mp.getTeamColor() == TeamColor.BLUE) {
+          if (matchPlayer.getTeamColor() == TeamColor.BLUE) {
             bluePlayers.add(name);
           } else {
-            if (mp.getTeamColor() == null) {
+            if (matchPlayer.getTeamColor() == null) {
               waitingPlayers.add(name);
             }
           }
@@ -213,16 +217,18 @@ public class MatchUtils {
     return output;
   }
 
-  private static String joinStrings(List<String> list) {
+  public static String joinStrings(List<String> list) {
     if (list == null || list.isEmpty()) {
       return "/";
     }
+
     StringJoiner joiner = new StringJoiner(", ");
     for (String s : list) {
       if (s != null) {
         joiner.add(s);
       }
     }
+
     return joiner.toString();
   }
 
@@ -361,13 +367,15 @@ public class MatchUtils {
     );
   }
 
-  public static boolean isPlayerOffline(MatchPlayer matchPlayer) {
-    return matchPlayer == null
-        || matchPlayer.getPlayer() == null
-        || !matchPlayer.getPlayer().isOnline();
+  public static boolean isPlayerOnline(Player player) {
+    return player != null && player.isOnline() && player.isValid();
   }
 
-  private static boolean isHatTrickGoal(MatchSystem.ScoringResult result) {
+  public static boolean isPlayerOnline(MatchPlayer matchPlayer) {
+    return matchPlayer != null && isPlayerOnline(matchPlayer.getPlayer());
+  }
+
+  private static boolean isHatTrickGoal(ScoringResult result) {
     return !result.isOwnGoal()
         && result.getScorer() != null
         && result.getScorer().getPlayer() != null
@@ -375,7 +383,7 @@ public class MatchUtils {
         && result.getScorer().getGoals() % 3 == 0;
   }
 
-  private static double calculateScoringDistance(MatchSystem.ScoringResult result,
+  private static double calculateScoringDistance(ScoringResult result,
       Location goalLoc) {
     if (result.getScorer() != null && result.getScorer().getPlayer() != null) {
       return result.getScorer().getPlayer().getLocation().distance(goalLoc);
@@ -390,26 +398,14 @@ public class MatchUtils {
     return "default";
   }
 
-  public static void updateMatchScore(Match match, TeamColor scoringTeam) {
-    if (scoringTeam == TeamColor.RED) {
-      match.setScoreRed(match.getScoreRed() + 1);
-    } else {
-      match.setScoreBlue(match.getScoreBlue() + 1);
-    }
-    if (match.getCube() != null) {
-      match.getCube().setHealth(0);
-    }
-    match.setCube(null);
-  }
-
-  public static MatchSystem.ScoringResult determineScoringPlayers(Match match,
+  public static ScoringResult determineScoringPlayers(Match match,
       TeamColor scoringTeam, boolean shouldCountStats) {
     MatchPlayer scorer = match.getLastTouch();
     MatchPlayer assister = null;
     boolean ownGoal = false;
 
     if (scorer == null) {
-      return new MatchSystem.ScoringResult(null, null,
+      return new ScoringResult(null, null,
           false, scoringTeam);
     }
 
@@ -439,15 +435,15 @@ public class MatchUtils {
       scorer.incrementGoals();
     }
 
-    return new MatchSystem.ScoringResult(scorer, assister, ownGoal, scoringTeam);
+    return new ScoringResult(scorer, assister, ownGoal, scoringTeam);
   }
 
-  public static void awardCreditsForGoal(MatchSystem.ScoringResult result, Logger logger,
+  public static void awardCreditsForGoal(ScoringResult result, Logger logger,
       FCManager fcManager) {
     MatchPlayer scorer = result.getScorer();
     MatchPlayer assister = result.getAssister();
 
-    if (scorer != null && scorer.getPlayer() != null && scorer.getPlayer().isOnline()) {
+    if (isPlayerOnline(scorer)) {
       Player scoringPlayer = scorer.getPlayer();
       logger.send(scoringPlayer, MATCH_SCORE_CREDITS);
       fcManager.getEconomy().depositPlayer(scoringPlayer, Settings.ECONOMY_GOAL.asDouble());
@@ -458,22 +454,16 @@ public class MatchUtils {
       }
     }
 
-    if (assister != null && assister.getPlayer() != null && assister.getPlayer().isOnline()) {
+    if (isPlayerOnline(assister)) {
       Player assistingPlayer = assister.getPlayer();
       logger.send(assistingPlayer, MATCH_ASSIST_CREDITS);
       fcManager.getEconomy().depositPlayer(assistingPlayer, Settings.ECONOMY_ASSIST.asDouble());
     }
   }
 
-  public static Location getGoalLocation(Match match, TeamColor scoringTeam) {
-    return (scoringTeam == TeamColor.RED)
-        ? match.getArena().getBlueSpawn()
-        : match.getArena().getRedSpawn();
-  }
-
   public static void playGoalEffects(Match match, Location goalLoc, FCManager fcManager) {
     for (MatchPlayer matchPlayer : match.getPlayers()) {
-      if (isPlayerOffline(matchPlayer)) {
+      if (!isPlayerOnline(matchPlayer)) {
         continue;
       }
 
@@ -498,7 +488,7 @@ public class MatchUtils {
     }
   }
 
-  public static void broadcastGoalMessage(Match match, MatchSystem.ScoringResult result,
+  public static void broadcastGoalMessage(Match match, ScoringResult result,
       Location goalLoc, FCManager fcManager, Logger logger) {
     String prefixedScorer = NOBODY.toString();
     String prefixedAssister = null;
@@ -524,7 +514,7 @@ public class MatchUtils {
     sendGoalMessages(match, result, prefixedScorer, prefixedAssister, goalLoc, fcManager, logger);
   }
 
-  private static void sendGoalMessages(Match match, MatchSystem.ScoringResult result,
+  private static void sendGoalMessages(Match match, ScoringResult result,
       String prefixedScorer, String prefixedAssister,
       Location goalLoc, FCManager fcManager, Logger logger) {
     boolean isHatTrick = isHatTrickGoal(result);
@@ -556,7 +546,7 @@ public class MatchUtils {
     }
 
     for (MatchPlayer matchPlayer : match.getPlayers()) {
-      if (isPlayerOffline(matchPlayer)) {
+      if (!isPlayerOnline(matchPlayer)) {
         continue;
       }
 
@@ -576,10 +566,77 @@ public class MatchUtils {
     }
   }
 
-  public static void prepareMatchContinuation(Match match, ScoreManager scoreboardManager) {
-    match.setPhase(MatchPhase.CONTINUING);
-    match.setCountdown(5);
-    match.setTick(0);
-    scoreboardManager.updateScoreboard(match);
+  public static void preparePlayer(Player player, TeamColor color, Arena arena,
+      PlayerSettings playerSettings) {
+    ItemStack chestplate = createColoredArmor(Material.LEATHER_CHESTPLATE, color == TeamColor.RED
+        ? Color.RED
+        : Color.BLUE);
+    ItemStack leggings = createColoredArmor(Material.LEATHER_LEGGINGS, color == TeamColor.RED
+        ? Color.RED
+        : Color.BLUE);
+
+    PlayerInventory inventory = player.getInventory();
+    inventory.setChestplate(chestplate);
+    inventory.setLeggings(leggings);
+
+    preventPlayerAbuse(player, playerSettings);
+    player.teleport(color == TeamColor.RED ? arena.getRedSpawn() : arena.getBlueSpawn());
+  }
+
+  public static boolean preventPlayerAbuse(Player player, PlayerSettings playerSettings) {
+    if (player.getGameMode() != GameMode.SURVIVAL) {
+      player.setGameMode(GameMode.SURVIVAL);
+      return true;
+    }
+
+    if (player.isFlying() || player.getAllowFlight()) {
+      player.setFlying(false);
+      player.setAllowFlight(false);
+      return true;
+    }
+
+    if (playerSettings.isBuildEnabled()) {
+      playerSettings.setBuildEnabled(false);
+      return true;
+    }
+
+    return false;
+  }
+
+  public static boolean shouldPreventAbuse(MatchPhase matchPhase) {
+    return matchPhase == MatchPhase.STARTING || matchPhase == MatchPhase.IN_PROGRESS
+        || matchPhase == MatchPhase.CONTINUING;
+  }
+
+  /**
+   * Represents the result of determining who scored and assisted. This is a traditional Java class
+   * that holds immutable data about a scoring event.
+   */
+  public static class ScoringResult {
+
+    @Getter
+    private final MatchPlayer scorer;
+    @Getter
+    private final MatchPlayer assister;
+    @Getter
+    private final boolean ownGoal;
+    @Getter
+    private final TeamColor scoringTeam;
+
+    public ScoringResult(MatchPlayer scorer, MatchPlayer assister, boolean ownGoal,
+        TeamColor scoringTeam) {
+      this.scorer = scorer;
+      this.assister = assister;
+      this.ownGoal = ownGoal;
+      this.scoringTeam = scoringTeam;
+    }
+
+    /**
+     * Determines if credits should be awarded for this goal. Credits are only awarded for regular
+     * goals, not own goals.
+     */
+    public boolean shouldAwardCredits() {
+      return !ownGoal && scorer != null;
+    }
   }
 }

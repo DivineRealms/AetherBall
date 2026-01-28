@@ -1,5 +1,7 @@
 package io.github.divinerealms.footcube.tasks;
 
+import static io.github.divinerealms.footcube.matchmaking.util.MatchUtils.isPlayerOnline;
+
 import io.github.divinerealms.footcube.core.FCManager;
 import org.bukkit.entity.Player;
 
@@ -13,7 +15,7 @@ public class CacheCleanupTask extends BaseTask {
   protected void kaboom() {
     int removed = 0;
     for (Player player : fcManager.getCachedPlayers()) {
-      if (player != null && player.isOnline()) {
+      if (!isPlayerOnline(player)) {
         continue;
       }
 

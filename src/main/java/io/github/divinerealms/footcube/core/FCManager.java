@@ -6,6 +6,7 @@ import static io.github.divinerealms.footcube.configs.Lang.NO_PERM;
 import static io.github.divinerealms.footcube.configs.Lang.NO_PERM_PARAMETERS;
 import static io.github.divinerealms.footcube.configs.Lang.PLAYER_NOT_FOUND;
 import static io.github.divinerealms.footcube.configs.Lang.UNKNOWN_COMMAND;
+import static io.github.divinerealms.footcube.matchmaking.util.MatchUtils.isPlayerOnline;
 import static io.github.divinerealms.footcube.utils.Permissions.PERM_ADMIN;
 
 import co.aikar.commands.BukkitCommandCompletionContext;
@@ -167,28 +168,30 @@ public class FCManager {
     }
 
     enabling = false;
+    setupConfigs();
     matchManager.forceLeaveAllPlayers();
+    matchSystem.initializeMatchTypes();
     physicsSystem.removeCubes();
     arenaManager.reloadArenas();
-    setupConfigs();
     registerCommands();
 
+    highscoreManager.initializeArrays();
     listenerManager.unregisterAll();
     taskManager.restart();
     listenerManager.registerAll();
 
     List<UUID> onlinePlayers = new ArrayList<>(cachedPlayers.size());
-    for (Player p : cachedPlayers) {
-      if (p == null) {
+    for (Player player : cachedPlayers) {
+      if (!isPlayerOnline(player)) {
         continue;
       }
 
-      onlinePlayers.add(p.getUniqueId());
+      onlinePlayers.add(player.getUniqueId());
     }
 
     scheduler.runTaskAsynchronously(plugin, () -> onlinePlayers.forEach(uuid -> {
       Player asyncPlayer = plugin.getServer().getPlayer(uuid);
-      if (asyncPlayer == null || !asyncPlayer.isOnline()) {
+      if (!isPlayerOnline(asyncPlayer)) {
         return;
       }
 
@@ -382,7 +385,7 @@ public class FCManager {
       settings.setParticlesEnabled((Boolean) playerData.get(CONFIG_PARTICLES_BASE + ".enabled"));
     }
     if (playerData.has("ban")) {
-      matchManager.getBanManager().getBannedPlayers()
+      banManager.getBannedPlayers()
           .put(player.getUniqueId(), (Long) playerData.get("ban"));
     }
 
@@ -405,9 +408,12 @@ public class FCManager {
       joiner.add(author);
     }
 
-    String[] banner = new String[]{"&2┏┓┏┓" + "&8 -+-------------------------------------------+-",
+    String[] banner = new String[]{
+        "&2┏┓┏┓" + "&8 -+-------------------------------------------+-",
         "&2┣ ┃ " + "&7  Created by &b" + joiner + "&7, version &f" + plugin.getDescription()
-            .getVersion(), "&2┻ ┗┛" + "&8 -+-------------------------------------------+-"};
+            .getVersion(),
+        "&2┻ ┗┛" + "&8 -+-------------------------------------------+-"
+    };
 
     for (String line : banner) {
       plugin.getServer().getConsoleSender()
@@ -425,6 +431,9 @@ public class FCManager {
 
     utilities.getPrefixedName(uuid, playerName)
         .thenAccept(prefixedName -> cachedPrefixedNames.put(uuid, prefixedName));
+
+    scheduler.runTaskLaterAsynchronously(plugin, () -> cachedPrefixedNames.remove(uuid),
+        Settings.getPrefixExpiry());
   }
 
   private void clearBukkitCommandMap() {

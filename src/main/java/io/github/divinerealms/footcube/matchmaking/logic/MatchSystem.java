@@ -9,6 +9,7 @@ import static io.github.divinerealms.footcube.configs.Lang.MATCHES_LIST_STARTING
 import static io.github.divinerealms.footcube.configs.Lang.MATCH_PREPARATION_SUBTITLE;
 import static io.github.divinerealms.footcube.configs.Lang.MATCH_PREPARATION_TITLE;
 import static io.github.divinerealms.footcube.configs.Lang.MATCH_PREPARING;
+import static io.github.divinerealms.footcube.configs.Lang.MATCH_PREVENT_ABUSE;
 import static io.github.divinerealms.footcube.configs.Lang.MATCH_PROCEED;
 import static io.github.divinerealms.footcube.configs.Lang.MATCH_STARTED;
 import static io.github.divinerealms.footcube.configs.Lang.MATCH_STARTED_ACTIONBAR;
@@ -24,11 +25,11 @@ import static io.github.divinerealms.footcube.configs.Lang.TAKE_PLACE_ANNOUNCEME
 import static io.github.divinerealms.footcube.matchmaking.util.MatchUtils.awardCreditsForGoal;
 import static io.github.divinerealms.footcube.matchmaking.util.MatchUtils.broadcastGoalMessage;
 import static io.github.divinerealms.footcube.matchmaking.util.MatchUtils.determineScoringPlayers;
-import static io.github.divinerealms.footcube.matchmaking.util.MatchUtils.getGoalLocation;
-import static io.github.divinerealms.footcube.matchmaking.util.MatchUtils.giveArmor;
+import static io.github.divinerealms.footcube.matchmaking.util.MatchUtils.isPlayerOnline;
 import static io.github.divinerealms.footcube.matchmaking.util.MatchUtils.playGoalEffects;
-import static io.github.divinerealms.footcube.matchmaking.util.MatchUtils.prepareMatchContinuation;
-import static io.github.divinerealms.footcube.matchmaking.util.MatchUtils.updateMatchScore;
+import static io.github.divinerealms.footcube.matchmaking.util.MatchUtils.preparePlayer;
+import static io.github.divinerealms.footcube.matchmaking.util.MatchUtils.preventPlayerAbuse;
+import static io.github.divinerealms.footcube.matchmaking.util.MatchUtils.shouldPreventAbuse;
 
 import io.github.divinerealms.footcube.configs.PlayerData;
 import io.github.divinerealms.footcube.configs.Settings;
@@ -44,7 +45,9 @@ import io.github.divinerealms.footcube.matchmaking.player.TeamColor;
 import io.github.divinerealms.footcube.matchmaking.scoreboard.ScoreManager;
 import io.github.divinerealms.footcube.matchmaking.team.Team;
 import io.github.divinerealms.footcube.matchmaking.team.TeamManager;
+import io.github.divinerealms.footcube.matchmaking.util.MatchUtils.ScoringResult;
 import io.github.divinerealms.footcube.utils.Logger;
+import io.github.divinerealms.footcube.utils.PlayerSettings;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -54,9 +57,7 @@ import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
-import lombok.Getter;
 import org.bukkit.Bukkit;
-import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Sound;
 import org.bukkit.command.CommandSender;
@@ -80,25 +81,18 @@ public class MatchSystem {
     this.data = fcManager.getMatchData();
     this.arenaManager = fcManager.getArenaManager();
     this.teamManager = fcManager.getTeamManager();
-    initializeMatchTypes();
   }
 
-  /**
-   * Initializes match type queues and locks based on config. Called during construction and after
-   * config reload.
-   */
-  private void initializeMatchTypes() {
+  public void initializeMatchTypes() {
     List<Integer> enabledTypes = Settings.getEnabledMatchTypes();
 
     if (enabledTypes.isEmpty()) {
-      logger.info("&c⚠ No match types enabled in matchmaking.yml!");
+      logger.info("&c⚠ No match types enabled in settings.yml!");
       return;
     }
 
-    // Initialize queues and locks for enabled types
     data.initializeForMatchTypes(enabledTypes);
 
-    // Log enabled types
     StringBuilder typesStr = new StringBuilder();
     for (int i = 0; i < enabledTypes.size(); i++) {
       int type = enabledTypes.get(i);
@@ -119,14 +113,11 @@ public class MatchSystem {
     scoreboardManager.createMatchScoreboard(match);
 
     for (MatchPlayer matchPlayer : match.getPlayers()) {
-      if (matchPlayer == null) {
-        continue;
-      }
-      Player player = matchPlayer.getPlayer();
-      if (player == null || !player.isOnline()) {
+      if (!isPlayerOnline(matchPlayer)) {
         continue;
       }
 
+      Player player = matchPlayer.getPlayer();
       scoreboardManager.showMatchScoreboard(match, player);
       logger.send(player, MATCH_STARTED);
     }
@@ -140,14 +131,11 @@ public class MatchSystem {
     }
 
     for (MatchPlayer matchPlayer : match.getPlayers()) {
-      if (matchPlayer == null) {
-        continue;
-      }
-      Player player = matchPlayer.getPlayer();
-      if (player == null || !player.isOnline()) {
+      if (!isPlayerOnline(matchPlayer)) {
         continue;
       }
 
+      Player player = matchPlayer.getPlayer();
       if (matchPlayer.getTeamColor() == TeamColor.RED) {
         player.getPlayer().teleport(match.getArena().getRedSpawn());
       } else {
@@ -188,6 +176,7 @@ public class MatchSystem {
     if (match.getCube() != null && !match.getCube().isDead()) {
       return;
     }
+
     if (match.getPhase() != MatchPhase.IN_PROGRESS) {
       return;
     }
@@ -196,11 +185,13 @@ public class MatchSystem {
     if (match.getPlayers() == null) {
       return;
     }
-    for (MatchPlayer player : match.getPlayers()) {
-      if (player == null || player.getPlayer() == null) {
+
+    for (MatchPlayer matchPlayer : match.getPlayers()) {
+      if (!isPlayerOnline(matchPlayer)) {
         continue;
       }
-      logger.send(player.getPlayer(), CLEARED_CUBE_INGAME);
+
+      logger.send(matchPlayer.getPlayer(), CLEARED_CUBE_INGAME);
     }
   }
 
@@ -267,16 +258,33 @@ public class MatchSystem {
     if (match.getPhase() != MatchPhase.IN_PROGRESS) {
       return;
     }
-    updateMatchScore(match, scoringTeam);
-    boolean shouldCountStats = Settings.shouldCountStats(match.getArena().getType());
+
+    Arena arena = match.getArena();
+    if (scoringTeam == TeamColor.RED) {
+      match.setScoreRed(match.getScoreRed() + 1);
+    } else {
+      match.setScoreBlue(match.getScoreBlue() + 1);
+    }
+
+    if (match.getCube() != null) {
+      match.getCube().setHealth(0);
+      match.setCube(null);
+    }
+
+    boolean shouldCountStats = Settings.shouldCountStats(arena.getType());
     ScoringResult scoringResult = determineScoringPlayers(match, scoringTeam, shouldCountStats);
     if (scoringResult.shouldAwardCredits()) {
       awardCreditsForGoal(scoringResult, logger, fcManager);
     }
-    Location goalLoc = getGoalLocation(match, scoringTeam);
+
+    Location goalLoc = scoringTeam == TeamColor.RED ? arena.getBlueSpawn() : arena.getRedSpawn();
     playGoalEffects(match, goalLoc, fcManager);
     broadcastGoalMessage(match, scoringResult, goalLoc, fcManager, logger);
-    prepareMatchContinuation(match, scoreboardManager);
+
+    match.setPhase(MatchPhase.CONTINUING);
+    match.setCountdown(5);
+    match.setTick(0);
+    scoreboardManager.updateScoreboard(match);
   }
 
   public void updateMatch(Match match) {
@@ -288,9 +296,17 @@ public class MatchSystem {
       return;
     }
 
-    for (MatchPlayer mp : players) {
-      if (mp != null && mp.getPlayer() != null && mp.getPlayer().isOnline()) {
+    for (MatchPlayer matchPlayer : players) {
+      if (isPlayerOnline(matchPlayer)) {
         currentPlayers++;
+
+        if (shouldPreventAbuse(match.getPhase())) {
+          Player player = matchPlayer.getPlayer();
+          PlayerSettings playerSettings = fcManager.getPlayerSettings(player);
+          if (preventPlayerAbuse(player, playerSettings)) {
+            logger.send(player, MATCH_PREVENT_ABUSE);
+          }
+        }
       }
     }
 
@@ -300,20 +316,21 @@ public class MatchSystem {
       case LOBBY:
         if (currentPlayers >= requiredPlayers) {
           List<MatchPlayer> playersToAssign = new ArrayList<>(currentPlayers);
-          for (MatchPlayer mp : players) {
-            if (mp != null && mp.getPlayer() != null && mp.getPlayer().isOnline()) {
-              playersToAssign.add(mp);
+          for (MatchPlayer matchPlayer : players) {
+            if (isPlayerOnline(matchPlayer)) {
+              playersToAssign.add(matchPlayer);
             }
           }
 
           Team firstTeam = null;
-          for (MatchPlayer mp : playersToAssign) {
-            if (mp == null || mp.getPlayer() == null) {
+          for (MatchPlayer matchPlayer : playersToAssign) {
+            if (!isPlayerOnline(matchPlayer)) {
               continue;
             }
-            Team t = teamManager.getTeam(mp.getPlayer());
-            if (t != null) {
-              firstTeam = t;
+
+            Team team = teamManager.getTeam(matchPlayer.getPlayer());
+            if (team != null) {
+              firstTeam = team;
               break;
             }
           }
@@ -323,17 +340,18 @@ public class MatchSystem {
             List<MatchPlayer> teamMatchPlayers = new ArrayList<>();
             List<MatchPlayer> soloPlayers = new ArrayList<>();
 
-            for (MatchPlayer mp : playersToAssign) {
-              if (mp.getPlayer() != null && teamMembers.contains(mp.getPlayer())) {
-                teamMatchPlayers.add(mp);
+            for (MatchPlayer matchPlayer : playersToAssign) {
+              if (isPlayerOnline(matchPlayer) && teamMembers.contains(matchPlayer.getPlayer())) {
+                teamMatchPlayers.add(matchPlayer);
               } else {
-                soloPlayers.add(mp);
+                soloPlayers.add(matchPlayer);
               }
             }
 
             for (MatchPlayer teamPlayer : teamMatchPlayers) {
               teamPlayer.setTeamColor(TeamColor.RED);
             }
+
             Collections.shuffle(soloPlayers);
 
             long redTeamSize = teamMatchPlayers.size();
@@ -355,11 +373,12 @@ public class MatchSystem {
             }
           }
 
-          for (MatchPlayer mp : playersToAssign) {
-            if (mp == null || mp.getPlayer() == null) {
+          for (MatchPlayer matchPlayer : playersToAssign) {
+            if (!isPlayerOnline(matchPlayer)) {
               continue;
             }
-            logger.send(mp.getPlayer(), STARTING);
+
+            logger.send(matchPlayer.getPlayer(), STARTING);
           }
 
           match.setPhase(MatchPhase.STARTING);
@@ -380,12 +399,14 @@ public class MatchSystem {
               match.getCountdown() == 0 ? MATCHES_LIST_MATCH.replace(matchType, matchId)
                   : MATCHES_LIST_LOBBY.replace(matchType, matchId);
 
-          for (MatchPlayer mp : players) {
-            if (mp == null || mp.getPlayer() == null) {
+          for (MatchPlayer matchPlayer : players) {
+            if (!isPlayerOnline(matchPlayer)) {
               continue;
             }
-            Player player = mp.getPlayer();
+
+            Player player = matchPlayer.getPlayer();
             player.playSound(player.getLocation(), Sound.NOTE_STICKS, 1, 1);
+
             if (match.getCountdown() != 0) {
               logger.sendActionBar(player, MATCH_STARTING_ACTIONBAR, matchTitle,
                   MATCHES_LIST_STARTING.replace(String.valueOf(match.getCountdown())));
@@ -395,19 +416,8 @@ public class MatchSystem {
             }
 
             if (match.getCountdown() == 10) {
-              if (mp.getTeamColor() == TeamColor.RED) {
-                player.teleport(match.getArena().getRedSpawn());
-              } else {
-                player.teleport(match.getArena().getBlueSpawn());
-              }
-              giveArmor(player, mp.getTeamColor());
-              if (player.getGameMode() != GameMode.SURVIVAL) {
-                player.setGameMode(GameMode.SURVIVAL);
-              }
-              if (player.isFlying()) {
-                player.setFlying(false);
-                player.setAllowFlight(false);
-              }
+              PlayerSettings playerSettings = fcManager.getPlayerSettings(player);
+              preparePlayer(player, matchPlayer.getTeamColor(), match.getArena(), playerSettings);
               logger.title(player, matchTitle, MATCH_PREPARING, 10, 50, 10);
             } else {
               if (match.getCountdown() == 5) {
@@ -433,6 +443,7 @@ public class MatchSystem {
         if (shouldUpdateScoreboard(match)) {
           scoreboardManager.updateScoreboard(match);
         }
+
         handleGoalDetection(match);
         handleMatchTimer(match);
         handleCubeRespawn(match);
@@ -457,11 +468,12 @@ public class MatchSystem {
           if (match.getCountdown() <= 0) {
             match.setPhase(MatchPhase.IN_PROGRESS);
 
-            for (MatchPlayer mp : players) {
-              if (mp == null || mp.getPlayer() == null) {
+            for (MatchPlayer matchPlayer : players) {
+              if (!isPlayerOnline(matchPlayer)) {
                 continue;
               }
-              logger.send(mp.getPlayer(), MATCH_PROCEED);
+
+              logger.send(matchPlayer.getPlayer(), MATCH_PROCEED);
             }
 
             startRound(match);
@@ -469,12 +481,12 @@ public class MatchSystem {
             match.setCountdown(match.getCountdown() - 1);
             scoreboardManager.updateScoreboard(match);
 
-            for (MatchPlayer mp : players) {
-              if (mp == null || mp.getPlayer() == null) {
+            for (MatchPlayer matchPlayer : players) {
+              if (!isPlayerOnline(matchPlayer)) {
                 continue;
               }
 
-              Player player = mp.getPlayer();
+              Player player = matchPlayer.getPlayer();
               player.setLevel(match.getCountdown());
               player.playSound(player.getLocation(), Sound.NOTE_STICKS, 1, 1);
             }
@@ -524,6 +536,7 @@ public class MatchSystem {
       if (!lock.tryLock()) {
         continue;
       }
+
       try {
         processSingleQueue(matchType, queue);
       } finally {
@@ -539,6 +552,7 @@ public class MatchSystem {
         queue.poll();
         head = queue.peek();
       }
+
       if (head == null) {
         break;
       }
@@ -551,9 +565,9 @@ public class MatchSystem {
       if (!arenaManager.hasArenaForType(matchType)) {
         List<Player> playersToKick = new ArrayList<>(queue);
         queue.clear();
-        for (Player p : playersToKick) {
-          if (p != null && p.isOnline()) {
-            logger.send(p, JOIN_NOARENA);
+        for (Player player : playersToKick) {
+          if (isPlayerOnline(player)) {
+            logger.send(player, JOIN_NOARENA);
           }
         }
         return;
@@ -566,7 +580,7 @@ public class MatchSystem {
         Set<Player> snapshot = new HashSet<>(queue);
         List<Player> members = new ArrayList<>();
         for (Player member : team.getMembers()) {
-          if (member != null && member.isOnline()) {
+          if (isPlayerOnline(member)) {
             members.add(member);
           }
         }
@@ -576,11 +590,12 @@ public class MatchSystem {
         }
 
         playerGroup = new ArrayList<>();
-        for (Player qp : queue) {
-          if (members.contains(qp)) {
-            playerGroup.add(qp);
+        for (Player player : queue) {
+          if (members.contains(player)) {
+            playerGroup.add(player);
           }
         }
+
         if (playerGroup.isEmpty()) {
           return;
         }
@@ -604,9 +619,10 @@ public class MatchSystem {
       if (targetMatch == null) {
         targetMatch = createNewLobby(matchType);
       }
+
       if (targetMatch == null) {
-        for (Player p : playerGroup) {
-          logger.send(p, JOIN_NOARENA);
+        for (Player player : playerGroup) {
+          logger.send(player, JOIN_NOARENA);
         }
         return;
       }
@@ -615,10 +631,10 @@ public class MatchSystem {
         scoreboardManager.createLobbyScoreboard(targetMatch);
       }
 
-      for (Player p : playerGroup) {
-        queue.remove(p);
-        targetMatch.getPlayers().add(new MatchPlayer(p, null));
-        scoreboardManager.showLobbyScoreboard(targetMatch, p);
+      for (Player player : playerGroup) {
+        queue.remove(player);
+        targetMatch.getPlayers().add(new MatchPlayer(player, null));
+        scoreboardManager.showLobbyScoreboard(targetMatch, player);
       }
 
       scoreboardManager.updateScoreboard(targetMatch);
@@ -644,8 +660,8 @@ public class MatchSystem {
   }
 
   public boolean isInAnyQueue(Player player) {
-    for (Queue<Player> q : data.getPlayerQueues().values()) {
-      if (q != null && q.contains(player)) {
+    for (Queue<Player> queue : data.getPlayerQueues().values()) {
+      if (queue != null && queue.contains(player)) {
         return true;
       }
     }
@@ -654,22 +670,25 @@ public class MatchSystem {
 
   private synchronized Match createNewLobby(int matchType) {
     List<Arena> available = new ArrayList<>();
-    for (Arena a : arenaManager.getArenas()) {
-      if (a == null || a.getType() != matchType) {
+    for (Arena arena : arenaManager.getArenas()) {
+      if (arena == null || arena.getType() != matchType) {
         continue;
       }
+
       boolean inUse = false;
-      for (Match m : data.getMatches()) {
-        if (m == null || m.getArena() == null) {
+      for (Match match : data.getMatches()) {
+        if (match == null || match.getArena() == null) {
           continue;
         }
-        if (m.getArena().getId() == a.getId()) {
+
+        if (match.getArena().getId() == arena.getId()) {
           inUse = true;
           break;
         }
       }
+
       if (!inUse) {
-        available.add(a);
+        available.add(arena);
       }
     }
 
@@ -690,7 +709,7 @@ public class MatchSystem {
   private void announceTakePlace(Match match) {
     boolean firstAnnouncement = match.getLastTakePlaceAnnounceTick() == 0;
     if (firstAnnouncement || match.getTick() - match.getLastTakePlaceAnnounceTick()
-        >= Settings.getTakePlaceAnnouncement()) {
+        >= Settings.getTakePlaceAnnouncementInterval()) {
       match.setLastTakePlaceAnnounceTick(match.getTick());
 
       long matchDuration = Settings.getMatchDuration(match.getArena().getType());
@@ -698,8 +717,8 @@ public class MatchSystem {
       long remainingSeconds = matchDuration - TimeUnit.MILLISECONDS.toSeconds(elapsedMillis);
 
       int matchType = match.getArena().getType();
-      String matchIdString = String.valueOf(match.getArena().getId()), matchTypeString =
-          Settings.getMatchTypeName(matchType);
+      String matchIdString = String.valueOf(match.getArena().getId());
+      String matchTypeString = Settings.getMatchTypeName(matchType);
       boolean activeMatch = match.getPhase() == MatchPhase.IN_PROGRESS;
 
       String matchTitle = activeMatch ? "&a&l" + matchTypeString + " Meča #" + matchIdString
@@ -712,45 +731,14 @@ public class MatchSystem {
               : TAKE_PLACE_ANNOUNCEMENT_LOBBY.replace(matchTitle);
 
       for (Player player : Bukkit.getOnlinePlayers()) {
-        if (player == null) {
+        if (!isPlayerOnline(player)) {
           continue;
         }
+
         if (fcManager.getMatchManager().getMatch(player).isEmpty()) {
           logger.send(player, announcement);
         }
       }
-    }
-  }
-
-  /**
-   * Represents the result of determining who scored and assisted. This is a traditional Java class
-   * that holds immutable data about a scoring event.
-   */
-  public static class ScoringResult {
-
-    @Getter
-    private final MatchPlayer scorer;
-    @Getter
-    private final MatchPlayer assister;
-    @Getter
-    private final boolean ownGoal;
-    @Getter
-    private final TeamColor scoringTeam;
-
-    public ScoringResult(MatchPlayer scorer, MatchPlayer assister, boolean ownGoal,
-        TeamColor scoringTeam) {
-      this.scorer = scorer;
-      this.assister = assister;
-      this.ownGoal = ownGoal;
-      this.scoringTeam = scoringTeam;
-    }
-
-    /**
-     * Determines if credits should be awarded for this goal. Credits are only awarded for regular
-     * goals, not own goals.
-     */
-    public boolean shouldAwardCredits() {
-      return !ownGoal && scorer != null;
     }
   }
 }

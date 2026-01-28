@@ -18,6 +18,7 @@ import static io.github.divinerealms.footcube.configs.Lang.TOGGLES_HIT_DEBUG;
 import static io.github.divinerealms.footcube.configs.Lang.TOGGLES_KICK;
 import static io.github.divinerealms.footcube.configs.Lang.TOGGLES_PARTICLES;
 import static io.github.divinerealms.footcube.configs.Lang.USAGE;
+import static io.github.divinerealms.footcube.matchmaking.util.MatchUtils.joinStrings;
 import static io.github.divinerealms.footcube.utils.Permissions.PERM_SET_GOAL_CELEBRATION;
 import static io.github.divinerealms.footcube.utils.Permissions.PERM_SET_PARTICLE;
 import static io.github.divinerealms.footcube.utils.Permissions.PERM_SET_SOUND;
@@ -36,8 +37,8 @@ import io.github.divinerealms.footcube.managers.PlayerDataManager;
 import io.github.divinerealms.footcube.physics.PhysicsData;
 import io.github.divinerealms.footcube.utils.Logger;
 import io.github.divinerealms.footcube.utils.PlayerSettings;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.StringJoiner;
 import net.minecraft.server.v1_8_R3.EnumParticle;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
@@ -170,7 +171,7 @@ public class SettingsCommands extends BaseCommand {
   public void onSetParticle(Player player, String particleName, @Optional String color) {
     if (particleName.equalsIgnoreCase("list")) {
       logger.send(player, AVAILABLE_TYPE, PARTICLE.toString(),
-          String.join(", ", PlayerSettings.getAllowedParticles()));
+          joinStrings(PlayerSettings.getAllowedParticles()));
       return;
     }
 
@@ -228,11 +229,9 @@ public class SettingsCommands extends BaseCommand {
   }
 
   private void showAllowedSounds(Player player, List<Sound> sounds) {
-    StringJoiner joiner = new StringJoiner(", ");
-    for (Sound s : sounds) {
-      joiner.add(s.name());
-    }
-    logger.send(player, AVAILABLE_TYPE, SOUND.toString(), joiner.toString());
+    List<String> soundNames = new ArrayList<>();
+    sounds.forEach(sound -> soundNames.add(sound.name()));
+    logger.send(player, AVAILABLE_TYPE, SOUND.toString(), joinStrings(soundNames));
   }
 
   private Sound parseSound(Player player, String soundName) {
@@ -251,7 +250,7 @@ public class SettingsCommands extends BaseCommand {
       if (PlayerSettings.DISALLOWED_PARTICLES.contains(particle)) {
         logger.send(player, INVALID_TYPE, PARTICLE.toString());
         logger.send(player, AVAILABLE_TYPE, PARTICLE.toString(),
-            String.join(", ", PlayerSettings.getAllowedParticles()));
+            joinStrings(PlayerSettings.getAllowedParticles()));
         return null;
       }
 
@@ -259,7 +258,7 @@ public class SettingsCommands extends BaseCommand {
     } catch (Exception e) {
       logger.send(player, INVALID_TYPE, PARTICLE.toString());
       logger.send(player, AVAILABLE_TYPE, PARTICLE.toString(),
-          String.join(", ", PlayerSettings.getAllowedParticles()));
+          joinStrings(PlayerSettings.getAllowedParticles()));
       return null;
     }
   }
@@ -274,7 +273,7 @@ public class SettingsCommands extends BaseCommand {
     } catch (IllegalArgumentException e) {
       logger.send(player, INVALID_COLOR, colorName);
       logger.send(player, AVAILABLE_TYPE, COLOR.toString(),
-          String.join(", ", PlayerSettings.getAllowedColorNames()));
+          joinStrings(PlayerSettings.getAllowedColorNames()));
       return;
     }
     settings.setParticle(EnumParticle.REDSTONE);

@@ -1,6 +1,7 @@
 package io.github.divinerealms.footcube.managers;
 
 import io.github.divinerealms.footcube.configs.PlayerData;
+import io.github.divinerealms.footcube.configs.Settings;
 import io.github.divinerealms.footcube.core.FCManager;
 import io.github.divinerealms.footcube.utils.Logger;
 import java.util.Collections;
@@ -151,11 +152,10 @@ public class PlayerDataManager {
     }
 
     plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
-      int chunkSize = 20;
       int processed = 0;
       int totalSaved = 0;
 
-      while (processed < chunkSize) {
+      while (processed < Settings.PLAYER_DATA_BATCH_SIZE.asInt()) {
         String playerName = dataQueue.poll();
         if (playerName == null) {
           break;
@@ -221,14 +221,16 @@ public class PlayerDataManager {
     if (fcManager.isDisabling()) {
       return;
     }
+
     if (saveScheduled) {
       return;
     }
+
     saveScheduled = true;
 
     plugin.getServer().getScheduler().runTaskLaterAsynchronously(plugin, () -> {
       saveQueue();
       saveScheduled = false;
-    }, 6000L);
+    }, Settings.getAutoSaveInterval());
   }
 }

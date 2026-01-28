@@ -1,5 +1,6 @@
 package io.github.divinerealms.footcube.tasks;
 
+import static io.github.divinerealms.footcube.matchmaking.util.MatchUtils.isPlayerOnline;
 import static io.github.divinerealms.footcube.physics.PhysicsConstants.CHARGE_BASE_VALUE;
 import static io.github.divinerealms.footcube.physics.PhysicsConstants.CHARGE_RECOVERY_RATE;
 import static io.github.divinerealms.footcube.physics.PhysicsConstants.EXP_UPDATE_INTERVAL_TICKS;
@@ -39,7 +40,7 @@ public class PlayerUpdateTask extends BaseTask {
 
     Map<UUID, Player> onlinePlayerMap = new HashMap<>(onlinePlayers.size());
     for (Player player : onlinePlayers) {
-      if (player != null) {
+      if (isPlayerOnline(player)) {
         onlinePlayerMap.put(player.getUniqueId(), player);
       }
     }
@@ -47,7 +48,7 @@ public class PlayerUpdateTask extends BaseTask {
     for (Map.Entry<UUID, Double> entry : charges.entrySet()) {
       UUID uuid = entry.getKey();
       Player player = onlinePlayerMap.get(uuid);
-      if (player == null) {
+      if (!isPlayerOnline(player)) {
         playersToRemove.add(uuid);
         continue;
       }
