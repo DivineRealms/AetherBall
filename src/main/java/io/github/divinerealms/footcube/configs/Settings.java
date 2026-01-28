@@ -245,7 +245,7 @@ public enum Settings {
   }
 
   public static long getSpawnCooldown() {
-    return CUBE_SPAWN_COOLDOWN.asLong() * 20L;
+    return TimeUnit.SECONDS.toMillis(CUBE_SPAWN_COOLDOWN.asLong());
   }
 
   public static long getTakePlaceAnnouncementInterval() {

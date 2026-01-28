@@ -327,14 +327,19 @@ public class PhysicsSystem {
       if (player.hasPermission(PERM_BYPASS_COOLDOWN)) {
         return false;
       }
+
       UUID playerId = player.getUniqueId();
-      long now = System.currentTimeMillis(), last = data.getButtonCooldowns()
-          .getOrDefault(playerId, 0L), diff = now - last;
+      long now = System.currentTimeMillis();
+      long last = data.getButtonCooldowns().getOrDefault(playerId, 0L);
+      long diff = now - last;
+
       if (diff < Settings.getSpawnCooldown()) {
-        long remainingMs = Settings.getSpawnCooldown() - diff, seconds = remainingMs / 1000;
+        long remainingMs = Settings.getSpawnCooldown() - diff;
+        long seconds = TimeUnit.MILLISECONDS.toSeconds(remainingMs);
         logger.send(player, BLOCK_INTERACT_COOLDOWN, Utilities.formatTime(seconds));
         return true;
       }
+      
       return false;
     } finally {
       if (Settings.DEBUG_MODE.asBoolean()) {
