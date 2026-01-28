@@ -2,7 +2,6 @@ package io.github.divinerealms.footcube.configs;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import lombok.Getter;
 import org.bukkit.configuration.file.FileConfiguration;
 
@@ -122,27 +121,38 @@ public enum Settings {
     return CONFIG;
   }
 
-  public static List<Integer> getEnabledMatchTypes() {
-    List<Integer> types = new ArrayList<>();
-    if (MATCH_1V1_ENABLED.asBoolean()) {
-      types.add(1);
-    }
-    if (MATCH_2V2_ENABLED.asBoolean()) {
-      types.add(2);
-    }
-    if (MATCH_3V3_ENABLED.asBoolean()) {
-      types.add(3);
-    }
-    if (MATCH_4V4_ENABLED.asBoolean()) {
-      types.add(4);
-    }
-    if (MATCH_5V5_ENABLED.asBoolean()) {
-      types.add(5);
-    }
-    return types;
+  public Object getDefault() {
+    return def;
   }
 
   // ==================== TYPE-SAFE GETTERS ====================
+
+  public boolean asBoolean() {
+    return Boolean.parseBoolean(String.valueOf(CONFIG.get(path, def)));
+  }
+
+  public int asInt() {
+    return Integer.parseInt(String.valueOf(CONFIG.get(path, def)));
+  }
+
+  public long asLong() {
+    return Long.parseLong(String.valueOf(CONFIG.get(path, def)));
+  }
+
+  public double asDouble() {
+    return Double.parseDouble(String.valueOf(CONFIG.get(path, def)));
+  }
+
+  public float asFloat() {
+    return Float.parseFloat(String.valueOf(CONFIG.get(path, def)));
+  }
+
+  @Override
+  public String toString() {
+    return CONFIG.getString(this.path, (String) this.def);
+  }
+
+  // ==================== HELPER METHODS ====================
 
   public static long getMatchDuration(int type) {
     switch (type) {
@@ -204,58 +214,47 @@ public enum Settings {
     return type + "v" + type;
   }
 
-  public static long getPracticeAreaCleanupTicks() {
-    return TimeUnit.MINUTES.toMillis(PRACTICE_AREA_CLEANUP.asInt());
+  public static List<Integer> getEnabledMatchTypes() {
+    List<Integer> types = new ArrayList<>();
+    if (MATCH_1V1_ENABLED.asBoolean()) {
+      types.add(1);
+    }
+    if (MATCH_2V2_ENABLED.asBoolean()) {
+      types.add(2);
+    }
+    if (MATCH_3V3_ENABLED.asBoolean()) {
+      types.add(3);
+    }
+    if (MATCH_4V4_ENABLED.asBoolean()) {
+      types.add(4);
+    }
+    if (MATCH_5V5_ENABLED.asBoolean()) {
+      types.add(5);
+    }
+    return types;
   }
 
-  // ==================== HELPER METHODS ====================
-
   public static long getCacheCleanupTicks() {
-    return TimeUnit.MINUTES.toMillis(CACHE_CLEANUP_INTERVAL.asInt());
+    return 20L * 60L * CACHE_CLEANUP_INTERVAL.asInt();
   }
 
   public static long getHighScoreUpdateTicks() {
-    return TimeUnit.MINUTES.toMillis(HIGHSCORE_UPDATE_INTERVAL.asInt());
+    return 20L * 60L * HIGHSCORE_UPDATE_INTERVAL.asInt();
   }
 
   public static long getAFKThreshold() {
-    return TimeUnit.MINUTES.toMillis(AFK_THRESHOLD.asInt());
+    return 20L * 60L * AFK_THRESHOLD.asInt();
   }
 
   public static long getSpawnCooldown() {
-    return TimeUnit.SECONDS.toMillis(CUBE_SPAWN_COOLDOWN.asInt());
+    return 20L * CUBE_SPAWN_COOLDOWN.asInt();
   }
 
   public static long getTakePlaceAnnouncement() {
-    return TimeUnit.SECONDS.toMillis(TAKE_PLACE_ANNOUNCEMENT.asInt());
+    return 20L * TAKE_PLACE_ANNOUNCEMENT.asInt();
   }
 
-  public Object getDefault() {
-    return def;
-  }
-
-  public boolean asBoolean() {
-    return Boolean.parseBoolean(String.valueOf(CONFIG.get(path, def)));
-  }
-
-  public int asInt() {
-    return Integer.parseInt(String.valueOf(CONFIG.get(path, def)));
-  }
-
-  public long asLong() {
-    return Long.parseLong(String.valueOf(CONFIG.get(path, def)));
-  }
-
-  public double asDouble() {
-    return Double.parseDouble(String.valueOf(CONFIG.get(path, def)));
-  }
-
-  public float asFloat() {
-    return Float.parseFloat(String.valueOf(CONFIG.get(path, def)));
-  }
-
-  @Override
-  public String toString() {
-    return CONFIG.getString(this.path, (String) this.def);
+  public static long getPracticeAreaCleanupTicks() {
+    return 20L * 60L * PRACTICE_AREA_CLEANUP.asInt();
   }
 }
