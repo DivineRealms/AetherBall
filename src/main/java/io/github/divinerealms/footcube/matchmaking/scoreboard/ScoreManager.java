@@ -62,7 +62,7 @@ public class ScoreManager {
       }
     }
 
-    String type = match.getArena().getType() + "v" + match.getArena().getType();
+    String type = Settings.getMatchTypeName(match.getArena().getType());
     String title = MATCHES_LIST_LOBBY.replace(type, String.valueOf(match.getArena().getId()));
     List<String> lines = Arrays.asList(buildLobbyScoreboard(match).split(System.lineSeparator()));
     String scoreboardName =
@@ -91,7 +91,7 @@ public class ScoreManager {
       }
     }
 
-    String type = match.getArena().getType() + "v" + match.getArena().getType();
+    String type = Settings.getMatchTypeName(match.getArena().getType());
     String title = MATCHES_LIST_MATCH.replace(type, String.valueOf(match.getArena().getId()));
     List<String> lines = Arrays.asList(buildMatchScoreboard(match).split(System.lineSeparator()));
     String scoreboardName =

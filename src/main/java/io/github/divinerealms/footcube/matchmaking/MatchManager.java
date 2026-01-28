@@ -90,7 +90,7 @@ public class MatchManager {
     Team team = teamManager.getTeam(player);
     List<Player> playersToQueue =
         (team != null) ? new ArrayList<>(team.getMembers()) : Collections.singletonList(player);
-    String matchTypeString = matchType + "v" + matchType;
+    String matchTypeString = Settings.getMatchTypeName(matchType);
 
     for (Player p : playersToQueue) {
       if (p == null || !p.isOnline()) {
@@ -162,7 +162,7 @@ public class MatchManager {
     StringBuilder sb = new StringBuilder("&e");
     for (int i = 0; i < types.size(); i++) {
       int type = types.get(i);
-      sb.append(type).append("v").append(type);
+      sb.append(Settings.getMatchTypeName(type));
       if (i < types.size() - 1) {
         sb.append("&7, &e");
       }
@@ -278,7 +278,7 @@ public class MatchManager {
     targetMatch.setCountdown(15);
 
     logger.send(player, MATCHMAN_FORCE_START,
-        targetMatch.getArena().getType() + "v" + targetMatch.getArena().getType());
+        Settings.getMatchTypeName(targetMatch.getArena().getType()));
     scoreboardManager.updateScoreboard(targetMatch);
   }
 
@@ -776,8 +776,7 @@ public class MatchManager {
           }
           clearPlayer(p);
           scoreboardManager.removeScoreboard(p);
-          logger.send(p, MATCHMAN_FORCE_END,
-              match.getArena().getType() + "v" + match.getArena().getType());
+          logger.send(p, MATCHMAN_FORCE_END, Settings.getMatchTypeName(match.getArena().getType()));
         }
       }
 

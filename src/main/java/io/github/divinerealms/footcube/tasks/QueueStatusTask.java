@@ -4,6 +4,7 @@ import static io.github.divinerealms.footcube.configs.Lang.MATCHES_LIST_LOBBY;
 import static io.github.divinerealms.footcube.configs.Lang.MATCHES_LIST_WAITING;
 import static io.github.divinerealms.footcube.configs.Lang.QUEUE_ACTIONBAR;
 
+import io.github.divinerealms.footcube.configs.Settings;
 import io.github.divinerealms.footcube.core.FCManager;
 import io.github.divinerealms.footcube.matchmaking.Match;
 import io.github.divinerealms.footcube.matchmaking.MatchPhase;
@@ -33,7 +34,7 @@ public class QueueStatusTask extends BaseTask {
 
       int matchType = match.getArena().getType();
       int requiredPlayers = matchType * 2;
-      String matchTypeString = matchType + "v" + matchType;
+      String matchTypeString = Settings.getMatchTypeName(matchType);
 
       int currentPlayers = 0;
       for (MatchPlayer mp : match.getPlayers()) {

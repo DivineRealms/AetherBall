@@ -139,7 +139,7 @@ public class MatchUtils {
       }
       firstBlock = false;
 
-      String type = match.getArena().getType() + "v" + match.getArena().getType();
+      String type = Settings.getMatchTypeName(match.getArena().getType());
 
       List<String> redPlayers = new ArrayList<>();
       List<String> bluePlayers = new ArrayList<>();

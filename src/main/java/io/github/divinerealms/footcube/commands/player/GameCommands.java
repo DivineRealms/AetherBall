@@ -140,7 +140,7 @@ public class GameCommands extends BaseCommand {
       matchManager.leaveMatch(player);
       logger.send(player, LEFT);
       logger.sendActionBar(player, LEAVE_QUEUE_ACTIONBAR,
-          match.getArena().getType() + "v" + match.getArena().getType());
+          Settings.getMatchTypeName(match.getArena().getType()));
       teamManager.forceDisbandTeam(player);
     } else {
       handleQueueLeave(player);
@@ -265,12 +265,10 @@ public class GameCommands extends BaseCommand {
     }
 
     if (matchPlayer != null) {
-      int playerScore = matchPlayer.getTeamColor() == TeamColor.RED
-          ? match.getScoreRed()
-          : match.getScoreBlue();
-      int opponentScore = matchPlayer.getTeamColor() == TeamColor.RED
-          ? match.getScoreBlue()
-          : match.getScoreRed();
+      int playerScore =
+          matchPlayer.getTeamColor() == TeamColor.RED ? match.getScoreRed() : match.getScoreBlue();
+      int opponentScore =
+          matchPlayer.getTeamColor() == TeamColor.RED ? match.getScoreBlue() : match.getScoreRed();
 
       if (playerScore < opponentScore) {
         fcManager.getEconomy().withdrawPlayer(player, 200);
@@ -307,9 +305,8 @@ public class GameCommands extends BaseCommand {
           emptySlots++;
         }
       }
-      logger.send(player, TAKEPLACE_AVAILABLE_ENTRY,
-          String.valueOf(openMatch.getArena().getId()),
-          openMatch.getArena().getType() + "v" + openMatch.getArena().getType(),
+      logger.send(player, TAKEPLACE_AVAILABLE_ENTRY, String.valueOf(openMatch.getArena().getId()),
+          Settings.getMatchTypeName(openMatch.getArena().getType()),
           String.valueOf(emptySlots));
     }
   }

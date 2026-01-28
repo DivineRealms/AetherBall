@@ -1,5 +1,6 @@
 package io.github.divinerealms.footcube.matchmaking.arena;
 
+import io.github.divinerealms.footcube.configs.Settings;
 import io.github.divinerealms.footcube.core.FCManager;
 import io.github.divinerealms.footcube.managers.ConfigManager;
 import io.github.divinerealms.footcube.utils.Logger;
@@ -89,7 +90,7 @@ public class ArenaManager {
 
     FileConfiguration config = configManager.getConfig("arenas.yml");
 
-    String typeString = type + "v" + type;
+    String typeString = Settings.getMatchTypeName(type);
     int index = config.getInt("arenas." + typeString + ".amount", 0) + 1;
 
     config.set("arenas." + typeString + ".amount", index);
@@ -169,7 +170,7 @@ public class ArenaManager {
   }
 
   public void clearArenaType(int type) {
-    String typeString = type + "v" + type;
+    String typeString = Settings.getMatchTypeName(type);
     FileConfiguration config = configManager.getConfig("arenas.yml");
 
     config.set("arenas." + typeString, null);

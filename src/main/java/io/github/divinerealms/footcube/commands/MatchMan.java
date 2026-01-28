@@ -9,6 +9,7 @@ import co.aikar.commands.annotation.CommandAlias;
 import co.aikar.commands.annotation.CommandPermission;
 import co.aikar.commands.annotation.Description;
 import co.aikar.commands.annotation.Subcommand;
+import io.github.divinerealms.footcube.configs.Settings;
 import io.github.divinerealms.footcube.core.FCManager;
 import io.github.divinerealms.footcube.matchmaking.Match;
 import io.github.divinerealms.footcube.matchmaking.MatchManager;
@@ -51,7 +52,7 @@ public class MatchMan extends BaseCommand {
       }
 
       logger.send(player, MATCHMAN_FORCE_END,
-          match.getArena().getType() + "v" + match.getArena().getType());
+          Settings.getMatchTypeName(match.getArena().getType()));
     } else {
       logger.send(player, MATCHES_LIST_NO_MATCHES);
     }

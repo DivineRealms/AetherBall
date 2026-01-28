@@ -102,7 +102,7 @@ public class MatchSystem {
     StringBuilder typesStr = new StringBuilder();
     for (int i = 0; i < enabledTypes.size(); i++) {
       int type = enabledTypes.get(i);
-      typesStr.append("&e").append(type).append("v").append(type);
+      typesStr.append("&e").append(Settings.getMatchTypeName(type));
       if (i < enabledTypes.size() - 1) {
         typesStr.append("&7, ");
       }
@@ -373,7 +373,7 @@ public class MatchSystem {
         if (shouldUpdateScoreboard(match)) {
           match.setCountdown(match.getCountdown() - 1);
           scoreboardManager.updateScoreboard(match);
-          String matchType = match.getArena().getType() + "v" + match.getArena().getType();
+          String matchType = Settings.getMatchTypeName(match.getArena().getType());
           String matchId = String.valueOf(match.getArena().getId());
 
           String matchTitle =
@@ -699,7 +699,7 @@ public class MatchSystem {
 
       int matchType = match.getArena().getType();
       String matchIdString = String.valueOf(match.getArena().getId()), matchTypeString =
-          matchType + "v" + matchType;
+          Settings.getMatchTypeName(matchType);
       boolean activeMatch = match.getPhase() == MatchPhase.IN_PROGRESS;
 
       String matchTitle = activeMatch ? "&a&l" + matchTypeString + " Meča #" + matchIdString
