@@ -1,4 +1,4 @@
-package io.github.divinerealms.footcube.commands;
+package io.github.divinerealms.footcube.commands.player;
 
 import static io.github.divinerealms.footcube.configs.Lang.FC_DISABLED;
 import static io.github.divinerealms.footcube.configs.Lang.JOIN_ALREADYINGAME;
@@ -16,10 +16,6 @@ import static io.github.divinerealms.footcube.configs.Lang.TEAM_NO_REQUEST;
 import static io.github.divinerealms.footcube.configs.Lang.TEAM_WANTS_TO_TEAM_OTHER;
 import static io.github.divinerealms.footcube.configs.Lang.TEAM_WANTS_TO_TEAM_SELF;
 import static io.github.divinerealms.footcube.configs.Lang.USAGE;
-import static io.github.divinerealms.footcube.matchmaking.util.MatchConstants.FIVE_V_FIVE;
-import static io.github.divinerealms.footcube.matchmaking.util.MatchConstants.FOUR_V_FOUR;
-import static io.github.divinerealms.footcube.matchmaking.util.MatchConstants.THREE_V_THREE;
-import static io.github.divinerealms.footcube.matchmaking.util.MatchConstants.TWO_V_TWO;
 import static io.github.divinerealms.footcube.utils.Permissions.PERM_PLAY;
 
 import co.aikar.commands.BaseCommand;
@@ -38,14 +34,14 @@ import io.github.divinerealms.footcube.utils.Logger;
 import org.bukkit.entity.Player;
 
 @CommandAlias("fc|footcube")
-public class FCTeamCommands extends BaseCommand {
+public class TeamCommands extends BaseCommand {
 
   private final FCManager fcManager;
   private final Logger logger;
   private final MatchManager matchManager;
   private final TeamManager teamManager;
 
-  public FCTeamCommands(FCManager fcManager) {
+  public TeamCommands(FCManager fcManager) {
     this.fcManager = fcManager;
     this.logger = fcManager.getLogger();
     this.matchManager = fcManager.getMatchManager();
@@ -189,14 +185,14 @@ public class FCTeamCommands extends BaseCommand {
   private int getMatchType(String matchType) {
     switch (matchType) {
       case "3v3":
-        return THREE_V_THREE;
+        return 3;
       case "4v4":
-        return FOUR_V_FOUR;
+        return 4;
       case "5v5":
-        return FIVE_V_FIVE;
+        return 5;
       case "2v2":
       default:
-        return TWO_V_TWO;
+        return 2;
     }
   }
 }

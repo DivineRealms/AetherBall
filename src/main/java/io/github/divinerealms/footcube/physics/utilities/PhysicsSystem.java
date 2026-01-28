@@ -7,42 +7,30 @@ import static io.github.divinerealms.footcube.configs.Lang.HITDEBUG_PLAYER_COOLD
 import static io.github.divinerealms.footcube.configs.Lang.HITDEBUG_PLAYER_REGULAR;
 import static io.github.divinerealms.footcube.configs.Lang.HITDEBUG_PLAYER_WHOLE;
 import static io.github.divinerealms.footcube.configs.Lang.HITDEBUG_REGULAR;
-import static io.github.divinerealms.footcube.physics.PhysicsConstants.AFK_THRESHOLD;
-import static io.github.divinerealms.footcube.physics.PhysicsConstants.CHARGED_BASE_POWER;
-import static io.github.divinerealms.footcube.physics.PhysicsConstants.CHARGED_KICK_COOLDOWN;
 import static io.github.divinerealms.footcube.physics.PhysicsConstants.CHARGE_BASE_VALUE;
 import static io.github.divinerealms.footcube.physics.PhysicsConstants.CHARGE_MULTIPLIER;
-import static io.github.divinerealms.footcube.physics.PhysicsConstants.CUBE_REMOVAL_DELAY_TICKS;
-import static io.github.divinerealms.footcube.physics.PhysicsConstants.DEBUG_ON_MS;
 import static io.github.divinerealms.footcube.physics.PhysicsConstants.JUMP_POTION_AMPLIFIER;
 import static io.github.divinerealms.footcube.physics.PhysicsConstants.JUMP_POTION_DURATION;
 import static io.github.divinerealms.footcube.physics.PhysicsConstants.KICK_POWER_SPEED_MULTIPLIER;
 import static io.github.divinerealms.footcube.physics.PhysicsConstants.MIN_SPEED_FOR_DAMPENING;
-import static io.github.divinerealms.footcube.physics.PhysicsConstants.REGULAR_BASE_POWER;
-import static io.github.divinerealms.footcube.physics.PhysicsConstants.REGULAR_KICK_COOLDOWN;
-import static io.github.divinerealms.footcube.physics.PhysicsConstants.SLIME_SIZE;
-import static io.github.divinerealms.footcube.physics.PhysicsConstants.SPAWN_COOLDOWN_MS;
 import static io.github.divinerealms.footcube.utils.Permissions.PERM_BYPASS_COOLDOWN;
 import static io.github.divinerealms.footcube.utils.Permissions.PERM_HIT_DEBUG;
 
+import io.github.divinerealms.footcube.configs.Settings;
+import io.github.divinerealms.footcube.core.FCManager;
 import io.github.divinerealms.footcube.managers.Utilities;
 import io.github.divinerealms.footcube.physics.PhysicsData;
 import io.github.divinerealms.footcube.physics.touch.CubeTouchInfo;
 import io.github.divinerealms.footcube.physics.touch.CubeTouchType;
 import io.github.divinerealms.footcube.utils.Logger;
-import java.lang.reflect.Field;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import java.util.logging.Level;
-import net.minecraft.server.v1_8_R3.EntitySlime;
-import net.minecraft.server.v1_8_R3.PathfinderGoalSelector;
+import java.util.concurrent.TimeUnit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
-import org.bukkit.craftbukkit.v1_8_R3.entity.CraftSlime;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
@@ -60,12 +48,12 @@ public class PhysicsSystem {
   private final Plugin plugin;
   private final PhysicsFormulae formulae;
 
-  public PhysicsSystem(PhysicsData data, Logger logger, BukkitScheduler scheduler, Plugin plugin) {
-    this.data = data;
-    this.logger = logger;
-    this.scheduler = scheduler;
-    this.plugin = plugin;
-    this.formulae = new PhysicsFormulae(logger);
+  public PhysicsSystem(FCManager fcManager) {
+    this.data = fcManager.getPhysicsData();
+    this.logger = fcManager.getLogger();
+    this.scheduler = fcManager.getScheduler();
+    this.plugin = fcManager.getPlugin();
+    this.formulae = fcManager.getPhysicsFormulae();
   }
 
   /**
@@ -79,6 +67,7 @@ public class PhysicsSystem {
 
     Set<Slime> toRemove = new HashSet<>(data.getCubesToRemove());
     data.getCubesToRemove().clear();
+    long removalDelay = TimeUnit.SECONDS.toMillis(Settings.REMOVAL_DELAY.asInt());
 
     scheduler.runTaskLater(plugin, () -> {
       for (Slime cube : toRemove) {
@@ -93,7 +82,7 @@ public class PhysicsSystem {
           cube.remove();
         }
       }
-    }, CUBE_REMOVAL_DELAY_TICKS);
+    }, removalDelay);
   }
 
   /**
@@ -109,18 +98,20 @@ public class PhysicsSystem {
       double charge = CHARGE_BASE_VALUE
           + data.getCharges().getOrDefault(player.getUniqueId(), 0D) * CHARGE_MULTIPLIER;
       double speed = data.getSpeed().getOrDefault(player.getUniqueId(), MIN_SPEED_FOR_DAMPENING);
-      double power = isCharged
-          ? speed * KICK_POWER_SPEED_MULTIPLIER + CHARGED_BASE_POWER
-          : speed * KICK_POWER_SPEED_MULTIPLIER + REGULAR_BASE_POWER;
+      double power = isCharged ? speed * KICK_POWER_SPEED_MULTIPLIER
+          + Settings.KICK_BASE_POWER_CHARGED.asDouble()
+          : speed * KICK_POWER_SPEED_MULTIPLIER + Settings.KICK_BASE_POWER_REGULAR.asDouble();
       double baseKickPower = charge * power;
       double finalKickPower = formulae.capKickPower(baseKickPower);
 
       return new PlayerKickResult(power, charge, baseKickPower, finalKickPower, isCharged);
     } finally {
-      long ms = (System.nanoTime() - start) / 1_000_000;
-      if (ms > DEBUG_ON_MS) {
-        logger.send(PERM_HIT_DEBUG,
-            "{prefix-admin}&dPhysicsSystem#calculateKickPower() &ftook &e" + ms + "ms");
+      if (Settings.DEBUG_MODE.asBoolean()) {
+        long ms = (System.nanoTime() - start) / 1_000_000;
+        if (ms > Settings.DEBUG_THRESHOLD.asLong()) {
+          logger.send(PERM_HIT_DEBUG,
+              "{prefix-admin}&dPhysicsSystem#calculateKickPower() &ftook &e" + ms + "ms");
+        }
       }
     }
   }
@@ -141,10 +132,12 @@ public class PhysicsSystem {
         }
       }
     } finally {
-      long ms = (System.nanoTime() - start) / 1_000_000;
-      if (ms > DEBUG_ON_MS) {
-        logger.send(PERM_HIT_DEBUG,
-            "{prefix-admin}&dPhysicsSystem#removeCubes() &ftook &e" + ms + "ms");
+      if (Settings.DEBUG_MODE.asBoolean()) {
+        long ms = (System.nanoTime() - start) / 1_000_000;
+        if (ms > Settings.DEBUG_THRESHOLD.asLong()) {
+          logger.send(PERM_HIT_DEBUG,
+              "{prefix-admin}&dPhysicsSystem#removeCubes() &ftook &e" + ms + "ms");
+        }
       }
     }
   }
@@ -160,61 +153,20 @@ public class PhysicsSystem {
     try {
       Slime cube = (Slime) location.getWorld().spawnEntity(location, EntityType.SLIME);
       cube.setRemoveWhenFarAway(false);
-      cube.setSize(SLIME_SIZE);
+      cube.setSize(1);
       // Permanent jump effect that stops the cube from hopping.
       cube.addPotionEffect(
           new PotionEffect(PotionEffectType.JUMP, JUMP_POTION_DURATION, JUMP_POTION_AMPLIFIER,
-              true),
-          true);
+              true), true);
       data.getCubes().add(cube);
       return cube;
     } finally {
-      long ms = (System.nanoTime() - start) / 1_000_000;
-      if (ms > DEBUG_ON_MS) {
-        logger.send(PERM_HIT_DEBUG,
-            "{prefix-admin}&dPhysicsSystem#spawnCube() &ftook &e" + ms + "ms");
-      }
-    }
-  }
-
-  /**
-   * Spawns a new ball at the given location and disables its AI.
-   *
-   * @param location The location to spawn the cube.
-   * @return The spawned entity.
-   */
-  public Slime _spawnCube(Location location) {
-    long start = System.nanoTime();
-    try {
-      Slime cube = (Slime) location.getWorld().spawnEntity(location, EntityType.SLIME);
-      cube.setRemoveWhenFarAway(false);
-      cube.setSize(SLIME_SIZE);
-      // Permanent jump effect that stops the cube from hopping.
-      cube.addPotionEffect(
-          new PotionEffect(PotionEffectType.JUMP, JUMP_POTION_DURATION, JUMP_POTION_AMPLIFIER,
-              true),
-          true);
-
-      // NMS Hack to prevent the ball from trying to reach the player.
-      EntitySlime nmsSlime = ((CraftSlime) cube).getHandle();
-      try {
-        for (String fieldName : new String[]{"b", "c"}) {
-          Field field = PathfinderGoalSelector.class.getDeclaredField(fieldName);
-          field.setAccessible(true);
-          field.set(nmsSlime.goalSelector, new LinkedList<>());
-          field.set(nmsSlime.targetSelector, new LinkedList<>());
+      if (Settings.DEBUG_MODE.asBoolean()) {
+        long ms = (System.nanoTime() - start) / 1_000_000;
+        if (ms > Settings.DEBUG_THRESHOLD.asLong()) {
+          logger.send(PERM_HIT_DEBUG,
+              "{prefix-admin}&dPhysicsSystem#spawnCube() &ftook &e" + ms + "ms");
         }
-      } catch (Exception exception) {
-        plugin.getLogger().log(Level.SEVERE, "Error injecting NMS Pathfinder Goals:", exception);
-      }
-
-      data.getCubes().add(cube);
-      return cube;
-    } finally {
-      long ms = (System.nanoTime() - start) / 1_000_000;
-      if (ms > DEBUG_ON_MS) {
-        logger.send(PERM_HIT_DEBUG,
-            "{prefix-admin}&dPhysicsSystem#spawnCube() &ftook &e" + ms + "ms");
       }
     }
   }
@@ -239,7 +191,7 @@ public class PhysicsSystem {
    */
   public boolean isAFK(Player player) {
     long last = data.getLastAction().getOrDefault(player.getUniqueId(), 0L);
-    return System.currentTimeMillis() - last > AFK_THRESHOLD;
+    return System.currentTimeMillis() - last > Settings.getAFKThreshold();
   }
 
   /**
@@ -271,10 +223,12 @@ public class PhysicsSystem {
       data.getCubeHits().remove(uuid);
       data.getButtonCooldowns().remove(uuid);
     } finally {
-      long ms = (System.nanoTime() - start) / 1_000_000;
-      if (ms > DEBUG_ON_MS) {
-        logger.send(PERM_HIT_DEBUG,
-            "{prefix-admin}&dPhysicsSystem#removePlayer() &ftook &e" + ms + "ms");
+      if (Settings.DEBUG_MODE.asBoolean()) {
+        long ms = (System.nanoTime() - start) / 1_000_000;
+        if (ms > Settings.DEBUG_THRESHOLD.asLong()) {
+          logger.send(PERM_HIT_DEBUG,
+              "{prefix-admin}&dPhysicsSystem#removePlayer() &ftook &e" + ms + "ms");
+        }
       }
     }
   }
@@ -294,9 +248,7 @@ public class PhysicsSystem {
       UUID playerId = player.getUniqueId();
       boolean isChargedHit = kickResult.isChargedHit();
       double finalKickPower = kickResult.getFinalKickPower();
-      CubeTouchType type = isChargedHit
-          ? CubeTouchType.CHARGED_KICK
-          : CubeTouchType.REGULAR_KICK;
+      CubeTouchType type = isChargedHit ? CubeTouchType.CHARGED_KICK : CubeTouchType.REGULAR_KICK;
 
       Map<CubeTouchType, CubeTouchInfo> touches = data.getLastTouches().get(playerId);
       long lastHitTime = 0L;
@@ -304,32 +256,28 @@ public class PhysicsSystem {
         lastHitTime = touches.get(type).getTimestamp();
       }
 
-      long cooldownDuration = isChargedHit
-          ? CHARGED_KICK_COOLDOWN
-          : REGULAR_KICK_COOLDOWN;
+      long cooldownDuration = isChargedHit ? Settings.KICK_COOLDOWN_CHARGED.asLong()
+          : Settings.KICK_COOLDOWN_REGULAR.asLong();
       long currentTime = System.currentTimeMillis();
       long timeElapsed = currentTime - lastHitTime;
       long timeRemainingMillis = Math.max(0, cooldownDuration - timeElapsed);
 
       String timeFormatted = String.format("%.1f", timeRemainingMillis / 1000.0);
-      String color = timeRemainingMillis > 50
-          ? "&c"
-          : "&a";
+      String color = timeRemainingMillis > 50 ? "&c" : "&a";
 
       logger.sendActionBar(player, HITDEBUG_PLAYER_WHOLE,
-          isChargedHit
-              ? HITDEBUG_PLAYER_CHARGED.replace(
-              String.format("%.2f", finalKickPower),
+          isChargedHit ? HITDEBUG_PLAYER_CHARGED.replace(String.format("%.2f", finalKickPower),
               String.format("%.2f", kickResult.getPower()),
-              String.format("%.2f", kickResult.getCharge())
-          )
+              String.format("%.2f", kickResult.getCharge()))
               : HITDEBUG_PLAYER_REGULAR.replace(String.format("%.2f", finalKickPower)),
           HITDEBUG_PLAYER_COOLDOWN.replace(color, timeFormatted));
     } finally {
-      long ms = (System.nanoTime() - start) / 1_000_000;
-      if (ms > DEBUG_ON_MS) {
-        logger.send(PERM_HIT_DEBUG,
-            "{prefix-admin}&dPhysicsSystem#showHits() &ftook &e" + ms + "ms");
+      if (Settings.DEBUG_MODE.asBoolean()) {
+        long ms = (System.nanoTime() - start) / 1_000_000;
+        if (ms > Settings.DEBUG_THRESHOLD.asLong()) {
+          logger.send(PERM_HIT_DEBUG,
+              "{prefix-admin}&dPhysicsSystem#showHits() &ftook &e" + ms + "ms");
+        }
       }
     }
   }
@@ -347,24 +295,21 @@ public class PhysicsSystem {
   public String onHitDebug(Player player, PlayerKickResult result) {
     long start = System.nanoTime();
     try {
-      String coloredKickPower = result.getFinalKickPower() != result.getBaseKickPower()
-          ? "&c"
-          : "&a";
-      return result.isChargedHit()
-          ? HITDEBUG_CHARGED.replace(
-          player.getDisplayName(),
+      String coloredKickPower =
+          result.getFinalKickPower() != result.getBaseKickPower() ? "&c" : "&a";
+      return result.isChargedHit() ? HITDEBUG_CHARGED.replace(player.getDisplayName(),
           coloredKickPower + String.format("%.2f", result.getFinalKickPower()),
           String.format("%.2f", result.getBaseKickPower()),
-          String.format("%.2f", result.getPower()),
-          String.format("%.2f", result.getCharge()))
+          String.format("%.2f", result.getPower()), String.format("%.2f", result.getCharge()))
           : HITDEBUG_REGULAR.replace(player.getDisplayName(),
-              String.format("%.2f", result.getFinalKickPower())
-          );
+              String.format("%.2f", result.getFinalKickPower()));
     } finally {
-      long ms = (System.nanoTime() - start) / 1_000_000;
-      if (ms > DEBUG_ON_MS) {
-        logger.send(PERM_HIT_DEBUG,
-            "{prefix-admin}&dPhysicsSystem#onHitDebug() &ftook &e" + ms + "ms");
+      if (Settings.DEBUG_MODE.asBoolean()) {
+        long ms = (System.nanoTime() - start) / 1_000_000;
+        if (ms > Settings.DEBUG_THRESHOLD.asLong()) {
+          logger.send(PERM_HIT_DEBUG,
+              "{prefix-admin}&dPhysicsSystem#onHitDebug() &ftook &e" + ms + "ms");
+        }
       }
     }
   }
@@ -384,19 +329,20 @@ public class PhysicsSystem {
       }
       UUID playerId = player.getUniqueId();
       long now = System.currentTimeMillis(), last = data.getButtonCooldowns()
-          .getOrDefault(playerId, 0L), diff =
-          now - last;
-      if (diff < SPAWN_COOLDOWN_MS) {
-        long remainingMs = SPAWN_COOLDOWN_MS - diff, seconds = remainingMs / 1000;
+          .getOrDefault(playerId, 0L), diff = now - last;
+      if (diff < Settings.getSpawnCooldown()) {
+        long remainingMs = Settings.getSpawnCooldown() - diff, seconds = remainingMs / 1000;
         logger.send(player, BLOCK_INTERACT_COOLDOWN, Utilities.formatTime(seconds));
         return true;
       }
       return false;
     } finally {
-      long ms = (System.nanoTime() - start) / 1_000_000;
-      if (ms > DEBUG_ON_MS) {
-        logger.send(PERM_HIT_DEBUG,
-            "{prefix-admin}&dPhysicsSystem#cantSpawnYet() &ftook &e" + ms + "ms");
+      if (Settings.DEBUG_MODE.asBoolean()) {
+        long ms = (System.nanoTime() - start) / 1_000_000;
+        if (ms > Settings.DEBUG_THRESHOLD.asLong()) {
+          logger.send(PERM_HIT_DEBUG,
+              "{prefix-admin}&dPhysicsSystem#cantSpawnYet() &ftook &e" + ms + "ms");
+        }
       }
     }
   }

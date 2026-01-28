@@ -10,13 +10,11 @@ import lombok.Getter;
 @AllArgsConstructor
 public class TaskStats {
 
-  private final double physicsAvgMs, touchCleanupAvgMs, playerUpdateAvgMs, particleTrailAvgMs,
-      cubeCleanerAvgMs, matchmakingAvgMs, cacheCleanupAvgMs, queueStatusAvgMs;
+  private final double physicsAvgMs, touchCleanupAvgMs, playerUpdateAvgMs, particleTrailAvgMs, matchmakingAvgMs, queueStatusAvgMs;
 
   public double getTotalAverageMs() {
-    return physicsAvgMs + touchCleanupAvgMs + playerUpdateAvgMs
-        + particleTrailAvgMs + cubeCleanerAvgMs + matchmakingAvgMs
-        + cacheCleanupAvgMs + queueStatusAvgMs;
+    return physicsAvgMs + touchCleanupAvgMs + playerUpdateAvgMs + particleTrailAvgMs
+        + matchmakingAvgMs + queueStatusAvgMs;
   }
 
   public double getAveragePerTask() {

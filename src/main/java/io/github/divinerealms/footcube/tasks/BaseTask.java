@@ -2,6 +2,7 @@ package io.github.divinerealms.footcube.tasks;
 
 import static io.github.divinerealms.footcube.utils.Permissions.PERM_ADMIN;
 
+import io.github.divinerealms.footcube.configs.Settings;
 import io.github.divinerealms.footcube.core.FCManager;
 import io.github.divinerealms.footcube.utils.Logger;
 import java.util.ArrayDeque;
@@ -49,9 +50,11 @@ public abstract class BaseTask implements Runnable {
     if (interval <= 2) {
       return 5;
     }
+
     if (interval <= 40) {
       return 20;
     }
+
     return 50;
   }
 
@@ -60,27 +63,29 @@ public abstract class BaseTask implements Runnable {
       logger.info("&e! &6" + taskName + " task is already running");
       return;
     }
+
     if (async) {
       task = plugin.getServer().getScheduler()
           .runTaskTimerAsynchronously(plugin, this, interval, interval);
     } else {
       task = plugin.getServer().getScheduler().runTaskTimer(plugin, this, interval, interval);
     }
+
     running = true;
-    logger.info("&a✔ &2Started &d" + taskName + "&2 task &7&o(type: " + (async
-        ? "&ba"
-        : "&a") + "sync&7&o, frequency: " + interval +
-        " ticks)");
+    logger.info("&a✔ &2Started &d" + taskName + "&2 task &7&o(type: " + (async ? "&ba" : "&a")
+        + "sync&7&o, frequency: " + interval + " ticks)");
   }
 
   public void stop() {
     if (!running) {
       return;
     }
+
     if (task != null) {
       task.cancel();
       task = null;
     }
+
     running = false;
   }
 
@@ -94,15 +99,16 @@ public abstract class BaseTask implements Runnable {
           .log(Level.SEVERE, "Error in " + taskName + " task: " + exception.getMessage(),
               exception);
     } finally {
-      long durationNanos = System.nanoTime() - start;
-      recordExecution(durationNanos);
+      if (Settings.DEBUG_MODE.asBoolean()) {
+        long durationNanos = System.nanoTime() - start;
+        recordExecution(durationNanos);
 
-      long durationMillis = durationNanos / 1_000_000;
-      if (durationMillis > debugThreshold) {
-        logger.send(PERM_ADMIN,
-            "{prefix-admin}&d" + taskName + " &ftook &e" + durationMillis + "ms &f(threshold: "
-                + debugThreshold +
-                "ms)");
+        long durationMillis = durationNanos / 1_000_000;
+        if (durationMillis > debugThreshold) {
+          logger.send(PERM_ADMIN,
+              "{prefix-admin}&d" + taskName + " &ftook &e" + durationMillis + "ms &f(threshold: "
+                  + debugThreshold + "ms)");
+        }
       }
     }
   }
@@ -124,6 +130,7 @@ public abstract class BaseTask implements Runnable {
     if (recentExecutionTimes.isEmpty()) {
       return 0.0;
     }
+
     return totalExecutionTime / (double) recentExecutionTimes.size() / 1_000_000.0;
   }
 

@@ -1,5 +1,6 @@
 package io.github.divinerealms.footcube.managers;
 
+import io.github.divinerealms.footcube.configs.Settings;
 import io.github.divinerealms.footcube.core.FCManager;
 import io.github.divinerealms.footcube.tasks.BaseTask;
 import io.github.divinerealms.footcube.tasks.CacheCleanupTask;
@@ -51,12 +52,11 @@ public class TaskManager {
     this.particleTrailTask = new ParticleTrailTask(fcManager);
 
     // Initialize general tasks.
-    this.cubeCleanerTask = new CubeCleanerTask(fcManager,
-        fcManager.getCubeCleaner().getRemoveInterval());
+    this.cubeCleanerTask = new CubeCleanerTask(fcManager, Settings.getPracticeAreaCleanupTicks());
     this.matchmakingTask = new MatchmakingTask(fcManager);
-    this.cacheCleanupTask = new CacheCleanupTask(fcManager);
+    this.cacheCleanupTask = new CacheCleanupTask(fcManager, Settings.getCacheCleanupTicks());
     this.queueStatusTask = new QueueStatusTask(fcManager);
-    this.highScoresTask = new HighScoresTask(fcManager);
+    this.highScoresTask = new HighScoresTask(fcManager, Settings.getHighScoreUpdateTicks());
 
     tasks.add(physicsTask);
     tasks.add(touchCleanupTask);
@@ -109,16 +109,10 @@ public class TaskManager {
   }
 
   public TaskStats getStats() {
-    return new TaskStats(
-        physicsTask.getAverageExecutionTime(),
-        touchCleanupTask.getAverageExecutionTime(),
-        playerUpdateTask.getAverageExecutionTime(),
-        particleTrailTask.getAverageExecutionTime(),
-        cubeCleanerTask.getAverageExecutionTime(),
-        matchmakingTask.getAverageExecutionTime(),
-        cacheCleanupTask.getAverageExecutionTime(),
-        queueStatusTask.getAverageExecutionTime()
-    );
+    return new TaskStats(physicsTask.getAverageExecutionTime(),
+        touchCleanupTask.getAverageExecutionTime(), playerUpdateTask.getAverageExecutionTime(),
+        particleTrailTask.getAverageExecutionTime(), matchmakingTask.getAverageExecutionTime(),
+        queueStatusTask.getAverageExecutionTime());
   }
 
   public void resetAllStats() {

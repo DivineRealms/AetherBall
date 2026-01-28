@@ -45,8 +45,8 @@ import static io.github.divinerealms.footcube.configs.Lang.MATCH_SCORE_OWN_GOAL_
 import static io.github.divinerealms.footcube.configs.Lang.MATCH_SCORE_STATS;
 import static io.github.divinerealms.footcube.configs.Lang.NOBODY;
 import static io.github.divinerealms.footcube.configs.Lang.RED;
-import static io.github.divinerealms.footcube.matchmaking.util.MatchConstants.TWO_V_TWO;
 
+import io.github.divinerealms.footcube.configs.Settings;
 import io.github.divinerealms.footcube.core.FCManager;
 import io.github.divinerealms.footcube.managers.Utilities;
 import io.github.divinerealms.footcube.matchmaking.Match;
@@ -170,9 +170,7 @@ public class MatchUtils {
       } else if (match.getPhase() == MatchPhase.STARTING) {
         timeDisplay = MATCHES_LIST_STARTING.replace(String.valueOf(match.getCountdown()));
       } else {
-        long matchDuration = match.getArena().getType() == TWO_V_TWO
-            ? 120
-            : 300;
+        long matchDuration = Settings.getMatchDuration(match.getArena().getType());
         long elapsedMillis =
             System.currentTimeMillis() - match.getStartTime();
         long remainingSeconds = matchDuration - TimeUnit.MILLISECONDS.toSeconds(elapsedMillis);
@@ -405,11 +403,10 @@ public class MatchUtils {
   }
 
   public static MatchSystem.ScoringResult determineScoringPlayers(Match match,
-      TeamColor scoringTeam) {
+      TeamColor scoringTeam, boolean shouldCountStats) {
     MatchPlayer scorer = match.getLastTouch();
     MatchPlayer assister = null;
     boolean ownGoal = false;
-    boolean shouldCountStats = match.getArena().getType() != TWO_V_TWO;
 
     if (scorer == null) {
       return new MatchSystem.ScoringResult(null, null,
@@ -453,18 +450,18 @@ public class MatchUtils {
     if (scorer != null && scorer.getPlayer() != null && scorer.getPlayer().isOnline()) {
       Player scoringPlayer = scorer.getPlayer();
       logger.send(scoringPlayer, MATCH_SCORE_CREDITS);
-      fcManager.getEconomy().depositPlayer(scoringPlayer, 50);
+      fcManager.getEconomy().depositPlayer(scoringPlayer, Settings.ECONOMY_GOAL.asDouble());
 
       if (scorer.getGoals() > 0 && scorer.getGoals() % 3 == 0) {
         logger.send(scoringPlayer, MATCH_SCORE_HATTRICK);
-        fcManager.getEconomy().depositPlayer(scoringPlayer, 250);
+        fcManager.getEconomy().depositPlayer(scoringPlayer, Settings.ECONOMY_HAT_TRICK.asDouble());
       }
     }
 
     if (assister != null && assister.getPlayer() != null && assister.getPlayer().isOnline()) {
       Player assistingPlayer = assister.getPlayer();
       logger.send(assistingPlayer, MATCH_ASSIST_CREDITS);
-      fcManager.getEconomy().depositPlayer(assistingPlayer, 25);
+      fcManager.getEconomy().depositPlayer(assistingPlayer, Settings.ECONOMY_ASSIST.asDouble());
     }
   }
 
@@ -482,9 +479,9 @@ public class MatchUtils {
 
       Player player = matchPlayer.getPlayer();
 
-      PlayerSettings settings = fcManager.getPlayerSettings(player);
-      if (settings != null && settings.isGoalSoundEnabled()) {
-        player.playSound(player.getLocation(), settings.getGoalSound(), 1, 1);
+      PlayerSettings playerSettings = fcManager.getPlayerSettings(player);
+      if (playerSettings != null && playerSettings.isGoalSoundEnabled()) {
+        player.playSound(player.getLocation(), playerSettings.getGoalSound(), 1, 1);
       }
 
       player.playEffect(goalLoc, Effect.EXPLOSION_HUGE, null);

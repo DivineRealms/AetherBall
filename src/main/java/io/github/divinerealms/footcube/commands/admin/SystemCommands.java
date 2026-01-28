@@ -1,4 +1,4 @@
-package io.github.divinerealms.footcube.commands;
+package io.github.divinerealms.footcube.commands.admin;
 
 import static io.github.divinerealms.footcube.configs.Lang.FC_TOGGLE;
 import static io.github.divinerealms.footcube.configs.Lang.OFF;
@@ -32,14 +32,14 @@ import io.github.divinerealms.footcube.utils.TaskStats;
 import org.bukkit.command.CommandSender;
 
 @CommandAlias("fca|fcadmin|footcubeadmin")
-public class FCAdminSystemCommands extends BaseCommand {
+public class SystemCommands extends BaseCommand {
 
   private final FCManager fcManager;
   private final Logger logger;
   private final MatchManager matchManager;
   private final ArenaManager arenaManager;
 
-  public FCAdminSystemCommands(FCManager fcManager) {
+  public SystemCommands(FCManager fcManager) {
     this.fcManager = fcManager;
     this.logger = fcManager.getLogger();
     this.matchManager = fcManager.getMatchManager();

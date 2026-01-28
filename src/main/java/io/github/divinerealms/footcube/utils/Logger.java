@@ -242,13 +242,8 @@ public class Logger {
    * @return the processed message with placeholders either removed or replaced
    */
   public String replacePlaceholders(String message, boolean clear) {
-    return message
-        .replace("{prefix}", clear
-            ? ""
-            : PREFIX.toString())
-        .replace("{prefix-admin}", clear
-            ? ""
-            : PREFIX_ADMIN.toString());
+    return message.replace("{prefix}", clear ? "" : PREFIX.toString())
+        .replace("{prefix-admin}", clear ? "" : PREFIX_ADMIN.toString());
   }
 
   /**

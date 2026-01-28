@@ -23,8 +23,6 @@ public class CubeCleaner {
   public boolean empty;
   @Getter
   public int amount = 0;
-  @Getter
-  public int removeInterval;
 
   public CubeCleaner(FCManager fcManager) {
     ConfigManager configManager = fcManager.getConfigManager();
@@ -33,14 +31,11 @@ public class CubeCleaner {
     this.practiceAreas = new ArrayList<>();
     Logger logger = fcManager.getLogger();
 
-    FileConfiguration config = configManager.getConfig("config.yml");
-    int minutes = config.getInt("clear-cube-interval", 5);
-    this.removeInterval = minutes * 60 * 20;
-
     if (noPracticeAreasSet()) {
       logger.info(PRACTICE_AREAS_EMPTY);
       return;
     }
+
     loadPracticeAreas();
   }
 
@@ -50,6 +45,7 @@ public class CubeCleaner {
     if (!practice.contains("practice-areas")) {
       return;
     }
+
     if (practice.getConfigurationSection("practice-areas") == null) {
       return;
     }
@@ -59,6 +55,7 @@ public class CubeCleaner {
       if (location == null) {
         continue;
       }
+
       practiceAreas.add(new PracticeArea(location, 100));
     }
   }
@@ -70,12 +67,15 @@ public class CubeCleaner {
     if (practiceAreas.isEmpty()) {
       return;
     }
+
     if (physicsData == null) {
       return;
     }
+
     if (physicsData.getCubes() == null) {
       return;
     }
+
     if (physicsData.getCubes().isEmpty()) {
       return;
     }
@@ -84,6 +84,7 @@ public class CubeCleaner {
       if (cube == null) {
         continue;
       }
+
       if (cube.isDead()) {
         continue;
       }
@@ -122,6 +123,7 @@ public class CubeCleaner {
       if (location.getWorld() == null || center.getWorld() == null) {
         return false;
       }
+
       if (!location.getWorld().equals(center.getWorld())) {
         return false;
       }
@@ -130,9 +132,11 @@ public class CubeCleaner {
       if (Math.abs(location.getX() - center.getX()) > radius) {
         return false;
       }
+
       if (Math.abs(location.getY() - center.getY()) > radius) {
         return false;
       }
+
       if (Math.abs(location.getZ() - center.getZ()) > radius) {
         return false;
       }

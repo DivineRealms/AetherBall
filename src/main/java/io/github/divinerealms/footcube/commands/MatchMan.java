@@ -20,12 +20,12 @@ import org.bukkit.entity.Player;
 @CommandAlias("matchman|mm")
 @CommandPermission(PERM_MATCHMAN)
 @Description("Manipulate FootCube matches")
-public class MatchManCommands extends BaseCommand {
+public class MatchMan extends BaseCommand {
 
   private final Logger logger;
   private final MatchManager matchManager;
 
-  public MatchManCommands(FCManager fcManager) {
+  public MatchMan(FCManager fcManager) {
     this.logger = fcManager.getLogger();
     this.matchManager = fcManager.getMatchManager();
   }

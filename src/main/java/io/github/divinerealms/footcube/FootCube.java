@@ -13,6 +13,7 @@ public class FootCube extends JavaPlugin {
     try {
       this.fcManager = new FCManager(this);
       fcManager.setEnabling(true);
+      fcManager.reload();
       fcManager.getLogger()
           .info("&a✔ &2Successfully enabled &bFootCube v" + getDescription().getVersion() + "&2!");
     } catch (Exception exception) {

@@ -6,35 +6,19 @@ import lombok.Getter;
 @Getter
 public class PhysicsConstants {
 
-  // --- Debug & Monitoring ---
-  public static final int DEBUG_ON_MS = 5;
-
   // --- Task Intervals (Ticks) ---
   public static final long PHYSICS_TASK_INTERVAL_TICKS = 1;
   public static final long MATCH_TASK_INTERVAL_TICKS = 1;
   public static final long GLOW_TASK_INTERVAL_TICKS = 2;
-  public static final long CUBE_REMOVAL_DELAY_TICKS = 20;
   public static final int CLEANUP_LAST_TOUCHES_INTERVAL = 1;
   public static final int EXP_UPDATE_INTERVAL_TICKS = 1;
 
-  // --- Timeouts & Cooldowns (Milliseconds) ---
-  public static final long REGULAR_KICK_COOLDOWN = 150;
-  public static final long CHARGED_KICK_COOLDOWN = 500;
-  public static final long RISE_COOLDOWN = 1000;
-  public static final long AFK_THRESHOLD = 60_000;
-  public static final long SPAWN_COOLDOWN_MS = 3_000L;
-
   // --- Slime / Entity Configuration ---
-  public static final int SLIME_SIZE = 1;
   public static final int JUMP_POTION_DURATION = Integer.MAX_VALUE;
   public static final int JUMP_POTION_AMPLIFIER = -3;
 
   // --- Kick Power & Charge Settings ---
-  public static final double MAX_KP = 5;
-  public static final double SOFT_CAP_MIN_FACTOR = 0.9;
   public static final double CHARGE_MULTIPLIER = 7;
-  public static final double CHARGED_BASE_POWER = 0.375;
-  public static final double REGULAR_BASE_POWER = 0.65;
   public static final double CHARGE_BASE_VALUE = 1;
   public static final double CHARGE_RECOVERY_RATE = 0.95;
 
@@ -44,7 +28,6 @@ public class PhysicsConstants {
   public static final double WALL_BOUNCE_FACTOR = 0.8;
   public static final double AIR_DRAG_FACTOR = 0.98;
   public static final double CUBE_JUMP_RIGHT_CLICK = 0.7;
-  public static final double KICK_VERTICAL_BOOST = 0.3;
 
   // --- Distance & Collision Thresholds ---
   public static final double HIT_RADIUS = 1.2;

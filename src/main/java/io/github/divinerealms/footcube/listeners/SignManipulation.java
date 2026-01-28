@@ -11,12 +11,10 @@ import static io.github.divinerealms.footcube.configs.Lang.MATCHES_LIST_FOOTER;
 import static io.github.divinerealms.footcube.configs.Lang.MATCHES_LIST_HEADER;
 import static io.github.divinerealms.footcube.configs.Lang.MATCHES_LIST_NO_MATCHES;
 import static io.github.divinerealms.footcube.configs.Lang.NO_PERM_PARAMETERS;
-import static io.github.divinerealms.footcube.matchmaking.util.MatchConstants.FOUR_V_FOUR;
-import static io.github.divinerealms.footcube.matchmaking.util.MatchConstants.THREE_V_THREE;
-import static io.github.divinerealms.footcube.matchmaking.util.MatchConstants.TWO_V_TWO;
 import static io.github.divinerealms.footcube.matchmaking.util.MatchUtils.getFormattedMatches;
 import static io.github.divinerealms.footcube.utils.Permissions.PERM_PLAY;
 
+import io.github.divinerealms.footcube.configs.Settings;
 import io.github.divinerealms.footcube.core.FCManager;
 import io.github.divinerealms.footcube.matchmaking.MatchManager;
 import io.github.divinerealms.footcube.physics.PhysicsData;
@@ -64,14 +62,12 @@ public class SignManipulation implements Listener {
   public void onSignChange(SignChangeEvent event) {
     Player player = event.getPlayer();
 
-    if (event.getLine(0) != null
-        && event.getLine(0).equalsIgnoreCase("[FootCube]")
-        && !player.hasPermission("footcube.admin")) {
+    if (event.getLine(0) != null && event.getLine(0).equalsIgnoreCase("[FootCube]")
+        && !player.hasPermission("footcube.admin") && !Settings.FEATURES_SIGNS.asBoolean()) {
       return;
     }
 
-    if (event.getLine(0) != null
-        && event.getLine(0).equalsIgnoreCase("[fc]")) {
+    if (event.getLine(0) != null && event.getLine(0).equalsIgnoreCase("[fc]")) {
       switch (event.getLine(1).toLowerCase()) {
         case "join":
           String arena = event.getLine(2).toLowerCase();
@@ -169,8 +165,7 @@ public class SignManipulation implements Listener {
           }
 
           Collection<Entity> nearbyEntities = playerLocation.getWorld()
-              .getNearbyEntities(playerLocation, 100, 100,
-                  100);
+              .getNearbyEntities(playerLocation, 100, 100, 100);
           int slimeCount = 0;
           if (nearbyEntities != null) {
             for (Entity entity : nearbyEntities) {
@@ -215,11 +210,10 @@ public class SignManipulation implements Listener {
       }
     }
 
-    if (block.getType() == Material.SIGN_POST
-        || block.getType() == Material.WALL_SIGN) {
+    if (block.getType() == Material.SIGN_POST || block.getType() == Material.WALL_SIGN) {
       Sign sign = (Sign) block.getState();
-      if (sign.getLine(0) == null
-          || !sign.getLine(0).equalsIgnoreCase("[FootCube]")) {
+      if (sign.getLine(0) == null || !sign.getLine(0).equalsIgnoreCase("[FootCube]")
+          || !Settings.FEATURES_SIGNS.asBoolean()) {
         return;
       }
 
@@ -252,16 +246,24 @@ public class SignManipulation implements Listener {
           String arenaType = ChatColor.stripColor(sign.getLine(2)).toLowerCase();
           int type;
           switch (arenaType) {
+            case "1v1":
+              type = 1;
+              break;
+
             case "2v2":
-              type = TWO_V_TWO;
+              type = 2;
               break;
 
             case "3v3":
-              type = THREE_V_THREE;
+              type = 3;
               break;
 
             case "4v4":
-              type = FOUR_V_FOUR;
+              type = 4;
+              break;
+
+            case "5v5":
+              type = 5;
               break;
 
             default:

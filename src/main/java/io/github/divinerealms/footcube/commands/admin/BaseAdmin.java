@@ -1,4 +1,4 @@
-package io.github.divinerealms.footcube.commands;
+package io.github.divinerealms.footcube.commands.admin;
 
 import static io.github.divinerealms.footcube.configs.Lang.HELP_ADMIN;
 import static io.github.divinerealms.footcube.configs.Lang.HELP_FOOTER;
@@ -20,12 +20,12 @@ import org.bukkit.entity.Player;
 @CommandAlias("fca|fcadmin|footcubeadmin")
 @CommandPermission(PERM_ADMIN)
 @Description("FootCube Admin Commands")
-public class FCAdminCommand extends BaseCommand {
+public class BaseAdmin extends BaseCommand {
 
   private final FCManager fcManager;
   private final Logger logger;
 
-  public FCAdminCommand(FCManager fcManager) {
+  public BaseAdmin(FCManager fcManager) {
     this.fcManager = fcManager;
     this.logger = fcManager.getLogger();
   }

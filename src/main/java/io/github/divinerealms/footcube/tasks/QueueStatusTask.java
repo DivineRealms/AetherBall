@@ -26,6 +26,7 @@ public class QueueStatusTask extends BaseTask {
       if (match == null || match.getPhase() != MatchPhase.LOBBY) {
         continue;
       }
+
       if (match.getArena() == null || match.getPlayers() == null) {
         continue;
       }

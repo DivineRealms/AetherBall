@@ -1,8 +1,8 @@
-package io.github.divinerealms.footcube.physics.listeners;
+package io.github.divinerealms.footcube.listeners;
 
-import static io.github.divinerealms.footcube.physics.PhysicsConstants.DEBUG_ON_MS;
 import static io.github.divinerealms.footcube.utils.Permissions.PERM_HIT_DEBUG;
 
+import io.github.divinerealms.footcube.configs.Settings;
 import io.github.divinerealms.footcube.core.FCManager;
 import io.github.divinerealms.footcube.physics.PhysicsData;
 import io.github.divinerealms.footcube.physics.utilities.PhysicsSystem;
@@ -16,13 +16,11 @@ import org.bukkit.event.player.PlayerToggleSneakEvent;
 public class PlayerChargeListener implements Listener {
 
   private final Logger logger;
-
   private final PhysicsData data;
   private final PhysicsSystem system;
 
   public PlayerChargeListener(FCManager fcManager) {
     this.logger = fcManager.getLogger();
-
     this.data = fcManager.getPhysicsData();
     this.system = fcManager.getPhysicsSystem();
   }
@@ -41,6 +39,7 @@ public class PlayerChargeListener implements Listener {
       if (system.notAllowedToInteract(player)) {
         return;
       }
+
       UUID playerId = player.getUniqueId();
 
       if (event.isSneaking()) {
@@ -53,9 +52,11 @@ public class PlayerChargeListener implements Listener {
         data.getCharges().remove(playerId);
       }
     } finally {
-      long ms = (System.nanoTime() - start) / 1_000_000;
-      if (ms > DEBUG_ON_MS) {
-        logger.send(PERM_HIT_DEBUG, "{prefix-admin}&dPlayerChargeListener &ftook &e" + ms + "ms");
+      if (Settings.DEBUG_MODE.asBoolean()) {
+        long ms = (System.nanoTime() - start) / 1_000_000;
+        if (ms > Settings.DEBUG_THRESHOLD.asLong()) {
+          logger.send(PERM_HIT_DEBUG, "{prefix-admin}&dPlayerChargeListener &ftook &e" + ms + "ms");
+        }
       }
     }
   }

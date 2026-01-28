@@ -1,11 +1,5 @@
 package io.github.divinerealms.footcube.matchmaking.logic;
 
-import static io.github.divinerealms.footcube.matchmaking.util.MatchConstants.FIVE_V_FIVE;
-import static io.github.divinerealms.footcube.matchmaking.util.MatchConstants.FOUR_V_FOUR;
-import static io.github.divinerealms.footcube.matchmaking.util.MatchConstants.ONE_V_ONE;
-import static io.github.divinerealms.footcube.matchmaking.util.MatchConstants.THREE_V_THREE;
-import static io.github.divinerealms.footcube.matchmaking.util.MatchConstants.TWO_V_TWO;
-
 import io.github.divinerealms.footcube.matchmaking.Match;
 import java.util.List;
 import java.util.Map;
@@ -32,10 +26,24 @@ public class MatchData {
   private boolean matchesEnabled = true;
 
   public MatchData() {
-    playerQueues.put(ONE_V_ONE, new ConcurrentLinkedQueue<>());
-    playerQueues.put(TWO_V_TWO, new ConcurrentLinkedQueue<>());
-    playerQueues.put(THREE_V_THREE, new ConcurrentLinkedQueue<>());
-    playerQueues.put(FOUR_V_FOUR, new ConcurrentLinkedQueue<>());
-    playerQueues.put(FIVE_V_FIVE, new ConcurrentLinkedQueue<>());
+  }
+
+  /**
+   * Initializes queues and locks for the given match types. Called by MatchSystem after config is
+   * loaded.
+   *
+   * @param enabledTypes List of match type numbers from config (e.g., [2, 3, 4])
+   */
+  public void initializeForMatchTypes(List<Integer> enabledTypes) {
+    // Clear existing queues and locks
+    playerQueues.clear();
+    queueLocks.clear();
+    lockedQueues.clear();
+
+    // Create queues and locks for each enabled match type
+    for (int matchType : enabledTypes) {
+      playerQueues.put(matchType, new ConcurrentLinkedQueue<>());
+      queueLocks.put(matchType, new ReentrantLock());
+    }
   }
 }

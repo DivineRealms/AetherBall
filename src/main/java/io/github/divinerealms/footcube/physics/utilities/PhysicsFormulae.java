@@ -2,69 +2,23 @@ package io.github.divinerealms.footcube.physics.utilities;
 
 import static io.github.divinerealms.footcube.physics.PhysicsConstants.BALL_TOUCH_Y_OFFSET;
 import static io.github.divinerealms.footcube.physics.PhysicsConstants.CUBE_HITBOX_ADJUSTMENT;
-import static io.github.divinerealms.footcube.physics.PhysicsConstants.DEBUG_ON_MS;
-import static io.github.divinerealms.footcube.physics.PhysicsConstants.MAX_KP;
 import static io.github.divinerealms.footcube.physics.PhysicsConstants.RANDOM;
-import static io.github.divinerealms.footcube.physics.PhysicsConstants.SOFT_CAP_MIN_FACTOR;
 import static io.github.divinerealms.footcube.physics.PhysicsConstants.VERTICAL_INTERACTION_OFFSET;
 import static io.github.divinerealms.footcube.utils.Permissions.PERM_HIT_DEBUG;
 
+import io.github.divinerealms.footcube.configs.Settings;
+import io.github.divinerealms.footcube.core.FCManager;
 import io.github.divinerealms.footcube.utils.Logger;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 
-@SuppressWarnings("unused")
 public class PhysicsFormulae {
 
   private final Logger logger;
 
-  public PhysicsFormulae(Logger logger) {
-    this.logger = logger;
-  }
-
-  /**
-   * Calculates the Euclidean distance between two {@link Location} points, accounting for player
-   * and cube height offsets to ensure accurate collision detection.
-   * <p>
-   * This method is primarily used for short-range interaction checks (e.g., player–cube contact),
-   * and adjusts vertical distance to better reflect the cube’s physical hitbox rather than its
-   * entity base.
-   * </p>
-   *
-   * <p><b>Implementation Details:</b></p>
-   * <ul>
-   *   <li>Temporarily offsets {@code locA} by -1 block on the Y-axis to match player height.</li>
-   *   <li>Applies a 0.25-block downward adjustment for cube height alignment.</li>
-   *   <li>Clamps negative Y-differences to zero to prevent invalid proximity readings.</li>
-   * </ul>
-   *
-   * <p><b>Performance:</b> Uses direct arithmetic and {@link Math#sqrt(double)} for true Euclidean distance.
-   * Prefer {@link #getDistanceSquared(Location, Location)} for large-scale or repeated calculations.</p>
-   *
-   * @param locA The first location (typically the player).
-   * @param locB The second location (typically the cube or ball).
-   * @return The real-world distance between the two adjusted positions.
-   */
-  public double getDistance(Location locA, Location locB) {
-    long start = System.nanoTime();
-    try {
-      Location locAnew = locA.clone().add(0, -BALL_TOUCH_Y_OFFSET, 0);
-      double dx = Math.abs(locAnew.getX() - locB.getX());
-      double dy = Math.abs(locAnew.getY() - locB.getY() - VERTICAL_INTERACTION_OFFSET) - (
-          CUBE_HITBOX_ADJUSTMENT - VERTICAL_INTERACTION_OFFSET);
-      if (dy < 0) {
-        dy = 0;
-      }
-      double dz = Math.abs(locAnew.getZ() - locB.getZ());
-      return Math.sqrt(dx * dx + dy * dy + dz * dz);
-    } finally {
-      long ms = (System.nanoTime() - start) / 1_000_000;
-      if (ms > DEBUG_ON_MS) {
-        logger.send(PERM_HIT_DEBUG,
-            "{prefix-admin}&dPhysicsFormulae#getDistance() &ftook &e" + ms + "ms");
-      }
-    }
+  public PhysicsFormulae(FCManager fcManager) {
+    this.logger = fcManager.getLogger();
   }
 
   /**
@@ -90,43 +44,12 @@ public class PhysicsFormulae {
 
       return dx * dx + dy * dy + dz * dz;
     } finally {
-      long ms = (System.nanoTime() - start) / 1_000_000;
-      if (ms > DEBUG_ON_MS) {
-        logger.send(PERM_HIT_DEBUG,
-            "{prefix-admin}&dPhysicsFormulae#getDistanceSquared() &ftook &e" + ms + "ms");
-      }
-    }
-  }
-
-  /**
-   * Calculates the perpendicular distance from a player's position to the path of the cube's
-   * movement vector. Used for proximity and collision prediction.
-   *
-   * @param newVelocity The velocity vector of the cube.
-   * @param cubePos     The cube's current position.
-   * @param player      The player whose position is used for distance checking.
-   * @return The perpendicular distance between the player and the cube's velocity vector.
-   */
-  public double getPerpendicularDistance(Vector newVelocity, Vector cubePos, Player player) {
-    long start = System.nanoTime();
-    try {
-      if (Math.abs(newVelocity.getX()) < 1e-6) {
-        return Double.MAX_VALUE;
-      }
-
-      double slopeA = newVelocity.getZ() / newVelocity.getX();
-      double interceptB = cubePos.getZ() - slopeA * cubePos.getX();
-
-      double playerX = player.getLocation().getX();
-      double playerZ = player.getLocation().getZ();
-
-      // Compute perpendicular distance from player to cube’s path
-      return Math.abs(slopeA * playerX - playerZ + interceptB) / Math.sqrt(slopeA * slopeA + 1);
-    } finally {
-      long ms = (System.nanoTime() - start) / 1_000_000;
-      if (ms > DEBUG_ON_MS) {
-        logger.send(PERM_HIT_DEBUG,
-            "{prefix-admin}&dPhysicsFormulae#getPerpendicularDistance() &ftook &e" + ms + "ms");
+      if (Settings.DEBUG_MODE.asBoolean()) {
+        long ms = (System.nanoTime() - start) / 1_000_000;
+        if (ms > Settings.DEBUG_THRESHOLD.asLong()) {
+          logger.send(PERM_HIT_DEBUG,
+              "{prefix-admin}&dPhysicsFormulae#getDistanceSquared() &ftook &e" + ms + "ms");
+        }
       }
     }
   }
@@ -160,11 +83,13 @@ public class PhysicsFormulae {
       double numerator = slopeA * playerX - playerZ + interceptB;
       return (numerator * numerator) / (slopeA * slopeA + 1);
     } finally {
-      long ms = (System.nanoTime() - start) / 1_000_000;
-      if (ms > DEBUG_ON_MS) {
-        logger.send(PERM_HIT_DEBUG,
-            "{prefix-admin}&dPhysicsFormulae#getPerpendicularDistanceSquared() &ftook &e" + ms
-                + "ms");
+      if (Settings.DEBUG_MODE.asBoolean()) {
+        long ms = (System.nanoTime() - start) / 1_000_000;
+        if (ms > Settings.DEBUG_THRESHOLD.asLong()) {
+          logger.send(PERM_HIT_DEBUG,
+              "{prefix-admin}&dPhysicsFormulae#getPerpendicularDistanceSquared() &ftook &e" + ms
+                  + "ms");
+        }
       }
     }
   }
@@ -178,16 +103,18 @@ public class PhysicsFormulae {
   public double capKickPower(double baseKickPower) {
     long start = System.nanoTime();
     try {
-      if (baseKickPower <= MAX_KP) {
+      if (baseKickPower <= Settings.MAX_KICK_POWER.asInt()) {
         return baseKickPower;
       }
-      double minRandomKP = MAX_KP * SOFT_CAP_MIN_FACTOR;
-      return minRandomKP + RANDOM.nextDouble() * (MAX_KP - minRandomKP);
+      double minRandomKP = Settings.MAX_KICK_POWER.asInt() * Settings.SOFT_CAP.asDouble();
+      return minRandomKP + RANDOM.nextDouble() * (Settings.MAX_KICK_POWER.asDouble() - minRandomKP);
     } finally {
-      long ms = (System.nanoTime() - start) / 1_000_000;
-      if (ms > DEBUG_ON_MS) {
-        logger.send(PERM_HIT_DEBUG,
-            "{prefix-admin}&dPhysicsFormulae#capKickPower() &ftook &e" + ms + "ms");
+      if (Settings.DEBUG_MODE.asBoolean()) {
+        long ms = (System.nanoTime() - start) / 1_000_000;
+        if (ms > Settings.DEBUG_THRESHOLD.asLong()) {
+          logger.send(PERM_HIT_DEBUG,
+              "{prefix-admin}&dPhysicsFormulae#capKickPower() &ftook &e" + ms + "ms");
+        }
       }
     }
   }

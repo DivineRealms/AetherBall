@@ -1,4 +1,4 @@
-package io.github.divinerealms.footcube.commands;
+package io.github.divinerealms.footcube.commands.player;
 
 import static io.github.divinerealms.footcube.configs.Lang.MATCHES_LIST_FOOTER;
 import static io.github.divinerealms.footcube.configs.Lang.MATCHES_LIST_HEADER;
@@ -17,12 +17,12 @@ import java.util.List;
 import org.bukkit.command.CommandSender;
 
 @CommandAlias("matches|queues|q")
-public class FCMatchesCommand extends BaseCommand {
+public class MatchesCommand extends BaseCommand {
 
   private final Logger logger;
   private final MatchManager matchManager;
 
-  public FCMatchesCommand(FCManager fcManager) {
+  public MatchesCommand(FCManager fcManager) {
     this.logger = fcManager.getLogger();
     this.matchManager = fcManager.getMatchManager();
   }

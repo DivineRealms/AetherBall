@@ -8,8 +8,8 @@ public class HighScoresTask extends BaseTask {
 
   private final HighScoreManager highScoreManager;
 
-  public HighScoresTask(FCManager fcManager) {
-    super(fcManager, "HighScores", 20 * 60 * 10, true);
+  public HighScoresTask(FCManager fcManager, long interval) {
+    super(fcManager, "HighScores", interval, true);
     this.highScoreManager = fcManager.getHighscoreManager();
   }
 

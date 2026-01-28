@@ -6,7 +6,6 @@ import static io.github.divinerealms.footcube.configs.Lang.NO_PERM;
 import static io.github.divinerealms.footcube.configs.Lang.NO_PERM_PARAMETERS;
 import static io.github.divinerealms.footcube.configs.Lang.PLAYER_NOT_FOUND;
 import static io.github.divinerealms.footcube.configs.Lang.UNKNOWN_COMMAND;
-import static io.github.divinerealms.footcube.physics.PhysicsConstants.DEBUG_ON_MS;
 import static io.github.divinerealms.footcube.utils.Permissions.PERM_ADMIN;
 
 import co.aikar.commands.BukkitCommandCompletionContext;
@@ -14,22 +13,23 @@ import co.aikar.commands.CommandCompletions;
 import co.aikar.commands.MessageKeys;
 import co.aikar.commands.PaperCommandManager;
 import io.github.divinerealms.footcube.FootCube;
-import io.github.divinerealms.footcube.commands.FCAdminArenaCommands;
-import io.github.divinerealms.footcube.commands.FCAdminBanCommands;
-import io.github.divinerealms.footcube.commands.FCAdminCommand;
-import io.github.divinerealms.footcube.commands.FCAdminDebugCommands;
-import io.github.divinerealms.footcube.commands.FCAdminPlayerCommands;
-import io.github.divinerealms.footcube.commands.FCAdminSystemCommands;
-import io.github.divinerealms.footcube.commands.FCBuildCommand;
-import io.github.divinerealms.footcube.commands.FCCommand;
-import io.github.divinerealms.footcube.commands.FCCubeCommands;
-import io.github.divinerealms.footcube.commands.FCGameCommands;
-import io.github.divinerealms.footcube.commands.FCMatchesCommand;
-import io.github.divinerealms.footcube.commands.FCSettingsCommands;
-import io.github.divinerealms.footcube.commands.FCTeamCommands;
-import io.github.divinerealms.footcube.commands.MatchManCommands;
+import io.github.divinerealms.footcube.commands.CubeCommands;
+import io.github.divinerealms.footcube.commands.MainCommand;
+import io.github.divinerealms.footcube.commands.MatchMan;
+import io.github.divinerealms.footcube.commands.admin.ArenaCommands;
+import io.github.divinerealms.footcube.commands.admin.BanCommands;
+import io.github.divinerealms.footcube.commands.admin.BaseAdmin;
+import io.github.divinerealms.footcube.commands.admin.DebugCommands;
+import io.github.divinerealms.footcube.commands.admin.PlayerCommands;
+import io.github.divinerealms.footcube.commands.admin.SystemCommands;
+import io.github.divinerealms.footcube.commands.player.BuildCommand;
+import io.github.divinerealms.footcube.commands.player.GameCommands;
+import io.github.divinerealms.footcube.commands.player.MatchesCommand;
+import io.github.divinerealms.footcube.commands.player.SettingsCommands;
+import io.github.divinerealms.footcube.commands.player.TeamCommands;
 import io.github.divinerealms.footcube.configs.Lang;
 import io.github.divinerealms.footcube.configs.PlayerData;
+import io.github.divinerealms.footcube.configs.Settings;
 import io.github.divinerealms.footcube.managers.ConfigManager;
 import io.github.divinerealms.footcube.managers.ListenerManager;
 import io.github.divinerealms.footcube.managers.PlayerDataManager;
@@ -48,8 +48,8 @@ import io.github.divinerealms.footcube.physics.utilities.PhysicsFormulae;
 import io.github.divinerealms.footcube.physics.utilities.PhysicsSystem;
 import io.github.divinerealms.footcube.utils.CubeCleaner;
 import io.github.divinerealms.footcube.utils.DisableCommands;
-import io.github.divinerealms.footcube.utils.FCPlaceholders;
 import io.github.divinerealms.footcube.utils.Logger;
+import io.github.divinerealms.footcube.utils.Placeholders;
 import io.github.divinerealms.footcube.utils.PlayerSettings;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -87,7 +87,6 @@ public class FCManager {
 
   @Getter
   private static FCManager instance;
-
   private final FootCube plugin;
   private final Logger logger;
   private final Utilities utilities;
@@ -104,15 +103,14 @@ public class FCManager {
   private final DisableCommands disableCommands;
   private final BukkitScheduler scheduler;
   private final PhysicsData physicsData;
-  private final PhysicsSystem physicsSystem;
   private final PhysicsFormulae physicsFormulae;
+  private final PhysicsSystem physicsSystem;
   private final CubeCleaner cubeCleaner;
   private final ListenerManager listenerManager;
   private final TaskManager taskManager;
   private final Set<Player> cachedPlayers = ConcurrentHashMap.newKeySet();
   private final Map<UUID, PlayerSettings> playerSettings = new ConcurrentHashMap<>();
   private final Map<UUID, String> cachedPrefixedNames = new ConcurrentHashMap<>();
-
   private PaperCommandManager commandManager;
 
   private Economy economy;
@@ -120,7 +118,9 @@ public class FCManager {
   private TabAPI tabAPI;
 
   @Setter
-  private boolean enabling = false, disabling = false;
+  private boolean enabling;
+  @Setter
+  private boolean disabling;
 
   public FCManager(FootCube plugin) throws IllegalStateException {
     instance = this;
@@ -132,8 +132,7 @@ public class FCManager {
 
     this.dataManager = new PlayerDataManager(this);
 
-    this.setupConfig();
-    this.setupMessages();
+    this.setupConfigs();
     this.setupDependencies();
 
     this.utilities = new Utilities(this);
@@ -151,15 +150,14 @@ public class FCManager {
     this.scheduler = plugin.getServer().getScheduler();
 
     this.physicsData = new PhysicsData();
-    this.physicsSystem = new PhysicsSystem(physicsData, logger, scheduler, plugin);
-    this.physicsFormulae = new PhysicsFormulae(logger);
+    this.physicsFormulae = new PhysicsFormulae(this);
+    this.physicsSystem = new PhysicsSystem(this);
 
     this.cubeCleaner = new CubeCleaner(this);
     this.listenerManager = new ListenerManager(this);
     this.taskManager = new TaskManager(this);
 
-    new FCPlaceholders(this).register();
-    this.reload();
+    new Placeholders(this).register();
   }
 
   public void reload() {
@@ -168,13 +166,16 @@ public class FCManager {
       configManager.reloadAllConfigs();
     }
 
+    enabling = false;
+    matchManager.forceLeaveAllPlayers();
+    physicsSystem.removeCubes();
     arenaManager.reloadArenas();
-    setupConfig();
-    setupMessages();
+    setupConfigs();
     registerCommands();
-    listenerManager.registerAll();
 
+    listenerManager.unregisterAll();
     taskManager.restart();
+    listenerManager.registerAll();
 
     List<UUID> onlinePlayers = new ArrayList<>(cachedPlayers.size());
     for (Player p : cachedPlayers) {
@@ -227,88 +228,73 @@ public class FCManager {
   }
 
   private void configureACF() {
-    commandManager.getLocales().addMessage(Locale.ENGLISH,
-        MessageKeys.PERMISSION_DENIED,
-        NO_PERM.toString());
-    commandManager.getLocales().addMessage(Locale.ENGLISH,
-        MessageKeys.PERMISSION_DENIED_PARAMETER,
+    commandManager.getLocales()
+        .addMessage(Locale.ENGLISH, MessageKeys.PERMISSION_DENIED, NO_PERM.toString());
+    commandManager.getLocales().addMessage(Locale.ENGLISH, MessageKeys.PERMISSION_DENIED_PARAMETER,
         NO_PERM_PARAMETERS.toString());
-    commandManager.getLocales().addMessage(Locale.ENGLISH,
-        MessageKeys.INVALID_SYNTAX,
-        HELP_USAGE.toString());
-    commandManager.getLocales().addMessage(Locale.ENGLISH,
-        MessageKeys.COULD_NOT_FIND_PLAYER,
-        PLAYER_NOT_FOUND.toString());
-    commandManager.getLocales().addMessage(Locale.ENGLISH,
-        MessageKeys.NOT_ALLOWED_ON_CONSOLE,
-        INGAME_ONLY.toString());
-    commandManager.getLocales().addMessage(Locale.ENGLISH,
-        MessageKeys.UNKNOWN_COMMAND,
-        UNKNOWN_COMMAND.toString());
+    commandManager.getLocales()
+        .addMessage(Locale.ENGLISH, MessageKeys.INVALID_SYNTAX, HELP_USAGE.toString());
+    commandManager.getLocales()
+        .addMessage(Locale.ENGLISH, MessageKeys.COULD_NOT_FIND_PLAYER, PLAYER_NOT_FOUND.toString());
+    commandManager.getLocales()
+        .addMessage(Locale.ENGLISH, MessageKeys.NOT_ALLOWED_ON_CONSOLE, INGAME_ONLY.toString());
+    commandManager.getLocales()
+        .addMessage(Locale.ENGLISH, MessageKeys.UNKNOWN_COMMAND, UNKNOWN_COMMAND.toString());
   }
 
   private void registerCustomCompletions() {
-    CommandCompletions<BukkitCommandCompletionContext> completions =
-        commandManager.getCommandCompletions();
-    completions.registerStaticCompletion("particles",
-        PlayerSettings.getAllowedParticles());
-    completions.registerStaticCompletion("colors",
-        PlayerSettings.getAllowedColorNames());
+    CommandCompletions<BukkitCommandCompletionContext> completions = commandManager.getCommandCompletions();
+    completions.registerStaticCompletion("particles", PlayerSettings.getAllowedParticles());
+    completions.registerStaticCompletion("colors", PlayerSettings.getAllowedColorNames());
   }
 
   private void registerPlayerCommands() {
-    commandManager.registerCommand(new FCCommand(this));
-    commandManager.registerCommand(new FCGameCommands(this));
-    commandManager.registerCommand(new FCTeamCommands(this));
-    commandManager.registerCommand(new FCCubeCommands(this));
-    commandManager.registerCommand(new FCSettingsCommands(this));
-    commandManager.registerCommand(new FCBuildCommand(this));
-    commandManager.registerCommand(new FCMatchesCommand(this));
+    commandManager.registerCommand(new MainCommand(this));
+    commandManager.registerCommand(new GameCommands(this));
+    commandManager.registerCommand(new TeamCommands(this));
+    commandManager.registerCommand(new CubeCommands(this));
+    commandManager.registerCommand(new SettingsCommands(this));
+    commandManager.registerCommand(new BuildCommand(this));
+    commandManager.registerCommand(new MatchesCommand(this));
   }
 
   private void registerAdminCommands() {
-    commandManager.registerCommand(new FCAdminCommand(this));
-    commandManager.registerCommand(new FCAdminSystemCommands(this));
-    commandManager.registerCommand(new FCAdminBanCommands(this));
-    commandManager.registerCommand(new FCAdminArenaCommands(this));
-    commandManager.registerCommand(new FCAdminPlayerCommands(this));
-    commandManager.registerCommand(new MatchManCommands(this));
-    commandManager.registerCommand(new FCAdminDebugCommands(this));
+    commandManager.registerCommand(new BaseAdmin(this));
+    commandManager.registerCommand(new SystemCommands(this));
+    commandManager.registerCommand(new BanCommands(this));
+    commandManager.registerCommand(new ArenaCommands(this));
+    commandManager.registerCommand(new PlayerCommands(this));
+    commandManager.registerCommand(new MatchMan(this));
+    commandManager.registerCommand(new DebugCommands(this));
   }
 
-  private void setupConfig() {
-    configManager.createNewFile("config.yml", "FootCubeOG Main Configuration");
-  }
+  private void setupConfigs() {
+    configManager.createNewFile("config.yml", "FootCube Main Configuration");
 
-  private void setupMessages() {
-    FileConfiguration file = configManager.getConfig("messages.yml");
-    Lang.setFile(file);
+    FileConfiguration lang = configManager.getConfig("messages.yml");
+    FileConfiguration settings = configManager.getConfig("settings.yml");
+    Lang.setFile(lang);
+    Settings.setFile(settings);
 
     for (Lang value : Lang.values()) {
-      setDefaultIfMissing(file, value.getPath(), value.getDefault());
+      setDefaultIfMissing(lang, value.getPath(), value.getDefault());
     }
 
-    file.options().copyDefaults(true);
+    lang.options().copyDefaults(true);
     configManager.saveConfig("messages.yml");
   }
 
   private void setupDependencies() throws IllegalStateException {
     RegisteredServiceProvider<LuckPerms> luckPermsRsp = plugin.getServer().getServicesManager()
-        .getRegistration(
-            LuckPerms.class);
-    this.luckPerms = luckPermsRsp == null
-        ? null
-        : luckPermsRsp.getProvider();
+        .getRegistration(LuckPerms.class);
+    this.luckPerms = luckPermsRsp == null ? null : luckPermsRsp.getProvider();
     if (luckPerms == null) {
       throw new IllegalStateException("LuckPerms not found!");
     }
 
     RegisteredServiceProvider<Economy> economyRsp = plugin.getServer().getServicesManager()
-        .getRegistration(
-            Economy.class);
-    this.economy = economyRsp == null
-        ? null
-        : economyRsp.getProvider();
+        .getRegistration(Economy.class);
+    this.economy = economyRsp == null ? null : economyRsp.getProvider();
     if (economy == null) {
       throw new IllegalStateException("Vault not found!");
     }
@@ -419,17 +405,13 @@ public class FCManager {
       joiner.add(author);
     }
 
-    String[] banner = new String[]{
-        "&2┏┓┏┓" + "&8 -+-------------------------------------------+-",
+    String[] banner = new String[]{"&2┏┓┏┓" + "&8 -+-------------------------------------------+-",
         "&2┣ ┃ " + "&7  Created by &b" + joiner + "&7, version &f" + plugin.getDescription()
-            .getVersion(),
-        "&2┻ ┗┛" + "&8 -+-------------------------------------------+-"
-    };
+            .getVersion(), "&2┻ ┗┛" + "&8 -+-------------------------------------------+-"};
 
     for (String line : banner) {
-      plugin.getServer().getConsoleSender().sendMessage(
-          logger.getConsolePrefix() + logger.color(line)
-      );
+      plugin.getServer().getConsoleSender()
+          .sendMessage(logger.getConsolePrefix() + logger.color(line));
     }
   }
 
@@ -441,9 +423,8 @@ public class FCManager {
     UUID uuid = player.getUniqueId();
     String playerName = player.getName();
 
-    utilities.getPrefixedName(uuid, playerName).thenAccept(prefixedName ->
-        cachedPrefixedNames.put(uuid, prefixedName)
-    );
+    utilities.getPrefixedName(uuid, playerName)
+        .thenAccept(prefixedName -> cachedPrefixedNames.put(uuid, prefixedName));
   }
 
   private void clearBukkitCommandMap() {
@@ -466,8 +447,8 @@ public class FCManager {
         return false;
       });
     } catch (Exception exception) {
-      Bukkit.getLogger().log(Level.WARNING,
-          "Failed to clear command map: " + exception.getMessage(), exception);
+      Bukkit.getLogger()
+          .log(Level.WARNING, "Failed to clear command map: " + exception.getMessage(), exception);
     }
   }
 
@@ -500,10 +481,12 @@ public class FCManager {
       Bukkit.getLogger()
           .log(Level.SEVERE, "Error in cleanup: " + exception.getMessage(), exception);
     } finally {
-      long ms = (System.nanoTime() - start) / 1_000_000;
-      if (ms > DEBUG_ON_MS) {
-        logger.send(PERM_ADMIN,
-            "{prefix-admin}&dCleanup &ftook &e" + ms + "ms &f(threshold: " + DEBUG_ON_MS + "ms)");
+      if (Settings.DEBUG_MODE.asBoolean()) {
+        long ms = (System.nanoTime() - start) / 1_000_000;
+        if (ms > Settings.DEBUG_THRESHOLD.asLong()) {
+          logger.send(PERM_ADMIN, "{prefix-admin}&dCleanup &ftook &e" + ms + "ms &f(threshold: "
+              + Settings.DEBUG_THRESHOLD.asLong() + "ms)");
+        }
       }
     }
   }

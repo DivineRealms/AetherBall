@@ -5,10 +5,8 @@ import org.bukkit.entity.Player;
 
 public class CacheCleanupTask extends BaseTask {
 
-  private static final long UPDATE_INTERVAL = 20 * 60 * 5; // 5 minutes
-
-  public CacheCleanupTask(FCManager fcManager) {
-    super(fcManager, "CacheCleanup", UPDATE_INTERVAL, true);
+  public CacheCleanupTask(FCManager fcManager, long interval) {
+    super(fcManager, "CacheCleanup", interval, true);
   }
 
   @Override
@@ -18,6 +16,7 @@ public class CacheCleanupTask extends BaseTask {
       if (player != null && player.isOnline()) {
         continue;
       }
+
       fcManager.getCachedPlayers().remove(player);
       removed++;
     }

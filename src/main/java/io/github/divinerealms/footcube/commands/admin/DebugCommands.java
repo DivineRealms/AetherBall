@@ -1,4 +1,4 @@
-package io.github.divinerealms.footcube.commands;
+package io.github.divinerealms.footcube.commands.admin;
 
 import static io.github.divinerealms.footcube.configs.Lang.COMMAND_DISABLER_ALREADY_ADDED;
 import static io.github.divinerealms.footcube.configs.Lang.COMMAND_DISABLER_LIST;
@@ -29,14 +29,14 @@ import io.github.divinerealms.footcube.utils.Logger;
 import org.bukkit.command.CommandSender;
 
 @CommandAlias("fca|fcadmin|footcubeadmin")
-public class FCAdminDebugCommands extends BaseCommand {
+public class DebugCommands extends BaseCommand {
 
   private final FCManager fcManager;
   private final Logger logger;
   private final PhysicsData physicsData;
   private final DisableCommands disableCommands;
 
-  public FCAdminDebugCommands(FCManager fcManager) {
+  public DebugCommands(FCManager fcManager) {
     this.fcManager = fcManager;
     this.logger = fcManager.getLogger();
     this.physicsData = fcManager.getPhysicsData();

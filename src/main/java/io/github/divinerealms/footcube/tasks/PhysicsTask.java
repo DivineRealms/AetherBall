@@ -8,7 +8,6 @@ import static io.github.divinerealms.footcube.physics.PhysicsConstants.CUBE_SPEE
 import static io.github.divinerealms.footcube.physics.PhysicsConstants.DRIBBLE_SPEED_LIMIT;
 import static io.github.divinerealms.footcube.physics.PhysicsConstants.HIT_RADIUS_SQUARED;
 import static io.github.divinerealms.footcube.physics.PhysicsConstants.HIT_RADIUS_SQUARED_3X;
-import static io.github.divinerealms.footcube.physics.PhysicsConstants.MAX_KP;
 import static io.github.divinerealms.footcube.physics.PhysicsConstants.MIN_RADIUS_SQUARED;
 import static io.github.divinerealms.footcube.physics.PhysicsConstants.MIN_SOUND_POWER;
 import static io.github.divinerealms.footcube.physics.PhysicsConstants.MIN_SPEED_FOR_DAMPENING;
@@ -24,6 +23,7 @@ import static io.github.divinerealms.footcube.physics.PhysicsConstants.VERTICAL_
 import static io.github.divinerealms.footcube.physics.PhysicsConstants.WALL_BOUNCE_FACTOR;
 import static io.github.divinerealms.footcube.utils.Permissions.PERM_HIT_DEBUG;
 
+import io.github.divinerealms.footcube.configs.Settings;
 import io.github.divinerealms.footcube.core.FCManager;
 import io.github.divinerealms.footcube.matchmaking.MatchManager;
 import io.github.divinerealms.footcube.physics.PhysicsData;
@@ -271,11 +271,12 @@ public class PhysicsTask extends BaseTask {
       // --- Velocity Capping ---
       // If the ball exceeds MAX_KP, we scale the vector back to prevent "unreal" speeds.
       double finalSpeed = newVelocity.length(); // Calculate final speed after all adjustments.
-      if (finalSpeed > MAX_KP) {
-        newVelocity.multiply(MAX_KP / finalSpeed); // Scale back to MAX_KP.
+      double maxKickPower = Settings.MAX_KICK_POWER.asDouble();
+      if (finalSpeed > maxKickPower) {
+        newVelocity.multiply(maxKickPower / finalSpeed); // Scale back to MAX_KP.
         // Log violation to players with debugging permissions.
         logger.send(PERM_HIT_DEBUG, HITDEBUG_VELOCITY_CAP, String.format("%.2f", finalSpeed),
-            String.valueOf(MAX_KP));
+            String.valueOf(maxKickPower));
       }
 
       // Apply final computed velocity to the cube and update its tracked state.

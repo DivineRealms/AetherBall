@@ -20,12 +20,11 @@ import static io.github.divinerealms.footcube.configs.Lang.TAKEPLACE_INVALID_ID;
 import static io.github.divinerealms.footcube.configs.Lang.TAKEPLACE_SUCCESS;
 import static io.github.divinerealms.footcube.configs.Lang.TEAMCHAT_BLUE;
 import static io.github.divinerealms.footcube.configs.Lang.TEAMCHAT_RED;
-import static io.github.divinerealms.footcube.matchmaking.util.MatchConstants.ONE_V_ONE;
-import static io.github.divinerealms.footcube.matchmaking.util.MatchConstants.TWO_V_TWO;
 import static io.github.divinerealms.footcube.matchmaking.util.MatchUtils.clearPlayer;
 import static io.github.divinerealms.footcube.matchmaking.util.MatchUtils.giveArmor;
 
 import io.github.divinerealms.footcube.configs.PlayerData;
+import io.github.divinerealms.footcube.configs.Settings;
 import io.github.divinerealms.footcube.core.FCManager;
 import io.github.divinerealms.footcube.managers.Utilities;
 import io.github.divinerealms.footcube.matchmaking.arena.ArenaManager;
@@ -78,6 +77,12 @@ public class MatchManager {
   }
 
   public synchronized void joinQueue(Player player, int matchType) {
+    if (!Settings.isMatchTypeEnabled(matchType)) {
+      logger.send(player, "&c&l✘ &cThis match type is not available!");
+      logger.send(player, "&7Available types: " + getAvailableTypesString());
+      return;
+    }
+
     if (banManager.isBanned(player)) {
       return;
     }
@@ -147,6 +152,22 @@ public class MatchManager {
     }
 
     system.processQueues();
+  }
+
+  /**
+   * Gets a formatted string of available match types for display.
+   */
+  public String getAvailableTypesString() {
+    List<Integer> types = Settings.getEnabledMatchTypes();
+    StringBuilder sb = new StringBuilder("&e");
+    for (int i = 0; i < types.size(); i++) {
+      int type = types.get(i);
+      sb.append(type).append("v").append(type);
+      if (i < types.size() - 1) {
+        sb.append("&7, &e");
+      }
+    }
+    return sb.toString();
   }
 
   public synchronized void leaveQueue(Player player, int matchType) {
@@ -450,13 +471,13 @@ public class MatchManager {
     }
 
     String winningTeam = winner == TeamColor.RED ? RED.toString() : BLUE.toString();
-    boolean shouldCount =
-        match.getArena().getType() != TWO_V_TWO && match.getArena().getType() != ONE_V_ONE;
+    boolean shouldCount = Settings.shouldCountStats(match.getArena().getType());
 
     for (MatchPlayer matchPlayer : match.getPlayers()) {
       if (matchPlayer == null) {
         continue;
       }
+
       Player player = matchPlayer.getPlayer();
       if (player == null || !player.isOnline()) {
         continue;
@@ -466,11 +487,9 @@ public class MatchManager {
         PlayerData data = fcManager.getDataManager().get(player);
 
         boolean cleanSheet = false;
-        if (matchPlayer.getTeamColor() == TeamColor.RED
-            && match.getScoreBlue() == 0) {
+        if (matchPlayer.getTeamColor() == TeamColor.RED && match.getScoreBlue() == 0) {
           cleanSheet = true;
-        } else if (matchPlayer.getTeamColor() == TeamColor.BLUE
-            && match.getScoreRed() == 0) {
+        } else if (matchPlayer.getTeamColor() == TeamColor.BLUE && match.getScoreRed() == 0) {
           cleanSheet = true;
         }
 
@@ -481,12 +500,12 @@ public class MatchManager {
             data.add("matches");
           }
 
-          fcManager.getEconomy().depositPlayer(player, 50);
+          fcManager.getEconomy().depositPlayer(player, Settings.ECONOMY_TIE.asDouble());
           logger.send(player, MATCH_TIED);
           logger.send(player, MATCH_TIED_CREDITS);
 
           if (cleanSheet) {
-            fcManager.getEconomy().depositPlayer(player, 30);
+            fcManager.getEconomy().depositPlayer(player, Settings.ECONOMY_CLEAN_SHEET.asDouble());
             logger.send(player, MATCH_CLEAN_SHEET_BONUS);
           }
         } else {
@@ -501,17 +520,18 @@ public class MatchManager {
               }
 
               if ((int) data.get("winstreak") > 0 && (int) data.get("winstreak") % 5 == 0) {
-                fcManager.getEconomy().depositPlayer(player, 300);
+                fcManager.getEconomy()
+                    .depositPlayer(player, Settings.ECONOMY_WIN_STREAK.asDouble());
                 logger.send(player, MATCH_WINSTREAK_CREDITS, String.valueOf(data.get("winstreak")));
               }
             }
 
-            fcManager.getEconomy().depositPlayer(player, 100);
+            fcManager.getEconomy().depositPlayer(player, Settings.ECONOMY_VICTORY.asDouble());
             logger.send(player, MATCH_TIMES_UP, winningTeam);
             logger.send(player, MATCH_WIN_CREDITS);
 
             if (cleanSheet) {
-              fcManager.getEconomy().depositPlayer(player, 30);
+              fcManager.getEconomy().depositPlayer(player, Settings.ECONOMY_CLEAN_SHEET.asDouble());
               logger.send(player, MATCH_CLEAN_SHEET_BONUS);
             }
           } else {

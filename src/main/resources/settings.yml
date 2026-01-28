@@ -1,0 +1,222 @@
+# ============================================================
+# FootCube - Unified Settings Configuration
+# ============================================================
+# This file contains ALL configurable settings for FootCube.
+# Restart server or use /fca reload to apply changes.
+# ============================================================
+
+# ==================== GENERAL SETTINGS ====================
+General:
+  # Enable debug mode for performance monitoring
+  Debug_Mode: false
+
+  # Performance threshold in milliseconds - operations exceeding this will be logged
+  Debug_Threshold: 50
+
+# ============================================================
+# PHYSICS SYSTEM
+# ============================================================
+
+Physics:
+  # Maximum kick power (soft cap)
+  # Higher values = faster ball speeds
+  Max_Kick_Power: 5
+
+  # Soft cap randomization factor (0.0-1.0)
+  # When exceeding max-kick-power, random value between (max * this) and max
+  Soft_Cap: 0.9
+
+  # Delay before removing dead cubes (in ticks)
+  Removal_Delay: 2
+
+  Kick_Cooldowns:
+    Regular: 150
+    Charged: 500
+    Rise: 1000
+
+  Kick_Base_Power:
+    Regular: 0.65
+    Charged: 0.375
+
+  # Vertical boost applied on kicks
+  Kick_Vertical_Boost: 0.25
+  
+  # AFK threshold - players idle longer are excluded from physics
+  AFK_Threshold: 60
+
+# ============================================================
+# MATCHMAKING SYSTEM
+# ============================================================
+
+Matchmaking:
+  # -------------------- MATCH TYPES --------------------
+  Match_Types:
+    1v1:
+      Enabled: true
+      Duration: 120      # 2 minutes
+      Max_Score: 5       # First to 5 goals wins
+      Count_Stats: true  # Count towards player statistics
+
+    2v2:
+      Enabled: true
+      Duration: 240      # 4 minutes
+      Max_Score: 7
+      Count_Stats: true
+
+    3v3:
+      Enabled: true
+      Duration: 300      # 5 minutes
+      Max_Score: 10
+      Count_Stats: true
+
+    4v4:
+      Enabled: true
+      Duration: 300
+      Max_Score: 12
+      Count_Stats: true
+
+    5v5:
+      Enabled: true
+      Duration: 300
+      Max_Score: 15
+      Count_Stats: true
+
+  # -------------------- TIMING --------------------
+  Timing:
+    # Countdown duration before match starts (seconds)
+    Starting_Countdown: 15
+
+    # Interval between /takeplace announcements (seconds)
+    Take_Place_Announcement: 20
+
+  # -------------------- ECONOMY --------------------
+  Economy:
+    # Credits awarded for scoring a goal
+    Goal: 50
+
+    # Credits awarded for assisting a goal
+    Assist: 25
+
+    # Credits awarded for winning a match
+    Victory: 100
+
+    # Credits awarded for tie
+    Tie: 50
+
+    # Bonus for scoring 3 goals (hat trick)
+    Hat_Trick: 150
+
+    # Bonus for every 5-win streak
+    Win_Streak: 100
+
+    # Bonus for clean sheet (no goals conceded)
+    Clean_Sheet: 75
+
+# ============================================================
+# CUBE SPAWN SETTINGS
+# ============================================================
+
+Cube:
+  # Maximum cubes allowed in one area (spawn buttons/signs)
+  Max_Per_Area: 10
+
+  # Cooldown before player can spawn another cube (seconds)
+  Spawn_Cooldown: 3
+
+# ============================================================
+# PLAYER SETTINGS
+# ============================================================
+
+Player_Defaults:
+  # Default settings for new players
+  Build_Mode: false
+  Particles: true
+  Kick_Sound: true
+  Goal_Sound: true
+
+  # Default goal celebration style
+  # Options: "default", "simple", "epic", "minimal"
+  Goal_Celebration: "default"
+
+# ============================================================
+# BAN SYSTEM
+# ============================================================
+
+Moderation:
+  # Default ban duration when using /fca ban (minutes)
+  Default_Duration: 30
+
+  # Ban duration for ragequitting (minutes)
+  Rage_Quit_Duration: 30
+
+  # Money penalty for ragequitting
+  Rage_Quit_Penalty: 200
+
+# ============================================================
+# HIGHSCORES & LEADERBOARDS
+# ============================================================
+
+HighScores:
+  # How often to recalculate highscores (minutes)
+  Update_Interval: 10
+
+  # Number of players shown in each category
+  Top_Players_Count: 5
+
+# ============================================================
+# CACHE MANAGEMENT
+# ============================================================
+
+Cache:
+  # How often to clean stale cache entries (minutes)
+  Cleanup_Interval: 5
+
+  # How long cached player prefixes last (minutes)
+  Prefix_Expiry: 30
+
+# ============================================================
+# PLAYER DATA
+# ============================================================
+
+Player_Data:
+  # How often to auto-save player data (minutes)
+  Auto_Save_Interval: 10
+
+  # Number of player files saved per batch
+  Batch_Size: 20
+
+# ============================================================
+# TEAM SYSTEM
+# ============================================================
+
+Teams:
+  # How long team invites last (minutes)
+  Invite_Expiry: 2
+
+# ============================================================
+# PRACTICE AREAS
+# ============================================================
+
+Practice_Areas:
+  # Radius for cube cleanup in practice areas (blocks)
+  Radius: 100
+
+  # Auto-removal interval for practice area cubes (minutes)
+  # Set to 0 to disable
+  Cleanup_Interval: 5
+
+# ============================================================
+# LOBBY
+# ============================================================
+
+Lobby:
+  # World name for lobby location
+  World: "world"
+
+# ============================================================
+# FEATURES
+# ============================================================
+
+Features:
+  # Enable FootCube signs ([FootCube] signs)
+  Signs_Enabled: true

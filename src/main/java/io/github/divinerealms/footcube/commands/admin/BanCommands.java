@@ -1,4 +1,4 @@
-package io.github.divinerealms.footcube.commands;
+package io.github.divinerealms.footcube.commands.admin;
 
 import static io.github.divinerealms.footcube.configs.Lang.BAN_REMAINING;
 import static io.github.divinerealms.footcube.configs.Lang.NOT_BANNED;
@@ -14,22 +14,25 @@ import co.aikar.commands.annotation.CommandCompletion;
 import co.aikar.commands.annotation.CommandPermission;
 import co.aikar.commands.annotation.Description;
 import co.aikar.commands.annotation.Flags;
+import co.aikar.commands.annotation.Optional;
 import co.aikar.commands.annotation.Subcommand;
 import co.aikar.commands.annotation.Syntax;
+import io.github.divinerealms.footcube.configs.Settings;
 import io.github.divinerealms.footcube.core.FCManager;
 import io.github.divinerealms.footcube.managers.Utilities;
 import io.github.divinerealms.footcube.matchmaking.ban.BanManager;
 import io.github.divinerealms.footcube.utils.Logger;
+import java.util.concurrent.TimeUnit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 @CommandAlias("fca|fcadmin|footcubeadmin")
-public class FCAdminBanCommands extends BaseCommand {
+public class BanCommands extends BaseCommand {
 
   private final Logger logger;
   private final BanManager banManager;
 
-  public FCAdminBanCommands(FCManager fcManager) {
+  public BanCommands(FCManager fcManager) {
     this.logger = fcManager.getLogger();
     this.banManager = fcManager.getBanManager();
   }
@@ -39,17 +42,24 @@ public class FCAdminBanCommands extends BaseCommand {
   @Syntax("<player> <time>")
   @CommandCompletion("@players 10s|30s|5min|10min|30min|1h")
   @Description("Ban a player from matchmaking")
-  public void onBan(CommandSender sender, @Flags("other") Player target, String timeStr) {
+  public void onBan(CommandSender sender, @Flags("other") Player target, @Optional String timeStr) {
     try {
-      int seconds = Utilities.parseTime(timeStr);
-      if (seconds <= 0) {
+      long duration;
+      if (timeStr == null) {
+        int defaultDuration = Settings.BAN_DEFAULT_DURATION.asInt();
+        duration = TimeUnit.MINUTES.toMillis(defaultDuration);
+      } else {
+        duration = Utilities.parseTime(timeStr);
+      }
+
+      if (duration <= 0) {
         logger.send(sender, USAGE, "fca ban <player> <time>");
         return;
       }
 
-      banManager.banPlayer(target, seconds * 1000L);
+      banManager.banPlayer(target, duration);
       logger.send(sender, PLAYER_BANNED, target.getDisplayName(),
-          Utilities.formatTime(seconds));
+          Utilities.formatTime(duration));
     } catch (NumberFormatException e) {
       logger.send(sender, USAGE, "fca ban <player> <time>");
     }

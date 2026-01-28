@@ -41,10 +41,12 @@ import org.bukkit.entity.Slime;
  */
 public class ParticleTrailTask extends BaseTask {
 
+  private final FCManager fcManager;
   private final PhysicsData data;
 
   public ParticleTrailTask(FCManager fcManager) {
     super(fcManager, "ParticleTrail", GLOW_TASK_INTERVAL_TICKS, true);
+    this.fcManager = fcManager;
     this.data = fcManager.getPhysicsData();
   }
 
@@ -125,6 +127,7 @@ public class ParticleTrailTask extends BaseTask {
         if (distanceSquared < DISTANCE_PARTICLE_THRESHOLD_SQUARED) {
           continue;
         }
+
         if (distanceSquared > MAX_PARTICLE_DISTANCE_SQUARED) {
           continue;
         }
@@ -161,8 +164,7 @@ public class ParticleTrailTask extends BaseTask {
   }
 
   private void renderTrail(Player player, EnumParticle particle, PlayerSettings settings,
-      int trailPoints, double prevX, double prevY, double prevZ,
-      double x, double y, double z) {
+      int trailPoints, double prevX, double prevY, double prevZ, double x, double y, double z) {
     for (int i = 0; i < trailPoints; i++) {
       double t = (double) i / Math.max(trailPoints - 1, 1);
 
@@ -174,21 +176,14 @@ public class ParticleTrailTask extends BaseTask {
         Color color = settings.getRedstoneColor();
         float fadeFactor = 0.6f + (float) (t * 0.4f);
 
-        Utilities.sendParticle(player, EnumParticle.REDSTONE,
-            trailX, trailY, trailZ,
-            (color.getRed() / 255F) * fadeFactor,
-            (color.getGreen() / 255F) * fadeFactor,
-            (color.getBlue() / 255F) * fadeFactor,
-            1.0F, 0);
+        Utilities.sendParticle(player, EnumParticle.REDSTONE, trailX, trailY, trailZ,
+            (color.getRed() / 255F) * fadeFactor, (color.getGreen() / 255F) * fadeFactor,
+            (color.getBlue() / 255F) * fadeFactor, 1.0F, 0);
       } else {
         int particleCount = (int) (GENERIC_PARTICLE_COUNT * (0.6 + t * 0.4));
 
-        Utilities.sendParticle(player, particle,
-            trailX, trailY, trailZ,
-            GENERIC_PARTICLE_OFFSET,
-            GENERIC_PARTICLE_OFFSET,
-            GENERIC_PARTICLE_OFFSET,
-            GENERIC_PARTICLE_SPEED,
+        Utilities.sendParticle(player, particle, trailX, trailY, trailZ, GENERIC_PARTICLE_OFFSET,
+            GENERIC_PARTICLE_OFFSET, GENERIC_PARTICLE_OFFSET, GENERIC_PARTICLE_SPEED,
             Math.max(1, particleCount));
       }
     }

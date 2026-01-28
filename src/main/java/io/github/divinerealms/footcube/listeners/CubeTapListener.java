@@ -1,11 +1,9 @@
-package io.github.divinerealms.footcube.physics.listeners;
+package io.github.divinerealms.footcube.listeners;
 
 import static io.github.divinerealms.footcube.physics.PhysicsConstants.CUBE_JUMP_RIGHT_CLICK;
-import static io.github.divinerealms.footcube.physics.PhysicsConstants.DEBUG_ON_MS;
-import static io.github.divinerealms.footcube.physics.PhysicsConstants.SOUND_PITCH;
-import static io.github.divinerealms.footcube.physics.PhysicsConstants.SOUND_VOLUME;
 import static io.github.divinerealms.footcube.utils.Permissions.PERM_HIT_DEBUG;
 
+import io.github.divinerealms.footcube.configs.Settings;
 import io.github.divinerealms.footcube.core.FCManager;
 import io.github.divinerealms.footcube.physics.PhysicsData;
 import io.github.divinerealms.footcube.physics.touch.CubeTouchInfo;
@@ -78,7 +76,7 @@ public class CubeTapListener implements Listener {
         // Cooldown expired, allow tap and update below.
       }
 
-      // Apply vertical boost and play sound.
+      // Calculate and apply vertical boost.
       Vector previousVelocity = cube.getVelocity().clone();
       double newY = Math.max(previousVelocity.getY(), CUBE_JUMP_RIGHT_CLICK);
       cube.setVelocity(previousVelocity.setY(newY));
@@ -95,11 +93,13 @@ public class CubeTapListener implements Listener {
       fcManager.getMatchManager().kick(player);
 
       // Play feedback sound.
-      cube.getWorld().playSound(cube.getLocation(), Sound.SLIME_WALK, SOUND_VOLUME, SOUND_PITCH);
+      cube.getWorld().playSound(cube.getLocation(), Sound.SLIME_WALK, 0.5F, 1.0F);
     } finally {
-      long ms = (System.nanoTime() - start) / 1_000_000;
-      if (ms > DEBUG_ON_MS) {
-        logger.send(PERM_HIT_DEBUG, "{prefix-admin}&bCubeTapListener &ftook &e" + ms + "ms");
+      if (Settings.DEBUG_MODE.asBoolean()) {
+        long ms = (System.nanoTime() - start) / 1_000_000;
+        if (ms > Settings.DEBUG_THRESHOLD.asLong()) {
+          logger.send(PERM_HIT_DEBUG, "{prefix-admin}&bCubeTapListener &ftook &e" + ms + "ms");
+        }
       }
     }
   }

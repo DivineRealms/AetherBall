@@ -1,4 +1,4 @@
-package io.github.divinerealms.footcube.commands;
+package io.github.divinerealms.footcube.commands.player;
 
 import static io.github.divinerealms.footcube.configs.Lang.COMMAND_DISABLER_CANT_USE;
 import static io.github.divinerealms.footcube.configs.Lang.NO_PERM;
@@ -28,13 +28,13 @@ import org.bukkit.entity.Player;
 
 @CommandAlias("build")
 @Description("Toggle build mode")
-public class FCBuildCommand extends BaseCommand {
+public class BuildCommand extends BaseCommand {
 
   private final FCManager fcManager;
   private final Logger logger;
   private final MatchManager matchManager;
 
-  public FCBuildCommand(FCManager fcManager) {
+  public BuildCommand(FCManager fcManager) {
     this.fcManager = fcManager;
     this.logger = fcManager.getLogger();
     this.matchManager = fcManager.getMatchManager();

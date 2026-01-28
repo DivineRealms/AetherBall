@@ -1,8 +1,8 @@
-package io.github.divinerealms.footcube.physics.listeners;
+package io.github.divinerealms.footcube.listeners;
 
-import static io.github.divinerealms.footcube.physics.PhysicsConstants.DEBUG_ON_MS;
 import static io.github.divinerealms.footcube.utils.Permissions.PERM_HIT_DEBUG;
 
+import io.github.divinerealms.footcube.configs.Settings;
 import io.github.divinerealms.footcube.core.FCManager;
 import io.github.divinerealms.footcube.physics.PhysicsData;
 import io.github.divinerealms.footcube.utils.Logger;
@@ -38,9 +38,11 @@ public class CubeDamageListener implements Listener {
         event.setCancelled(true);
       }
     } finally {
-      long ms = (System.nanoTime() - start) / 1_000_000;
-      if (ms > DEBUG_ON_MS) {
-        logger.send(PERM_HIT_DEBUG, "{prefix-admin}&dCubeDamageListener &ftook &e" + ms + "ms");
+      if (Settings.DEBUG_MODE.asBoolean()) {
+        long ms = (System.nanoTime() - start) / 1_000_000;
+        if (ms > Settings.DEBUG_THRESHOLD.asLong()) {
+          logger.send(PERM_HIT_DEBUG, "{prefix-admin}&dCubeDamageListener &ftook &e" + ms + "ms");
+        }
       }
     }
   }

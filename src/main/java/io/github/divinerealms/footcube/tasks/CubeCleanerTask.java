@@ -22,9 +22,7 @@ public class CubeCleanerTask extends BaseTask {
   protected void kaboom() {
     cubeCleaner.clearCubes();
     if (!cubeCleaner.isEmpty()) {
-      logger.broadcast(CLEARED_CUBES,
-          String.valueOf(cubeCleaner.getAmount())
-      );
+      logger.broadcast(CLEARED_CUBES, String.valueOf(cubeCleaner.getAmount()));
     }
   }
 

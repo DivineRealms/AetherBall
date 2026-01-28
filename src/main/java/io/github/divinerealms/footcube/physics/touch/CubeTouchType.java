@@ -1,20 +1,27 @@
 package io.github.divinerealms.footcube.physics.touch;
 
-import static io.github.divinerealms.footcube.physics.PhysicsConstants.CHARGED_KICK_COOLDOWN;
-import static io.github.divinerealms.footcube.physics.PhysicsConstants.REGULAR_KICK_COOLDOWN;
-import static io.github.divinerealms.footcube.physics.PhysicsConstants.RISE_COOLDOWN;
-
+import io.github.divinerealms.footcube.configs.Settings;
 import lombok.Getter;
 
 @Getter
 public enum CubeTouchType {
-  REGULAR_KICK(REGULAR_KICK_COOLDOWN),
-  CHARGED_KICK(CHARGED_KICK_COOLDOWN),
-  RISE(RISE_COOLDOWN);
+  REGULAR_KICK, CHARGED_KICK, RISE;
 
-  private final long cooldown;
-
-  CubeTouchType(long cooldown) {
-    this.cooldown = cooldown;
+  /**
+   * Gets the cooldown for this touch type from the config.
+   *
+   * @return Cooldown in milliseconds
+   */
+  public long getCooldown() {
+    switch (this) {
+      case REGULAR_KICK:
+        return Settings.KICK_COOLDOWN_REGULAR.asLong();
+      case CHARGED_KICK:
+        return Settings.KICK_COOLDOWN_CHARGED.asLong();
+      case RISE:
+        return Settings.KICK_COOLDOWN_RISE.asLong();
+      default:
+        throw new IllegalStateException("Unknown touch type: " + this);
+    }
   }
 }

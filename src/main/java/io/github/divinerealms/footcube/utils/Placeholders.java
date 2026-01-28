@@ -1,11 +1,5 @@
 package io.github.divinerealms.footcube.utils;
 
-import static io.github.divinerealms.footcube.matchmaking.util.MatchConstants.FIVE_V_FIVE;
-import static io.github.divinerealms.footcube.matchmaking.util.MatchConstants.FOUR_V_FOUR;
-import static io.github.divinerealms.footcube.matchmaking.util.MatchConstants.ONE_V_ONE;
-import static io.github.divinerealms.footcube.matchmaking.util.MatchConstants.THREE_V_THREE;
-import static io.github.divinerealms.footcube.matchmaking.util.MatchConstants.TWO_V_TWO;
-
 import io.github.divinerealms.footcube.configs.PlayerData;
 import io.github.divinerealms.footcube.core.FCManager;
 import io.github.divinerealms.footcube.managers.PlayerDataManager;
@@ -20,14 +14,14 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.jetbrains.annotations.NotNull;
 
-public class FCPlaceholders extends PlaceholderExpansion {
+public class Placeholders extends PlaceholderExpansion {
 
   private final PluginDescriptionFile pluginDescriptionFile;
   private final MatchManager matchManager;
   private final HighScoreManager highscoreManager;
   private final PlayerDataManager dataManager;
 
-  public FCPlaceholders(FCManager fcManager) {
+  public Placeholders(FCManager fcManager) {
     this.pluginDescriptionFile = fcManager.getPlugin().getDescription();
     this.matchManager = fcManager.getMatchManager();
     this.highscoreManager = fcManager.getHighscoreManager();
@@ -62,15 +56,12 @@ public class FCPlaceholders extends PlaceholderExpansion {
   @Override
   public String onPlaceholderRequest(Player player, @NotNull String identifier) {
     if (identifier.equals("enabled")) {
-      return matchManager.getData().isMatchesEnabled()
-          ? "YES"
-          : "NO";
+      return matchManager.getData().isMatchesEnabled() ? "YES" : "NO";
     }
 
     if (identifier.equals("active_lobbies_all")) {
       int count = 0;
-      for (int type : Arrays.asList(ONE_V_ONE, TWO_V_TWO, THREE_V_THREE, FOUR_V_FOUR,
-          FIVE_V_FIVE)) {
+      for (int type : Arrays.asList(1, 2, 3, 4, 5)) {
         count += matchManager.countActiveLobbies(type);
       }
 
@@ -84,9 +75,11 @@ public class FCPlaceholders extends PlaceholderExpansion {
           if (match == null) {
             continue;
           }
+
           if (match.getPlayers() == null) {
             continue;
           }
+
           playersInMatches += match.getPlayers().size();
         }
       }
@@ -97,6 +90,7 @@ public class FCPlaceholders extends PlaceholderExpansion {
           if (q == null) {
             continue;
           }
+
           playersInQueues += q.size();
         }
       }

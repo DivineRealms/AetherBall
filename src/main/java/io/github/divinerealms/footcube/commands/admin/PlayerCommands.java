@@ -1,4 +1,4 @@
-package io.github.divinerealms.footcube.commands;
+package io.github.divinerealms.footcube.commands.admin;
 
 import static io.github.divinerealms.footcube.configs.Lang.ADMIN_STATSET;
 import static io.github.divinerealms.footcube.configs.Lang.CLEAR_STATS_SUCCESS;
@@ -31,7 +31,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 @CommandAlias("fca|fcadmin|footcubeadmin")
-public class FCAdminPlayerCommands extends BaseCommand {
+public class PlayerCommands extends BaseCommand {
 
   private final FCManager fcManager;
   private final FootCube plugin;
@@ -39,7 +39,7 @@ public class FCAdminPlayerCommands extends BaseCommand {
   private final MatchManager matchManager;
   private final PlayerDataManager dataManager;
 
-  public FCAdminPlayerCommands(FCManager fcManager) {
+  public PlayerCommands(FCManager fcManager) {
     this.fcManager = fcManager;
     this.plugin = fcManager.getPlugin();
     this.logger = fcManager.getLogger();

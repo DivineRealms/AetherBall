@@ -1,4 +1,4 @@
-package io.github.divinerealms.footcube.commands;
+package io.github.divinerealms.footcube.commands.player;
 
 import static io.github.divinerealms.footcube.configs.Lang.AVAILABLE_TYPE;
 import static io.github.divinerealms.footcube.configs.Lang.COLOR;
@@ -43,14 +43,14 @@ import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 
 @CommandAlias("fc|footcube")
-public class FCSettingsCommands extends BaseCommand {
+public class SettingsCommands extends BaseCommand {
 
   private final FCManager fcManager;
   private final Logger logger;
   private final PlayerDataManager dataManager;
   private final PhysicsData physicsData;
 
-  public FCSettingsCommands(FCManager fcManager) {
+  public SettingsCommands(FCManager fcManager) {
     this.fcManager = fcManager;
     this.logger = fcManager.getLogger();
     this.dataManager = fcManager.getDataManager();

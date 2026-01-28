@@ -53,8 +53,8 @@ public class PlayerUpdateTask extends BaseTask {
       }
 
       double currentCharge = entry.getValue();
-      double recoveredCharge = CHARGE_BASE_VALUE -
-          (CHARGE_BASE_VALUE - currentCharge) * CHARGE_RECOVERY_RATE;
+      double recoveredCharge =
+          CHARGE_BASE_VALUE - (CHARGE_BASE_VALUE - currentCharge) * CHARGE_RECOVERY_RATE;
       entry.setValue(recoveredCharge);
 
       player.setExp((float) recoveredCharge);

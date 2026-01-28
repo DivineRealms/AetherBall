@@ -1,8 +1,8 @@
 package io.github.divinerealms.footcube.tasks;
 
 import static io.github.divinerealms.footcube.physics.PhysicsConstants.CLEANUP_LAST_TOUCHES_INTERVAL;
-import static io.github.divinerealms.footcube.physics.PhysicsConstants.RISE_COOLDOWN;
 
+import io.github.divinerealms.footcube.configs.Settings;
 import io.github.divinerealms.footcube.core.FCManager;
 import io.github.divinerealms.footcube.physics.PhysicsData;
 import io.github.divinerealms.footcube.physics.touch.CubeTouchInfo;
@@ -93,7 +93,7 @@ public class TouchCleanupTask extends BaseTask {
     }
     cubesToRemove.clear();
     for (Map.Entry<UUID, Long> entry : raised.entrySet()) {
-      if ((now - entry.getValue()) > RISE_COOLDOWN) {
+      if ((now - entry.getValue()) > Settings.KICK_COOLDOWN_RISE.asInt()) {
         cubesToRemove.add(entry.getKey());
       }
     }

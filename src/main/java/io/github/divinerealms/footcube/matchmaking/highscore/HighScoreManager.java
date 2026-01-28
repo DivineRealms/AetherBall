@@ -12,6 +12,7 @@ import static io.github.divinerealms.footcube.configs.Lang.NOBODY;
 import static io.github.divinerealms.footcube.configs.Lang.SIMPLE_FOOTER;
 
 import io.github.divinerealms.footcube.configs.PlayerData;
+import io.github.divinerealms.footcube.configs.Settings;
 import io.github.divinerealms.footcube.core.FCManager;
 import io.github.divinerealms.footcube.managers.PlayerDataManager;
 import io.github.divinerealms.footcube.managers.Utilities;
@@ -28,7 +29,6 @@ import org.bukkit.plugin.Plugin;
 
 public class HighScoreManager {
 
-  private static final int TOP_SCORES_SIZE = 5;
   private final FCManager fcManager;
   private final Plugin plugin;
   private final Logger logger;
@@ -61,6 +61,7 @@ public class HighScoreManager {
   private int skippedCount = 0;
   @Getter
   private int processedCount = 0;
+  private static int TOP_SCORES_SIZE = 5;
 
   public HighScoreManager(FCManager fcManager) {
     this.fcManager = fcManager;
@@ -68,6 +69,7 @@ public class HighScoreManager {
     this.logger = fcManager.getLogger();
     this.utilities = fcManager.getUtilities();
     this.playerDataManager = fcManager.getDataManager();
+    TOP_SCORES_SIZE = Settings.HIGHSCORE_TOP_PLAYERS.asInt();
     initializeArrays();
   }
 
@@ -130,7 +132,7 @@ public class HighScoreManager {
   }
 
   private void showTopCategory(CommandSender sender, String[] names, double[] values) {
-    for (int i = 0; i < 5; i++) {
+    for (int i = 0; i < TOP_SCORES_SIZE; i++) {
       logger.send(sender, BEST_ENTRY,
           String.valueOf(i + 1),
           names[i],
@@ -140,7 +142,7 @@ public class HighScoreManager {
   }
 
   private void showTopCategory(CommandSender sender, String[] names, int[] values) {
-    for (int i = 0; i < 5; i++) {
+    for (int i = 0; i < TOP_SCORES_SIZE; i++) {
       logger.send(sender, BEST_ENTRY,
           String.valueOf(i + 1),
           names[i],
@@ -172,32 +174,32 @@ public class HighScoreManager {
       skippedCount = 0;
       processedCount = 0;
 
-      for (int i = 0; i < 5; i++) {
+      for (int i = 0; i < TOP_SCORES_SIZE; i++) {
         bestRatings[i] = 0.0;
         topSkillNames[i] = nobody;
       }
 
-      for (int i = 0; i < 5; i++) {
+      for (int i = 0; i < TOP_SCORES_SIZE; i++) {
         mostGoals[i] = 0;
         topGoalsNames[i] = nobody;
       }
 
-      for (int i = 0; i < 5; i++) {
+      for (int i = 0; i < TOP_SCORES_SIZE; i++) {
         mostAssists[i] = 0;
         topAssistsNames[i] = nobody;
       }
 
-      for (int i = 0; i < 5; i++) {
+      for (int i = 0; i < TOP_SCORES_SIZE; i++) {
         mostOwnGoals[i] = 0;
         topOwnGoalsNames[i] = nobody;
       }
 
-      for (int i = 0; i < 5; i++) {
+      for (int i = 0; i < TOP_SCORES_SIZE; i++) {
         mostWins[i] = 0;
         topWinsNames[i] = nobody;
       }
 
-      for (int i = 0; i < 5; i++) {
+      for (int i = 0; i < TOP_SCORES_SIZE; i++) {
         longestStreak[i] = 0;
         topStreakNames[i] = nobody;
       }
@@ -267,7 +269,7 @@ public class HighScoreManager {
   private void insertIntoArray(double[] array, String[] names, double value, String prefixedName) {
     synchronized (highScoreLock) {
       int existingIndex = -1;
-      for (int i = 0; i < 5; i++) {
+      for (int i = 0; i < TOP_SCORES_SIZE; i++) {
         if (names[i] != null && names[i].equals(prefixedName)) {
           existingIndex = i;
           break;
@@ -279,17 +281,17 @@ public class HighScoreManager {
       }
 
       if (existingIndex != -1) {
-        for (int j = existingIndex; j < 4; j++) {
+        for (int j = existingIndex; j < TOP_SCORES_SIZE - 1; j++) {
           array[j] = array[j + 1];
           names[j] = names[j + 1];
         }
-        array[4] = 0;
-        names[4] = NOBODY.toString();
+        array[TOP_SCORES_SIZE - 1] = 0;
+        names[TOP_SCORES_SIZE - 1] = NOBODY.toString();
       }
 
-      for (int i = 0; i < 5; i++) {
+      for (int i = 0; i < TOP_SCORES_SIZE; i++) {
         if (value > array[i]) {
-          for (int j = 4; j > i; j--) {
+          for (int j = TOP_SCORES_SIZE - 1; j > i; j--) {
             array[j] = array[j - 1];
             names[j] = names[j - 1];
           }
@@ -305,7 +307,7 @@ public class HighScoreManager {
   private void insertIntoArray(int[] array, String[] names, int value, String prefixedName) {
     synchronized (highScoreLock) {
       int existingIndex = -1;
-      for (int i = 0; i < 5; i++) {
+      for (int i = 0; i < TOP_SCORES_SIZE; i++) {
         if (names[i] != null && names[i].equals(prefixedName)) {
           existingIndex = i;
           break;
@@ -317,17 +319,17 @@ public class HighScoreManager {
       }
 
       if (existingIndex != -1) {
-        for (int j = existingIndex; j < 4; j++) {
+        for (int j = existingIndex; j < TOP_SCORES_SIZE - 1; j++) {
           array[j] = array[j + 1];
           names[j] = names[j + 1];
         }
-        array[4] = 0;
-        names[4] = NOBODY.toString();
+        array[TOP_SCORES_SIZE - 1] = 0;
+        names[TOP_SCORES_SIZE - 1] = NOBODY.toString();
       }
 
-      for (int i = 0; i < 5; i++) {
+      for (int i = 0; i < TOP_SCORES_SIZE; i++) {
         if (value > array[i]) {
-          for (int j = 4; j > i; j--) {
+          for (int j = TOP_SCORES_SIZE - 1; j > i; j--) {
             array[j] = array[j - 1];
             names[j] = names[j - 1];
           }

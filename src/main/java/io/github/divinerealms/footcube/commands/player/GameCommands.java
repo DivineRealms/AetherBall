@@ -1,4 +1,4 @@
-package io.github.divinerealms.footcube.commands;
+package io.github.divinerealms.footcube.commands.player;
 
 import static io.github.divinerealms.footcube.configs.Lang.FC_DISABLED;
 import static io.github.divinerealms.footcube.configs.Lang.JOIN_ALREADYINGAME;
@@ -14,11 +14,6 @@ import static io.github.divinerealms.footcube.configs.Lang.TAKEPLACE_AVAILABLE_E
 import static io.github.divinerealms.footcube.configs.Lang.TAKEPLACE_AVAILABLE_HEADER;
 import static io.github.divinerealms.footcube.configs.Lang.TAKEPLACE_INGAME;
 import static io.github.divinerealms.footcube.configs.Lang.TAKEPLACE_NOPLACE;
-import static io.github.divinerealms.footcube.matchmaking.util.MatchConstants.FIVE_V_FIVE;
-import static io.github.divinerealms.footcube.matchmaking.util.MatchConstants.FOUR_V_FOUR;
-import static io.github.divinerealms.footcube.matchmaking.util.MatchConstants.ONE_V_ONE;
-import static io.github.divinerealms.footcube.matchmaking.util.MatchConstants.THREE_V_THREE;
-import static io.github.divinerealms.footcube.matchmaking.util.MatchConstants.TWO_V_TWO;
 import static io.github.divinerealms.footcube.utils.Permissions.PERM_PLAY;
 
 import co.aikar.commands.BaseCommand;
@@ -29,6 +24,7 @@ import co.aikar.commands.annotation.Description;
 import co.aikar.commands.annotation.Optional;
 import co.aikar.commands.annotation.Subcommand;
 import co.aikar.commands.annotation.Syntax;
+import io.github.divinerealms.footcube.configs.Settings;
 import io.github.divinerealms.footcube.core.FCManager;
 import io.github.divinerealms.footcube.matchmaking.Match;
 import io.github.divinerealms.footcube.matchmaking.MatchManager;
@@ -44,7 +40,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 @CommandAlias("fc|footcube")
-public class FCGameCommands extends BaseCommand {
+public class GameCommands extends BaseCommand {
 
   private final FCManager fcManager;
   private final Logger logger;
@@ -52,7 +48,7 @@ public class FCGameCommands extends BaseCommand {
   private final TeamManager teamManager;
   private final ArenaManager arenaManager;
 
-  public FCGameCommands(FCManager fcManager) {
+  public GameCommands(FCManager fcManager) {
     this.fcManager = fcManager;
     this.logger = fcManager.getLogger();
     this.matchManager = fcManager.getMatchManager();
@@ -70,19 +66,19 @@ public class FCGameCommands extends BaseCommand {
     int type;
     switch (matchType.toLowerCase()) {
       case "1v1":
-        type = ONE_V_ONE;
+        type = 1;
         break;
       case "2v2":
-        type = TWO_V_TWO;
+        type = 2;
         break;
       case "3v3":
-        type = THREE_V_THREE;
+        type = 3;
         break;
       case "4v4":
-        type = FOUR_V_FOUR;
+        type = 4;
         break;
       case "5v5":
-        type = FIVE_V_FIVE;
+        type = 5;
         break;
       default:
         logger.send(player, JOIN_INVALIDTYPE, matchType, OR.toString());
@@ -96,35 +92,35 @@ public class FCGameCommands extends BaseCommand {
   @CommandPermission(PERM_PLAY)
   @Description("Join 1v1 matchmaking queue")
   public void on1v1(Player player) {
-    joinQueue(player, ONE_V_ONE);
+    joinQueue(player, 1);
   }
 
   @CommandAlias("2v2")
   @CommandPermission(PERM_PLAY)
   @Description("Join 2v2 matchmaking queue")
   public void on2v2(Player player) {
-    joinQueue(player, TWO_V_TWO);
+    joinQueue(player, 2);
   }
 
   @CommandAlias("3v3")
   @CommandPermission(PERM_PLAY)
   @Description("Join 3v3 matchmaking queue")
   public void on3v3(Player player) {
-    joinQueue(player, THREE_V_THREE);
+    joinQueue(player, 3);
   }
 
   @CommandAlias("4v4")
   @CommandPermission(PERM_PLAY)
   @Description("Join 4v4 matchmaking queue")
   public void on4v4(Player player) {
-    joinQueue(player, FOUR_V_FOUR);
+    joinQueue(player, 4);
   }
 
   @CommandAlias("5v5")
   @CommandPermission(PERM_PLAY)
   @Description("Join 5v5 matchmaking queue")
   public void on5v5(Player player) {
-    joinQueue(player, FIVE_V_FIVE);
+    joinQueue(player, 5);
   }
 
   @CommandAlias("fcleave|fcl|leave")
@@ -231,6 +227,12 @@ public class FCGameCommands extends BaseCommand {
   }
 
   private void joinQueue(Player player, int type) {
+    if (!Settings.isMatchTypeEnabled(type)) {
+      logger.send(player, "&c&l✘ &cThis match type is not available!");
+      logger.send(player, "&7Available types: " + matchManager.getAvailableTypesString());
+      return;
+    }
+
     if (!matchManager.getData().isMatchesEnabled()) {
       logger.send(player, FC_DISABLED);
       return;

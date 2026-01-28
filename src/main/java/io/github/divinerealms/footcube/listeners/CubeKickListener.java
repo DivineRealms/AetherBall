@@ -1,14 +1,11 @@
-package io.github.divinerealms.footcube.physics.listeners;
+package io.github.divinerealms.footcube.listeners;
 
 import static io.github.divinerealms.footcube.configs.Lang.CUBE_CLEAR;
 import static io.github.divinerealms.footcube.configs.Lang.HITDEBUG_WHOLE;
-import static io.github.divinerealms.footcube.physics.PhysicsConstants.DEBUG_ON_MS;
-import static io.github.divinerealms.footcube.physics.PhysicsConstants.KICK_VERTICAL_BOOST;
-import static io.github.divinerealms.footcube.physics.PhysicsConstants.SOUND_PITCH;
-import static io.github.divinerealms.footcube.physics.PhysicsConstants.SOUND_VOLUME;
 import static io.github.divinerealms.footcube.utils.Permissions.PERM_CLEAR_CUBE;
 import static io.github.divinerealms.footcube.utils.Permissions.PERM_HIT_DEBUG;
 
+import io.github.divinerealms.footcube.configs.Settings;
 import io.github.divinerealms.footcube.core.FCManager;
 import io.github.divinerealms.footcube.physics.PhysicsData;
 import io.github.divinerealms.footcube.physics.touch.CubeTouchInfo;
@@ -94,9 +91,8 @@ public class CubeKickListener implements Listener {
       }
 
       // Check & Enforce cooldown.
-      CubeTouchType kickType = player.isSneaking()
-          ? CubeTouchType.CHARGED_KICK
-          : CubeTouchType.REGULAR_KICK;
+      CubeTouchType kickType =
+          player.isSneaking() ? CubeTouchType.CHARGED_KICK : CubeTouchType.REGULAR_KICK;
 
       Map<CubeTouchType, CubeTouchInfo> touches = data.getLastTouches().get(playerId);
       if (touches != null && touches.containsKey(kickType)) {
@@ -115,8 +111,7 @@ public class CubeKickListener implements Listener {
 
       // Compute final kick direction and apply impulse.
       Vector kick = player.getLocation().getDirection().normalize()
-          .multiply(kickResult.getFinalKickPower())
-          .setY(KICK_VERTICAL_BOOST);
+          .multiply(kickResult.getFinalKickPower()).setY(Settings.KICK_VERTICAL_BOOST.asDouble());
       cube.setVelocity(cube.getVelocity().add(kick));
 
       // Update cooldown entry (overwrites old one if exists).
@@ -128,14 +123,13 @@ public class CubeKickListener implements Listener {
       fcManager.getMatchManager().kick(player);
 
       // Sound effects.
-      cube.getWorld().playSound(cube.getLocation(), Sound.SLIME_WALK, 0.75F, SOUND_PITCH);
+      cube.getWorld().playSound(cube.getLocation(), Sound.SLIME_WALK, 0.75F, 1.0F);
 
       // Schedule post-processing for player sound feedback and debug info.
       scheduler.runTask(plugin, () -> {
-        PlayerSettings settings = fcManager.getPlayerSettings(player);
-        if (settings != null && settings.isKickSoundEnabled()) {
-          player.playSound(player.getLocation(), settings.getKickSound(), SOUND_VOLUME,
-              SOUND_PITCH);
+        PlayerSettings playerSettings = fcManager.getPlayerSettings(player);
+        if (playerSettings != null && playerSettings.isKickSoundEnabled()) {
+          player.playSound(player.getLocation(), playerSettings.getKickSound(), 0.5F, 1.0F);
         }
 
         if (data.isHitDebugEnabled()) {
@@ -150,9 +144,11 @@ public class CubeKickListener implements Listener {
 
       event.setCancelled(true);
     } finally {
-      long ms = (System.nanoTime() - start) / 1_000_000;
-      if (ms > DEBUG_ON_MS) {
-        logger.send("group.fcfa", "{prefix-admin}&dCubeKickListener &ftook &e" + ms + "ms");
+      if (Settings.DEBUG_MODE.asBoolean()) {
+        long ms = (System.nanoTime() - start) / 1_000_000;
+        if (ms > Settings.DEBUG_THRESHOLD.asLong()) {
+          logger.send("group.fcfa", "{prefix-admin}&dCubeKickListener &ftook &e" + ms + "ms");
+        }
       }
     }
   }

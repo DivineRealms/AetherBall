@@ -26,12 +26,12 @@ import org.bukkit.entity.Player;
 
 @CommandAlias("fc|footcube")
 @Description("FootCube base command.")
-public class FCCommand extends BaseCommand {
+public class MainCommand extends BaseCommand {
 
   private final FCManager fcManager;
   private final Logger logger;
 
-  public FCCommand(FCManager fcManager) {
+  public MainCommand(FCManager fcManager) {
     this.fcManager = fcManager;
     this.logger = fcManager.getLogger();
   }

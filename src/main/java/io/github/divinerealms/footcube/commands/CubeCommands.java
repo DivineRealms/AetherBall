@@ -27,14 +27,14 @@ import org.bukkit.entity.Slime;
 import org.bukkit.util.Vector;
 
 @CommandAlias("fc|footcube")
-public class FCCubeCommands extends BaseCommand {
+public class CubeCommands extends BaseCommand {
 
   private final Logger logger;
   private final MatchManager matchManager;
   private final PhysicsData physicsData;
   private final PhysicsSystem system;
 
-  public FCCubeCommands(FCManager fcManager) {
+  public CubeCommands(FCManager fcManager) {
     this.logger = fcManager.getLogger();
     this.matchManager = fcManager.getMatchManager();
     this.physicsData = fcManager.getPhysicsData();
