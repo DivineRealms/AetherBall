@@ -15,7 +15,7 @@ public class CacheCleanupTask extends BaseTask {
   protected void kaboom() {
     int removed = 0;
     for (Player player : fcManager.getCachedPlayers()) {
-      if (!isPlayerOnline(player)) {
+      if (isPlayerOnline(player)) {
         continue;
       }
 
