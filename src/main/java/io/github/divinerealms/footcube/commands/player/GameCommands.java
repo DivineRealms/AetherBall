@@ -1,22 +1,18 @@
 package io.github.divinerealms.footcube.commands.player;
 
 import static io.github.divinerealms.footcube.configs.Lang.FC_DISABLED;
-import static io.github.divinerealms.footcube.configs.Lang.JOIN_ALREADYINGAME;
 import static io.github.divinerealms.footcube.configs.Lang.JOIN_INVALIDTYPE;
-import static io.github.divinerealms.footcube.configs.Lang.JOIN_NOARENA;
-import static io.github.divinerealms.footcube.configs.Lang.LEAVE_LOSING;
-import static io.github.divinerealms.footcube.configs.Lang.LEAVE_NOT_INGAME;
 import static io.github.divinerealms.footcube.configs.Lang.LEAVE_QUEUE_ACTIONBAR;
 import static io.github.divinerealms.footcube.configs.Lang.LEFT;
-import static io.github.divinerealms.footcube.configs.Lang.MATCH_TYPE_UNAVAILABLE;
-import static io.github.divinerealms.footcube.configs.Lang.OR;
 import static io.github.divinerealms.footcube.configs.Lang.STATSSET_IS_NOT_A_NUMBER;
-import static io.github.divinerealms.footcube.configs.Lang.TAKEPLACE_AVAILABLE_ENTRY;
-import static io.github.divinerealms.footcube.configs.Lang.TAKEPLACE_AVAILABLE_HEADER;
 import static io.github.divinerealms.footcube.configs.Lang.TAKEPLACE_INGAME;
 import static io.github.divinerealms.footcube.configs.Lang.TAKEPLACE_NOPLACE;
-import static io.github.divinerealms.footcube.matchmaking.util.MatchUtils.isPlayerOnline;
 import static io.github.divinerealms.footcube.matchmaking.util.MatchUtils.shouldPreventAbuse;
+import static io.github.divinerealms.footcube.utils.GameCommandsHelper.handleInProgressLeave;
+import static io.github.divinerealms.footcube.utils.GameCommandsHelper.handleQueueLeave;
+import static io.github.divinerealms.footcube.utils.GameCommandsHelper.joinQueue;
+import static io.github.divinerealms.footcube.utils.GameCommandsHelper.parseMatchType;
+import static io.github.divinerealms.footcube.utils.GameCommandsHelper.showOpenMatches;
 import static io.github.divinerealms.footcube.utils.Permissions.PERM_PLAY;
 
 import co.aikar.commands.BaseCommand;
@@ -29,17 +25,10 @@ import co.aikar.commands.annotation.Subcommand;
 import co.aikar.commands.annotation.Syntax;
 import io.github.divinerealms.footcube.configs.Settings;
 import io.github.divinerealms.footcube.core.FCManager;
-import io.github.divinerealms.footcube.managers.Utilities;
 import io.github.divinerealms.footcube.matchmaking.Match;
 import io.github.divinerealms.footcube.matchmaking.MatchManager;
-import io.github.divinerealms.footcube.matchmaking.arena.ArenaManager;
-import io.github.divinerealms.footcube.matchmaking.player.MatchPlayer;
-import io.github.divinerealms.footcube.matchmaking.player.TeamColor;
-import io.github.divinerealms.footcube.matchmaking.team.TeamManager;
 import io.github.divinerealms.footcube.utils.Logger;
 import java.util.List;
-import java.util.Queue;
-import java.util.concurrent.TimeUnit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -48,83 +37,27 @@ public class GameCommands extends BaseCommand {
 
   private final FCManager fcManager;
   private final Logger logger;
-  private final MatchManager matchManager;
-  private final TeamManager teamManager;
-  private final ArenaManager arenaManager;
 
   public GameCommands(FCManager fcManager) {
     this.fcManager = fcManager;
     this.logger = fcManager.getLogger();
-    this.matchManager = fcManager.getMatchManager();
-    this.teamManager = fcManager.getTeamManager();
-    this.arenaManager = fcManager.getArenaManager();
   }
 
   @CommandAlias("fcjoin|fcj")
   @Subcommand("join|j")
   @CommandPermission(PERM_PLAY)
-  @Syntax("<1v1|2v2|3v3|4v4|5v5>")
-  @CommandCompletion("1v1|2v2|3v3|4v4|5v5")
+  @CommandCompletion("@matchtypes")
+  @Syntax("<match_type>")
   @Description("Join a matchmaking queue")
   public void onJoin(Player player, String matchType) {
-    int type;
-    switch (matchType.toLowerCase()) {
-      case "1v1":
-        type = 1;
-        break;
-      case "2v2":
-        type = 2;
-        break;
-      case "3v3":
-        type = 3;
-        break;
-      case "4v4":
-        type = 4;
-        break;
-      case "5v5":
-        type = 5;
-        break;
-      default:
-        logger.send(player, JOIN_INVALIDTYPE, matchType, OR.toString());
-        return;
+    Integer type = parseMatchType(matchType);
+    if (type == null) {
+      String availableTypes = fcManager.getMatchManager().getAvailableTypesString();
+      logger.send(player, JOIN_INVALIDTYPE, matchType, availableTypes);
+      return;
     }
 
-    joinQueue(player, type);
-  }
-
-  @CommandAlias("1v1")
-  @CommandPermission(PERM_PLAY)
-  @Description("Join 1v1 matchmaking queue")
-  public void on1v1(Player player) {
-    joinQueue(player, 1);
-  }
-
-  @CommandAlias("2v2")
-  @CommandPermission(PERM_PLAY)
-  @Description("Join 2v2 matchmaking queue")
-  public void on2v2(Player player) {
-    joinQueue(player, 2);
-  }
-
-  @CommandAlias("3v3")
-  @CommandPermission(PERM_PLAY)
-  @Description("Join 3v3 matchmaking queue")
-  public void on3v3(Player player) {
-    joinQueue(player, 3);
-  }
-
-  @CommandAlias("4v4")
-  @CommandPermission(PERM_PLAY)
-  @Description("Join 4v4 matchmaking queue")
-  public void on4v4(Player player) {
-    joinQueue(player, 4);
-  }
-
-  @CommandAlias("5v5")
-  @CommandPermission(PERM_PLAY)
-  @Description("Join 5v5 matchmaking queue")
-  public void on5v5(Player player) {
-    joinQueue(player, 5);
+    joinQueue(player, type, fcManager);
   }
 
   @CommandAlias("fcleave|fcl|leave")
@@ -132,22 +65,22 @@ public class GameCommands extends BaseCommand {
   @CommandPermission(PERM_PLAY)
   @Description("Leave current match or queue")
   public void onLeave(Player player) {
-    java.util.Optional<Match> matchOpt = matchManager.getMatch(player);
+    java.util.Optional<Match> matchOpt = fcManager.getMatchManager().getMatch(player);
 
     if (matchOpt.isPresent()) {
       Match match = matchOpt.get();
 
       if (shouldPreventAbuse(match.getPhase())) {
-        handleInProgressLeave(player, match);
+        handleInProgressLeave(player, match, fcManager);
       }
 
-      matchManager.leaveMatch(player);
+      fcManager.getMatchManager().leaveMatch(player);
       logger.send(player, LEFT);
       logger.sendActionBar(player, LEAVE_QUEUE_ACTIONBAR,
           Settings.getMatchTypeName(match.getArena().getType()));
-      teamManager.forceDisbandTeam(player);
+      fcManager.getTeamManager().forceDisbandTeam(player);
     } else {
-      handleQueueLeave(player);
+      handleQueueLeave(player, fcManager);
     }
   }
 
@@ -157,6 +90,7 @@ public class GameCommands extends BaseCommand {
   @Syntax("[matchId|list]")
   @Description("Take an open spot in an ongoing match")
   public void onTakePlace(Player player, @Optional String arg) {
+    MatchManager matchManager = fcManager.getMatchManager();
     if (!matchManager.getData().isMatchesEnabled()) {
       logger.send(player, FC_DISABLED);
       return;
@@ -185,7 +119,7 @@ public class GameCommands extends BaseCommand {
     }
 
     if (arg.equalsIgnoreCase("list")) {
-      showOpenMatches(player, openMatches);
+      showOpenMatches(player, openMatches, fcManager);
       return;
     }
 
@@ -202,7 +136,7 @@ public class GameCommands extends BaseCommand {
   @Syntax("<message>")
   @Description("Send a message to your team")
   public void onTeamChat(Player player, String message) {
-    matchManager.teamChat(player, message);
+    fcManager.getMatchManager().teamChat(player, message);
   }
 
   @CommandAlias("stats")
@@ -212,8 +146,9 @@ public class GameCommands extends BaseCommand {
   @Description("View player statistics")
   public void onStats(CommandSender sender, @Optional String targetName) {
     if (sender instanceof Player) {
-      Player p = (Player) sender;
-      fcManager.getMatchSystem().checkStats(targetName != null ? targetName : p.getName(), sender);
+      Player player = (Player) sender;
+      fcManager.getMatchSystem()
+          .checkStats(targetName != null ? targetName : player.getName(), sender);
     } else {
       if (targetName == null) {
         logger.send(sender, "&cYou need to specify a player.");
@@ -228,94 +163,5 @@ public class GameCommands extends BaseCommand {
   @Description("View top players leaderboard")
   public void onHighScores(CommandSender sender) {
     fcManager.getHighscoreManager().showHighScores(sender);
-  }
-
-  private void joinQueue(Player player, int type) {
-    if (!Settings.isMatchTypeEnabled(type)) {
-      logger.send(player, MATCH_TYPE_UNAVAILABLE, Settings.getMatchTypeName(type),
-          matchManager.getAvailableTypesString());
-      return;
-    }
-
-    if (!matchManager.getData().isMatchesEnabled()) {
-      logger.send(player, FC_DISABLED);
-      return;
-    }
-
-    if (fcManager.getBanManager().isBanned(player)) {
-      return;
-    }
-
-    if (matchManager.getMatch(player).isPresent()) {
-      logger.send(player, JOIN_ALREADYINGAME);
-      return;
-    }
-
-    if (!arenaManager.hasArenaForType(type)) {
-      logger.send(player, JOIN_NOARENA);
-      return;
-    }
-
-    matchManager.joinQueue(player, type);
-  }
-
-  private void handleInProgressLeave(Player player, Match match) {
-    MatchPlayer matchPlayer = null;
-    for (MatchPlayer mp : match.getPlayers()) {
-      if (isPlayerOnline(mp) && mp.getPlayer().equals(player)) {
-        matchPlayer = mp;
-        break;
-      }
-    }
-
-    if (matchPlayer != null) {
-      int playerScore =
-          matchPlayer.getTeamColor() == TeamColor.RED ? match.getScoreRed() : match.getScoreBlue();
-      int opponentScore =
-          matchPlayer.getTeamColor() == TeamColor.RED ? match.getScoreBlue() : match.getScoreRed();
-
-      if (playerScore < opponentScore) {
-        double rageQuitPenalty = Settings.BAN_RAGEQUIT_PENALTY.asDouble();
-        long rageQuitBanDuration = Settings.getRageQuitBanDuration();
-        fcManager.getEconomy().withdrawPlayer(player, rageQuitPenalty);
-        fcManager.getBanManager().banPlayer(player, rageQuitBanDuration);
-        long secondsLeft = TimeUnit.MILLISECONDS.toSeconds(rageQuitBanDuration);
-        logger.send(player, LEAVE_LOSING, String.format("%.0f", rageQuitPenalty),
-            Utilities.formatTime(secondsLeft));
-      }
-    }
-  }
-
-  private void handleQueueLeave(Player player) {
-    boolean leftQueue = false;
-    for (int queueType : matchManager.getData().getPlayerQueues().keySet()) {
-      Queue<Player> queue = matchManager.getData().getPlayerQueues().get(queueType);
-      if (queue != null && queue.contains(player)) {
-        matchManager.leaveQueue(player, queueType);
-        leftQueue = true;
-        teamManager.disbandTeamIfInLobby(player);
-      }
-    }
-
-    if (leftQueue) {
-      logger.send(player, LEFT);
-    } else {
-      logger.send(player, LEAVE_NOT_INGAME);
-    }
-  }
-
-  private void showOpenMatches(Player player, List<Match> openMatches) {
-    logger.send(player, TAKEPLACE_AVAILABLE_HEADER);
-    for (Match openMatch : openMatches) {
-      int emptySlots = 0;
-      for (MatchPlayer mp : openMatch.getPlayers()) {
-        if (mp == null) {
-          emptySlots++;
-        }
-      }
-      logger.send(player, TAKEPLACE_AVAILABLE_ENTRY, String.valueOf(openMatch.getArena().getId()),
-          Settings.getMatchTypeName(openMatch.getArena().getType()),
-          String.valueOf(emptySlots));
-    }
   }
 }

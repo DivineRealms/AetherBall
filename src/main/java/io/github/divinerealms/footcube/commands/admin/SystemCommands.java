@@ -22,6 +22,7 @@ import co.aikar.commands.annotation.Description;
 import co.aikar.commands.annotation.Optional;
 import co.aikar.commands.annotation.Subcommand;
 import co.aikar.commands.annotation.Syntax;
+import io.github.divinerealms.footcube.configs.Settings;
 import io.github.divinerealms.footcube.core.FCManager;
 import io.github.divinerealms.footcube.managers.TaskManager;
 import io.github.divinerealms.footcube.matchmaking.MatchManager;
@@ -57,6 +58,8 @@ public class SystemCommands extends BaseCommand {
     switch (type.toLowerCase()) {
       case "configs":
         fcManager.getConfigManager().reloadAllConfigs();
+        Settings.reloadMatchTypes();
+        fcManager.getMatchSystem().initializeMatchTypes();
         break;
       case "arenas":
         arenaManager.reloadArenas();

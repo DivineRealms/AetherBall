@@ -23,6 +23,7 @@ import static io.github.divinerealms.footcube.configs.Lang.TEAMCHAT_RED;
 import static io.github.divinerealms.footcube.matchmaking.util.MatchUtils.clearPlayer;
 import static io.github.divinerealms.footcube.matchmaking.util.MatchUtils.giveArmor;
 import static io.github.divinerealms.footcube.matchmaking.util.MatchUtils.isPlayerOnline;
+import static io.github.divinerealms.footcube.utils.GameCommandsHelper.isInQueueOrMatch;
 
 import io.github.divinerealms.footcube.configs.PlayerData;
 import io.github.divinerealms.footcube.configs.Settings;
@@ -88,7 +89,7 @@ public class MatchManager {
         continue;
       }
 
-      if (getMatch(player1).isPresent() || system.isInAnyQueue(player1)) {
+      if (isInQueueOrMatch(player, fcManager)) {
         logger.send(player, JOIN_ALREADYINGAME);
         return;
       }

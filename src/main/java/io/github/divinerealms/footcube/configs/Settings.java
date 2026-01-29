@@ -1,9 +1,12 @@
 package io.github.divinerealms.footcube.configs;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import lombok.Getter;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 
 @SuppressWarnings("unused")
@@ -24,32 +27,6 @@ public enum Settings {
   KICK_BASE_POWER_CHARGED("Physics.Kick_Base_Power.Charged", 0.375),
   KICK_VERTICAL_BOOST("Physics.Kick_Vertical_Boost", 0.3),
   AFK_THRESHOLD("Physics.AFK_Threshold", 2),
-
-  // ==================== MATCHMAKING - MATCH TYPES ====================
-  MATCH_1V1_ENABLED("Matchmaking.Match_Types.1v1.Enabled", true),
-  MATCH_1V1_DURATION("Matchmaking.Match_Types.1v1.Duration", 120),
-  MATCH_1V1_MAX_SCORE("Matchmaking.Match_Types.1v1.Max_Score", 5),
-  MATCH_1V1_COUNT_STATS("Matchmaking.Match_Types.1v1.Count_Stats", true),
-
-  MATCH_2V2_ENABLED("Matchmaking.Match_Types.2v2.Enabled", true),
-  MATCH_2V2_DURATION("Matchmaking.Match_Types.2v2.Duration", 240),
-  MATCH_2V2_MAX_SCORE("Matchmaking.Match_Types.2v2.Max_Score", 7),
-  MATCH_2V2_COUNT_STATS("Matchmaking.Match_Types.2v2.Count_Stats", true),
-
-  MATCH_3V3_ENABLED("Matchmaking.Match_Types.3v3.Enabled", true),
-  MATCH_3V3_DURATION("Matchmaking.Match_Types.3v3.Duration", 300),
-  MATCH_3V3_MAX_SCORE("Matchmaking.Match_Types.3v3.Max_Score", 10),
-  MATCH_3V3_COUNT_STATS("Matchmaking.Match_Types.3v3.Count_Stats", true),
-
-  MATCH_4V4_ENABLED("Matchmaking.Match_Types.4v4.Enabled", true),
-  MATCH_4V4_DURATION("Matchmaking.Match_Types.4v4.Duration", 300),
-  MATCH_4V4_MAX_SCORE("Matchmaking.Match_Types.4v4.Max_Score", 12),
-  MATCH_4V4_COUNT_STATS("Matchmaking.Match_Types.4v4.Count_Stats", true),
-
-  MATCH_5V5_ENABLED("Matchmaking.Match_Types.5v5.Enabled", true),
-  MATCH_5V5_DURATION("Matchmaking.Match_Types.5v5.Duration", 300),
-  MATCH_5V5_MAX_SCORE("Matchmaking.Match_Types.5v5.Max_Score", 15),
-  MATCH_5V5_COUNT_STATS("Matchmaking.Match_Types.5v5.Count_Stats", true),
 
   // ==================== MATCHMAKING - TIMING ====================
   STARTING_COUNTDOWN("Matchmaking.Timing.Starting_Countdown", 15),
@@ -106,6 +83,8 @@ public enum Settings {
   private final String path;
   private final Object def;
 
+  static final Map<Integer, MatchTypeConfig> MATCH_TYPE_CACHE = new HashMap<>();
+
   Settings(String path, Object def) {
     this.path = path;
     this.def = def;
@@ -113,6 +92,7 @@ public enum Settings {
 
   public static void setFile(FileConfiguration config) {
     CONFIG = config;
+    loadMatchTypes();
   }
 
   public static FileConfiguration getConfig() {
@@ -150,57 +130,84 @@ public enum Settings {
     return CONFIG.getString(this.path, (String) this.def);
   }
 
+  // ==================== DYNAMIC MATCH TYPE SYSTEM ====================
+
+  @Getter
+  public static class MatchTypeConfig {
+
+    private final int type;
+    private final boolean enabled;
+    private final long duration;
+    private final int maxScore;
+    private final boolean countStats;
+
+    public MatchTypeConfig(int type, boolean enabled, long duration, int maxScore,
+        boolean countStats) {
+      this.type = type;
+      this.enabled = enabled;
+      this.duration = duration;
+      this.maxScore = maxScore;
+      this.countStats = countStats;
+    }
+  }
+
+  private static void loadMatchTypes() {
+    MATCH_TYPE_CACHE.clear();
+
+    if (CONFIG == null) {
+      return;
+    }
+
+    ConfigurationSection matchTypesSection = CONFIG.getConfigurationSection(
+        "Matchmaking.Match_Types");
+    if (matchTypesSection == null) {
+      return;
+    }
+
+    for (String key : matchTypesSection.getKeys(false)) {
+      try {
+        int type = Integer.parseInt(key.split("v")[0]);
+
+        String basePath = "Matchmaking.Match_Types." + key + ".";
+        boolean enabled = CONFIG.getBoolean(basePath + "Enabled", true);
+        long duration = CONFIG.getLong(basePath + "Duration", 300);
+        int maxScore = CONFIG.getInt(basePath + "Max_Score", 10);
+        boolean countStats = CONFIG.getBoolean(basePath + "Count_Stats", true);
+
+        MATCH_TYPE_CACHE.put(type,
+            new MatchTypeConfig(type, enabled, duration, maxScore, countStats));
+      } catch (Exception ignored) {
+      }
+    }
+  }
+
+  public static void reloadMatchTypes() {
+    loadMatchTypes();
+  }
+
+  public static MatchTypeConfig getMatchTypeConfig(int type) {
+    return MATCH_TYPE_CACHE.get(type);
+  }
+
+  public static Map<Integer, MatchTypeConfig> getAllMatchTypeConfigs() {
+    return new HashMap<>(MATCH_TYPE_CACHE);
+  }
+
   // ==================== HELPER METHODS ====================
 
   public static long getMatchDuration(int type) {
-    switch (type) {
-      case 1:
-        return MATCH_1V1_DURATION.asLong();
-      case 2:
-        return MATCH_2V2_DURATION.asLong();
-      case 3:
-        return MATCH_3V3_DURATION.asLong();
-      case 4:
-        return MATCH_4V4_DURATION.asLong();
-      case 5:
-        return MATCH_5V5_DURATION.asLong();
-      default:
-        return 300L;
-    }
+    MatchTypeConfig config = MATCH_TYPE_CACHE.get(type);
+    return config != null ? config.getDuration() : 300L;
   }
 
   public static int getMaxScore(int type) {
-    switch (type) {
-      case 1:
-        return MATCH_1V1_MAX_SCORE.asInt();
-      case 2:
-        return MATCH_2V2_MAX_SCORE.asInt();
-      case 3:
-        return MATCH_3V3_MAX_SCORE.asInt();
-      case 4:
-        return MATCH_4V4_MAX_SCORE.asInt();
-      case 5:
-        return MATCH_5V5_MAX_SCORE.asInt();
-      default:
-        return 10;
-    }
+    MatchTypeConfig config = MATCH_TYPE_CACHE.get(type);
+    return config != null ? config.getMaxScore() : 10;
   }
 
   public static boolean shouldCountStats(int type) {
-    switch (type) {
-      case 1:
-        return MATCH_1V1_COUNT_STATS.asBoolean();
-      case 2:
-        return MATCH_2V2_COUNT_STATS.asBoolean();
-      case 3:
-        return MATCH_3V3_COUNT_STATS.asBoolean();
-      case 4:
-        return MATCH_4V4_COUNT_STATS.asBoolean();
-      case 5:
-        return MATCH_5V5_COUNT_STATS.asBoolean();
-      default:
-        return true;
-    }
+    MatchTypeConfig config = MATCH_TYPE_CACHE.get(type);
+    return config != null && config.isCountStats();
   }
 
   @SuppressWarnings("BooleanMethodIsAlwaysInverted")
@@ -214,20 +221,10 @@ public enum Settings {
 
   public static List<Integer> getEnabledMatchTypes() {
     List<Integer> types = new ArrayList<>();
-    if (MATCH_1V1_ENABLED.asBoolean()) {
-      types.add(1);
-    }
-    if (MATCH_2V2_ENABLED.asBoolean()) {
-      types.add(2);
-    }
-    if (MATCH_3V3_ENABLED.asBoolean()) {
-      types.add(3);
-    }
-    if (MATCH_4V4_ENABLED.asBoolean()) {
-      types.add(4);
-    }
-    if (MATCH_5V5_ENABLED.asBoolean()) {
-      types.add(5);
+    for (Map.Entry<Integer, MatchTypeConfig> entry : MATCH_TYPE_CACHE.entrySet()) {
+      if (entry.getValue().isEnabled()) {
+        types.add(entry.getKey());
+      }
     }
     return types;
   }

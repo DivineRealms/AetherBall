@@ -15,6 +15,7 @@ import co.aikar.commands.MessageKeys;
 import co.aikar.commands.PaperCommandManager;
 import io.github.divinerealms.footcube.FootCube;
 import io.github.divinerealms.footcube.commands.CubeCommands;
+import io.github.divinerealms.footcube.commands.DynamicCommandRegistry;
 import io.github.divinerealms.footcube.commands.MainCommand;
 import io.github.divinerealms.footcube.commands.MatchMan;
 import io.github.divinerealms.footcube.commands.admin.ArenaCommands;
@@ -63,6 +64,7 @@ import java.util.StringJoiner;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
 import lombok.Getter;
 import lombok.Setter;
 import me.neznamy.tab.api.TabAPI;
@@ -109,6 +111,8 @@ public class FCManager {
   private final CubeCleaner cubeCleaner;
   private final ListenerManager listenerManager;
   private final TaskManager taskManager;
+  @Getter
+  private final DynamicCommandRegistry dynamicCommandRegistry;
   private final Set<Player> cachedPlayers = ConcurrentHashMap.newKeySet();
   private final Map<UUID, PlayerSettings> playerSettings = new ConcurrentHashMap<>();
   private final Map<UUID, String> cachedPrefixedNames = new ConcurrentHashMap<>();
@@ -157,6 +161,7 @@ public class FCManager {
     this.cubeCleaner = new CubeCleaner(this);
     this.listenerManager = new ListenerManager(this);
     this.taskManager = new TaskManager(this);
+    this.dynamicCommandRegistry = new DynamicCommandRegistry(this);
 
     new Placeholders(this).register();
   }
@@ -226,6 +231,7 @@ public class FCManager {
     registerCustomCompletions();
     registerPlayerCommands();
     registerAdminCommands();
+    dynamicCommandRegistry.reloadCommands();
 
     logger.info("&a✔ &2Registered commands via &eACF &2successfully.");
   }
@@ -249,6 +255,16 @@ public class FCManager {
     CommandCompletions<BukkitCommandCompletionContext> completions = commandManager.getCommandCompletions();
     completions.registerStaticCompletion("particles", PlayerSettings.getAllowedParticles());
     completions.registerStaticCompletion("colors", PlayerSettings.getAllowedColorNames());
+    completions.registerCompletion("matchtypes",
+        context -> Settings.getEnabledMatchTypes().stream()
+            .map(Settings::getMatchTypeName)
+            .collect(Collectors.toList())
+    );
+    completions.registerCompletion("allmatchtypes",
+        context -> Settings.getAllMatchTypeConfigs().keySet().stream()
+            .map(Settings::getMatchTypeName)
+            .collect(Collectors.toList())
+    );
   }
 
   private void registerPlayerCommands() {
@@ -464,6 +480,9 @@ public class FCManager {
   public void cleanup() {
     long start = System.nanoTime();
     try {
+      if (dynamicCommandRegistry != null) {
+        dynamicCommandRegistry.unregisterAllMatchTypeCommands();
+      }
       if (commandManager != null) {
         try {
           commandManager.unregisterCommands();
