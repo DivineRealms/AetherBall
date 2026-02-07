@@ -1,2 +1,2 @@
-rootProject.name = "FootCube"
+rootProject.name = "AetherBall"
 

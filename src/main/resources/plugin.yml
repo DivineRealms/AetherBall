@@ -1,30 +1,8 @@
-name: FootCube
+name: AetherBall
 version: ${version}
-main: io.github.divinerealms.footcube.FootCube
+main: io.github.divinerealms.aetherball.AetherBall
 authors:
-  - SmileyCraft
   - neonsh
-description: Soccer/Football in MineCraft
+description: Soccer in Minecraft
 depend: [ Vault, LuckPerms, TAB ]
 softdepend: [ PlaceholderAPI ]
-
-commands:
-  footcube:
-    description: Main FootCube command
-    usage: /<command> <subcommand>
-    aliases: [ fc ]
-
-  fcadmin:
-    description: Admin command
-    aliases: [ afc ]
-    permission: footcube.admin
-
-  matches:
-    description: Matches command
-    aliases: [ q ]
-    default: true
-    permission: footcube.matches
-
-  build:
-    description: Toggle Build Mode
-    permission: footcube.build

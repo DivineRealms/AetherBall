@@ -15,7 +15,7 @@ java {
     targetCompatibility = JavaVersion.VERSION_11
 }
 
-group = "io.github.divinerealms.footcube"
+group = "io.github.divinerealms.aetherball"
 
 val versionFile = file("version.properties")
 val props = Properties().apply {
@@ -61,8 +61,8 @@ val dirty = hasUncommittedChanges()
 version = if (dirty) "$versionBase-$commit-DEV"
 else "$versionBase-$commit"
 
-val jarLabel = if (dirty) "FootCube-$versionBase-$commit-DEV.jar"
-else "FootCube-$versionBase-$commit.jar"
+val jarLabel = if (dirty) "AetherBall-$versionBase-$commit-DEV.jar"
+else "AetherBall-$versionBase-$commit.jar"
 
 repositories {
     mavenCentral()
@@ -105,15 +105,15 @@ tasks.processResources {
 
 tasks.withType<ShadowJar> {
     archiveFileName.set(jarLabel)
-    relocate("co.aikar.commands", "io.github.divinerealms.footcube.libs.acf")
-    relocate("co.aikar.locales", "io.github.divinerealms.footcube.libs.locales")
+    relocate("co.aikar.commands", "io.github.divinerealms.aetherball.libs.acf")
+    relocate("co.aikar.locales", "io.github.divinerealms.aetherball.libs.locales")
     minimize()
 }
 
 tasks.build {
     dependsOn(tasks.shadowJar)
     doFirst {
-        println("Building FootCube version: $version")
+        println("Building AetherBall version: $version")
         println("Repository state: ${if (dirty) "UNCOMMITTED CHANGES" else "CLEAN"}")
         println("Output JAR: $jarLabel")
     }

@@ -1,7 +1,7 @@
 # ============================================================
-# FootCube - Unified Settings Configuration
+# AetherBall - Unified Settings Configuration
 # ============================================================
-# This file contains ALL configurable settings for FootCube.
+# This file contains ALL configurable settings for AetherBall.
 # Restart server or use /fca reload to apply changes.
 # ============================================================
 
@@ -218,5 +218,5 @@ Lobby:
 # ============================================================
 
 Features:
-  # Enable FootCube signs ([FootCube] signs)
+  # Enable AetherBall signs ([AetherBall] signs)
   Signs_Enabled: true
