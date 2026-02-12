@@ -22,6 +22,8 @@ import static io.github.divinerealms.aetherball.physics.PhysicsConstants.SOUND_V
 import static io.github.divinerealms.aetherball.physics.PhysicsConstants.VECTOR_CHANGE_THRESHOLD;
 import static io.github.divinerealms.aetherball.physics.PhysicsConstants.VERTICAL_BOUNCE_THRESHOLD;
 import static io.github.divinerealms.aetherball.physics.PhysicsConstants.WALL_BOUNCE_FACTOR;
+import static io.github.divinerealms.aetherball.utils.LoggerUtil.logConsole;
+import static io.github.divinerealms.aetherball.utils.LoggerUtil.sendMessage;
 import static io.github.divinerealms.aetherball.utils.Permissions.PERM_HIT_DEBUG;
 
 import io.github.divinerealms.aetherball.configs.Settings;
@@ -33,8 +35,6 @@ import io.github.divinerealms.aetherball.physics.utilities.PhysicsSystem;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-import java.util.logging.Level;
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
@@ -64,7 +64,7 @@ public class PhysicsTask extends BaseTask {
     }
 
     // Build player cache once per tick for all cubes to reuse.
-    Map<UUID, PlayerPhysicsCache> playerCache = buildPlayerCache();
+    Map<UUID, PlayerPhysicsCache> playerCache = buildPlayerCache(system, data);
     if (playerCache.isEmpty()) {
       return; // No valid players to process
     }
@@ -258,7 +258,8 @@ public class PhysicsTask extends BaseTask {
         newVelocity.multiply(maxKickPower / finalSpeed); // Scale back to MAX_KP.
         // Log violation to players with debugging permissions.
         if (Settings.DEBUG_MODE.asBoolean()) {
-          logger.send(PERM_HIT_DEBUG, HITDEBUG_VELOCITY_CAP, String.format("%.2f", finalSpeed),
+          sendMessage(PERM_HIT_DEBUG, HITDEBUG_VELOCITY_CAP,
+              String.format("%.2f", finalSpeed),
               String.valueOf(maxKickPower));
         }
       }
@@ -280,7 +281,7 @@ public class PhysicsTask extends BaseTask {
    * @return a map of player UUIDs to their corresponding physics cache
    *
    **/
-  private Map<UUID, PlayerPhysicsCache> buildPlayerCache() {
+  private Map<UUID, PlayerPhysicsCache> buildPlayerCache(PhysicsSystem system, PhysicsData data) {
     Map<UUID, PlayerPhysicsCache> cache = new HashMap<>();
 
     for (Player player : manager.getCachedPlayers()) {
@@ -293,9 +294,8 @@ public class PhysicsTask extends BaseTask {
         PlayerPhysicsCache physicsCache = new PlayerPhysicsCache(player, system, data);
         cache.put(player.getUniqueId(), physicsCache);
       } catch (Exception exception) {
-        Bukkit.getLogger().log(Level.WARNING,
-            "Failed to cache player " + player.getName() + ": " + exception.getMessage(),
-            exception);
+        logConsole("{prefix_warn}Failed to cache player " + player.getName(),
+            exception.getMessage());
       }
     }
 

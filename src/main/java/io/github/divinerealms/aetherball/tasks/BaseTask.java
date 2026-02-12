@@ -1,23 +1,29 @@
 package io.github.divinerealms.aetherball.tasks;
 
+import static io.github.divinerealms.aetherball.utils.LoggerUtil.debugConsole;
+import static io.github.divinerealms.aetherball.utils.LoggerUtil.logConsole;
+import static io.github.divinerealms.aetherball.utils.LoggerUtil.sendMessage;
 import static io.github.divinerealms.aetherball.utils.Permissions.PERM_ADMIN;
 
 import io.github.divinerealms.aetherball.configs.Settings;
 import io.github.divinerealms.aetherball.core.Manager;
-import io.github.divinerealms.aetherball.utils.Logger;
 import java.util.ArrayDeque;
 import java.util.Queue;
-import java.util.logging.Level;
 import lombok.Getter;
-import org.bukkit.Bukkit;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitTask;
 
+/**
+ * Base class for all scheduled tasks with built-in performance monitoring.
+ * <p>
+ * Tracks execution times and provides automatic debug warnings when tasks exceed their threshold.
+ * Maintains a rolling window of the last 20 execution times for performance analysis.
+ * </p>
+ */
 public abstract class BaseTask implements Runnable {
 
   protected final Manager manager;
   protected final Plugin plugin;
-  protected final Logger logger;
   @Getter
   private final String taskName;
   private final long interval;
@@ -29,7 +35,7 @@ public abstract class BaseTask implements Runnable {
   private boolean running = false;
   @Getter
   private long totalExecutions = 0;
-  private long totalExecutionTime = 0;
+  private long recentExecutionTimeSum = 0;
 
   protected BaseTask(Manager manager, String taskName, long interval, boolean async) {
     this(manager, taskName, interval, async, getDefaultThreshold(interval));
@@ -39,7 +45,6 @@ public abstract class BaseTask implements Runnable {
       long customThreshold) {
     this.manager = manager;
     this.plugin = manager.getPlugin();
-    this.logger = manager.getLogger();
     this.taskName = taskName;
     this.interval = interval;
     this.async = async;
@@ -60,7 +65,7 @@ public abstract class BaseTask implements Runnable {
 
   public void start() {
     if (running) {
-      logger.info("&e! &6" + taskName + " task is already running");
+      debugConsole("{prefix_warn}" + taskName + " task is already running");
       return;
     }
 
@@ -72,8 +77,8 @@ public abstract class BaseTask implements Runnable {
     }
 
     running = true;
-    logger.info("&a✔ &2Started &d" + taskName + "&2 task &7&o(type: " + (async ? "&ba" : "&a")
-        + "sync&7&o, frequency: " + interval + " ticks)");
+    debugConsole("{prefix_success}Started " + taskName + " task (type: " + (async ? "a" : "")
+        + "sync, frequency: " + interval + " ticks)");
   }
 
   public void stop() {
@@ -95,19 +100,17 @@ public abstract class BaseTask implements Runnable {
     try {
       kaboom();
     } catch (Exception exception) {
-      Bukkit.getLogger()
-          .log(Level.SEVERE, "Error in " + taskName + " task: " + exception.getMessage(),
-              exception);
+      logConsole("{prefix_error}Error in " + taskName + " task", exception.getMessage());
     } finally {
+      long durationNanos = System.nanoTime() - start;
+      recordExecution(durationNanos);
       if (Settings.DEBUG_MODE.asBoolean()) {
-        long durationNanos = System.nanoTime() - start;
-        recordExecution(durationNanos);
-
         long durationMillis = durationNanos / 1_000_000;
         if (durationMillis > debugThreshold) {
-          logger.send(PERM_ADMIN,
-              "{prefix-admin}&d" + taskName + " &ftook &e" + durationMillis + "ms &f(threshold: "
-                  + debugThreshold + "ms)");
+          sendMessage(PERM_ADMIN,
+              "{prefix_debug}&d" + taskName + " &ftook &e" + durationMillis + "ms &f(threshold: "
+                  + debugThreshold
+                  + "ms)");
         }
       }
     }
@@ -115,28 +118,41 @@ public abstract class BaseTask implements Runnable {
 
   protected abstract void kaboom();
 
+  /**
+   * Records a task execution and maintains a rolling window of the last 20 execution times.
+   *
+   * @param duration the execution duration in nanoseconds
+   */
   private void recordExecution(long duration) {
     totalExecutions++;
-    totalExecutionTime += duration;
 
+    // Add new duration to the rolling sum.
+    recentExecutionTimeSum += duration;
     recentExecutionTimes.offer(duration);
+
+    // Keep only the last 20 execution times
     if (recentExecutionTimes.size() > 20) {
       long removed = recentExecutionTimes.poll();
-      totalExecutionTime -= removed;
+      recentExecutionTimeSum -= removed;
     }
   }
 
+  /**
+   * Gets the average execution time in milliseconds based on the last 20 runs.
+   *
+   * @return average execution time in milliseconds, or 0.0 if no executions recorded
+   */
   public double getAverageExecutionTime() {
     if (recentExecutionTimes.isEmpty()) {
       return 0.0;
     }
 
-    return totalExecutionTime / (double) recentExecutionTimes.size() / 1_000_000.0;
+    return recentExecutionTimeSum / (double) recentExecutionTimes.size() / 1_000_000.0;
   }
 
   public void resetStats() {
     totalExecutions = 0;
     recentExecutionTimes.clear();
-    totalExecutionTime = 0;
+    recentExecutionTimeSum = 0;
   }
 }

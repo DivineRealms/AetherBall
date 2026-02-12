@@ -1,5 +1,8 @@
 package io.github.divinerealms.aetherball.managers;
 
+import static io.github.divinerealms.aetherball.utils.LoggerUtil.debugConsole;
+import static io.github.divinerealms.aetherball.utils.LoggerUtil.logConsole;
+
 import io.github.divinerealms.aetherball.configs.Settings;
 import io.github.divinerealms.aetherball.core.Manager;
 import io.github.divinerealms.aetherball.tasks.BaseTask;
@@ -12,7 +15,6 @@ import io.github.divinerealms.aetherball.tasks.PhysicsTask;
 import io.github.divinerealms.aetherball.tasks.PlayerUpdateTask;
 import io.github.divinerealms.aetherball.tasks.QueueStatusTask;
 import io.github.divinerealms.aetherball.tasks.TouchCleanupTask;
-import io.github.divinerealms.aetherball.utils.Logger;
 import io.github.divinerealms.aetherball.utils.TaskStats;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,7 +27,6 @@ import lombok.Getter;
 @Getter
 public class TaskManager {
 
-  private final Logger logger;
   private final List<BaseTask> tasks;
 
   // Physics Tasks
@@ -42,7 +43,6 @@ public class TaskManager {
   private final HighScoresTask highScoresTask;
 
   public TaskManager(Manager manager) {
-    this.logger = manager.getLogger();
     this.tasks = new ArrayList<>();
 
     // Initialize physics tasks.
@@ -77,12 +77,12 @@ public class TaskManager {
         task.start();
         started++;
       } catch (Exception exception) {
-        logger.info(
-            "&c✘ &4Failed to start " + task.getTaskName() + " task: " + exception.getMessage());
+        logConsole("{prefix_error}Failed to start " + task.getTaskName() + " task: "
+            + exception.getMessage());
       }
     }
-    logger.info(
-        "&a✔ &2Started &e" + started + "/" + tasks.size() + " &2plugin tasks successfully!");
+    debugConsole(
+        "{prefix_success}Started " + started + "/" + tasks.size() + " plugin tasks successfully!");
   }
 
   public void stopAll() {
@@ -94,13 +94,13 @@ public class TaskManager {
           task.stop();
           stopped++;
         } catch (Exception exception) {
-          logger.info(
-              "&c✘ &4Error stopping " + task.getTaskName() + " task: " + exception.getMessage());
+          logConsole("{prefix_error}Error stopping " + task.getTaskName() + " task: "
+              + exception.getMessage());
         }
       }
     }
     if (stopped > 0) {
-      logger.info("&c✘ &4Stopped &c" + stopped + " &4plugin tasks.");
+      debugConsole("{prefix_success}Stopped " + stopped + " plugin tasks.");
     }
   }
 
@@ -120,7 +120,7 @@ public class TaskManager {
     for (BaseTask task : tasks) {
       task.resetStats();
     }
-    logger.info("&a✔ &2Reset statistics for all tasks.");
+    debugConsole("{prefix_success}Reset statistics for all tasks.");
   }
 
   public int getTaskCount() {

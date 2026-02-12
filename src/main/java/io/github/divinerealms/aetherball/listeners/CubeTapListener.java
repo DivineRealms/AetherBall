@@ -1,52 +1,58 @@
 package io.github.divinerealms.aetherball.listeners;
 
 import static io.github.divinerealms.aetherball.physics.PhysicsConstants.CUBE_JUMP_RIGHT_CLICK;
-import static io.github.divinerealms.aetherball.utils.Permissions.PERM_HIT_DEBUG;
 
 import io.github.divinerealms.aetherball.configs.Settings;
 import io.github.divinerealms.aetherball.core.Manager;
+import io.github.divinerealms.aetherball.matchmaking.MatchManager;
 import io.github.divinerealms.aetherball.physics.PhysicsData;
 import io.github.divinerealms.aetherball.physics.utilities.PhysicsSystem;
-import io.github.divinerealms.aetherball.utils.Logger;
 import java.util.UUID;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Slime;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.util.Vector;
 
-public class CubeTapListener implements Listener {
+/**
+ * Handles right-click interactions with cube entities.
+ * <p>
+ * Provides a lighter form of cube interaction compared to kicks, applying vertical boosts with
+ * cooldown management to prevent spam and maintain gameplay balance.
+ * </p>
+ */
+public class CubeTapListener extends BaseListener {
 
-  private final Manager manager;
-  private final Logger logger;
   private final PhysicsData data;
   private final PhysicsSystem system;
+  private final MatchManager matchManager;
 
   public CubeTapListener(Manager manager) {
-    this.manager = manager;
-    this.logger = manager.getLogger();
     this.data = manager.getPhysicsData();
     this.system = manager.getPhysicsSystem();
+    this.matchManager = manager.getMatchManager();
   }
 
   /**
    * Handles right-click interactions with cube entities.
-   * <p>When a player right-clicks a tracked {@link Slime}, applies a vertical boost
-   * and triggers sound effects to simulate a lighter form of interaction than a kick.</p>
+   * <p>
+   * Applies a vertical boost to tracked cubes when right-clicked, with per-cube cooldown tracking
+   * to prevent spam. This provides a softer interaction method compared to kicks.
+   * </p>
    *
    * @param event the {@link PlayerInteractEntityEvent} fired when a player interacts with an
    *              entity
    */
   @EventHandler
   public void rightClick(PlayerInteractEntityEvent event) {
-    long start = System.nanoTime();
-    try {
+    monitoredExecution(() -> {
+      // Only process Slime entities (cubes).
       if (!(event.getRightClicked() instanceof Slime)) {
         return;
       }
 
+      // Only process tracked physics cubes.
       if (!data.getCubes().contains((Slime) event.getRightClicked())) {
         return;
       }
@@ -60,7 +66,7 @@ public class CubeTapListener implements Listener {
         return;
       }
 
-      // Enforce per-cube cooldown.
+      // Enforce per-cube cooldown to prevent spam.
       Long lastRiseTime = data.getRaised().get(cubeId);
       if (lastRiseTime != null) {
         long elapsed = System.currentTimeMillis() - lastRiseTime;
@@ -69,27 +75,20 @@ public class CubeTapListener implements Listener {
         }
       }
 
-      // Calculate and apply vertical boost.
+      // Apply vertical boost while preserving horizontal velocity.
       Vector previousVelocity = cube.getVelocity().clone();
       double newY = Math.max(previousVelocity.getY(), CUBE_JUMP_RIGHT_CLICK);
       cube.setVelocity(previousVelocity.setY(newY));
 
-      // Mark cube as raised.
+      // Update cooldown timestamp for this cube.
       data.getRaised().put(cube.getUniqueId(), System.currentTimeMillis());
 
-      // Record interaction.
+      // Record player action and notify match manager.
       system.recordPlayerAction(player);
-      manager.getMatchManager().kick(player);
+      matchManager.kick(player);
 
-      // Play feedback sound.
+      // Play feedback sound at cube location.
       cube.getWorld().playSound(cube.getLocation(), Sound.SLIME_WALK, 0.5F, 1.0F);
-    } finally {
-      if (Settings.DEBUG_MODE.asBoolean()) {
-        long ms = (System.nanoTime() - start) / 1_000_000;
-        if (ms > Settings.DEBUG_THRESHOLD.asLong()) {
-          logger.send(PERM_HIT_DEBUG, "{prefix-admin}&bCubeTapListener &ftook &e" + ms + "ms");
-        }
-      }
-    }
+    });
   }
 }

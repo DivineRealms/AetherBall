@@ -1,10 +1,11 @@
 package io.github.divinerealms.aetherball.managers;
 
+import static io.github.divinerealms.aetherball.utils.LoggerUtil.logConsole;
+
 import io.github.divinerealms.aetherball.core.Manager;
 import io.github.divinerealms.aetherball.utils.PlayerSettings;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import java.util.logging.Level;
 import net.luckperms.api.LuckPerms;
 import net.luckperms.api.cacheddata.CachedMetaData;
 import net.minecraft.server.v1_8_R3.EnumParticle;
@@ -12,16 +13,13 @@ import net.minecraft.server.v1_8_R3.PacketPlayOutWorldParticles;
 import org.bukkit.ChatColor;
 import org.bukkit.craftbukkit.v1_8_R3.entity.CraftPlayer;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.Plugin;
 
 public class Utilities {
 
-  private static Plugin plugin;
   private final Manager manager;
   public LuckPerms luckPerms;
 
   public Utilities(Manager manager) {
-    plugin = manager.getPlugin();
     this.manager = manager;
     this.luckPerms = manager.getLuckPerms();
   }
@@ -161,7 +159,7 @@ public class Utilities {
           offsetX, offsetY, offsetZ, speed, count);
       ((CraftPlayer) player).getHandle().playerConnection.sendPacket(packet);
     } catch (Exception exception) {
-      plugin.getLogger().log(Level.SEVERE, "Error while trying to send particle", exception);
+      logConsole("{prefix_error}Error while trying to send particle", exception.getMessage());
     }
   }
 

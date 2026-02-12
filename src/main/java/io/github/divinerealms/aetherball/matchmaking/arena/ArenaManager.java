@@ -1,9 +1,11 @@
 package io.github.divinerealms.aetherball.matchmaking.arena;
 
+import static io.github.divinerealms.aetherball.utils.LoggerUtil.debugConsole;
+import static io.github.divinerealms.aetherball.utils.LoggerUtil.logConsole;
+
 import io.github.divinerealms.aetherball.configs.Settings;
 import io.github.divinerealms.aetherball.core.Manager;
 import io.github.divinerealms.aetherball.managers.ConfigManager;
-import io.github.divinerealms.aetherball.utils.Logger;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -20,7 +22,6 @@ import org.bukkit.entity.Player;
 public class ArenaManager {
 
   private final Manager manager;
-  private final Logger logger;
   private final Server server;
   private final List<Arena> arenas = new ArrayList<>();
   private final ConfigManager configManager;
@@ -30,7 +31,6 @@ public class ArenaManager {
 
   public ArenaManager(Manager manager) {
     this.manager = manager;
-    this.logger = manager.getLogger();
     this.server = manager.getPlugin().getServer();
     this.configManager = manager.getConfigManager();
     loadArenas();
@@ -40,20 +40,20 @@ public class ArenaManager {
     arenas.clear();
     configManager.reloadConfig("arenas.yml");
     loadArenas();
-    logger.info("&a✔ &2Arenas reloaded successfully! Total arenas: &e" + arenas.size());
+    debugConsole("{prefix_success}Arenas reloaded successfully! Total arenas: &e" + arenas.size());
   }
 
   private void loadArenas() {
     FileConfiguration config = configManager.getConfig("arenas.yml");
 
     if (config == null) {
-      logger.info("&carenas.yml not found!");
+      logConsole("{prefix_error}arenas.yml not found!");
       return;
     }
 
     World world = server.getWorld(config.getString("arenas.world", "world"));
     if (world == null) {
-      logger.info("&cWorld for arenas not found!");
+      logConsole("{prefix_error}World for arenas not found!");
       return;
     }
 
@@ -107,8 +107,9 @@ public class ArenaManager {
 
     Arena newArena = arenas.get(arenas.size() - 1);
 
-    logger.info("&a✔ &2Created " + typeString + " arena (ID: " + newArena.getId() + ") at " +
-        formatLocation(blueSpawn) + " and " + formatLocation(redSpawn));
+    debugConsole(
+        "{prefix_success}Created " + typeString + " arena (ID: " + newArena.getId() + ") at " +
+            formatLocation(blueSpawn) + " and " + formatLocation(redSpawn));
   }
 
   private Location normalizeLocation(Location location) {
@@ -166,7 +167,7 @@ public class ArenaManager {
     configManager.saveConfig("arenas.yml");
 
     arenas.clear();
-    logger.info("&a✔ &2All arenas cleared!");
+    debugConsole("{prefix_success}All arenas cleared!");
   }
 
   public void clearArenaType(int type) {
@@ -180,7 +181,7 @@ public class ArenaManager {
 
     reassignArenaIds();
 
-    logger.info("&a✔ &2Cleared all " + typeString + " arenas!");
+    debugConsole("{prefix_success}Cleared all " + typeString + " arenas!");
   }
 
   @SuppressWarnings("BooleanMethodIsAlwaysInverted")

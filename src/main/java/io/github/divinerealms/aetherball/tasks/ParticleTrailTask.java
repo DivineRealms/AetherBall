@@ -41,12 +41,10 @@ import org.bukkit.entity.Slime;
  */
 public class ParticleTrailTask extends BaseTask {
 
-  private final Manager manager;
   private final PhysicsData data;
 
   public ParticleTrailTask(Manager manager) {
     super(manager, "ParticleTrail", GLOW_TASK_INTERVAL_TICKS, true);
-    this.manager = manager;
     this.data = manager.getPhysicsData();
   }
 

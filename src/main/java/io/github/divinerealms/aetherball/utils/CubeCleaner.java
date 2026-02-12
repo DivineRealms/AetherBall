@@ -1,6 +1,7 @@
 package io.github.divinerealms.aetherball.utils;
 
 import static io.github.divinerealms.aetherball.configs.Lang.PRACTICE_AREAS_EMPTY;
+import static io.github.divinerealms.aetherball.utils.LoggerUtil.logConsole;
 
 import io.github.divinerealms.aetherball.configs.Settings;
 import io.github.divinerealms.aetherball.core.Manager;
@@ -15,8 +16,8 @@ import org.bukkit.entity.Slime;
 
 public class CubeCleaner {
 
+  private final PhysicsData data;
   private final FileConfiguration practice;
-  private final PhysicsData physicsData;
 
   private final List<PracticeArea> practiceAreas;
 
@@ -26,14 +27,13 @@ public class CubeCleaner {
   public int amount = 0;
 
   public CubeCleaner(Manager manager) {
+    this.data = manager.getPhysicsData();
     ConfigManager configManager = manager.getConfigManager();
     this.practice = configManager.getConfig("practice.yml");
-    this.physicsData = manager.getPhysicsData();
     this.practiceAreas = new ArrayList<>();
-    Logger logger = manager.getLogger();
 
     if (noPracticeAreasSet()) {
-      logger.info(PRACTICE_AREAS_EMPTY);
+      logConsole(PRACTICE_AREAS_EMPTY);
       return;
     }
 
@@ -69,19 +69,19 @@ public class CubeCleaner {
       return;
     }
 
-    if (physicsData == null) {
+    if (data == null) {
       return;
     }
 
-    if (physicsData.getCubes() == null) {
+    if (data.getCubes() == null) {
       return;
     }
 
-    if (physicsData.getCubes().isEmpty()) {
+    if (data.getCubes().isEmpty()) {
       return;
     }
 
-    for (Slime cube : physicsData.getCubes()) {
+    for (Slime cube : data.getCubes()) {
       if (cube == null) {
         continue;
       }

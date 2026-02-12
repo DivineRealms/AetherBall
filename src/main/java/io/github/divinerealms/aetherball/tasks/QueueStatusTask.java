@@ -4,27 +4,28 @@ import static io.github.divinerealms.aetherball.configs.Lang.MATCHES_LIST_LOBBY;
 import static io.github.divinerealms.aetherball.configs.Lang.MATCHES_LIST_WAITING;
 import static io.github.divinerealms.aetherball.configs.Lang.QUEUE_ACTIONBAR;
 import static io.github.divinerealms.aetherball.matchmaking.util.MatchUtils.isPlayerOnline;
+import static io.github.divinerealms.aetherball.utils.LoggerUtil.sendActionBar;
 
 import io.github.divinerealms.aetherball.configs.Settings;
 import io.github.divinerealms.aetherball.core.Manager;
 import io.github.divinerealms.aetherball.matchmaking.Match;
 import io.github.divinerealms.aetherball.matchmaking.MatchPhase;
+import io.github.divinerealms.aetherball.matchmaking.logic.MatchData;
 import io.github.divinerealms.aetherball.matchmaking.player.MatchPlayer;
-import io.github.divinerealms.aetherball.utils.Logger;
 import org.bukkit.entity.Player;
 
 public class QueueStatusTask extends BaseTask {
 
-  private final Logger logger;
+  private final MatchData matchData;
 
   public QueueStatusTask(Manager manager) {
     super(manager, "QueueStatus", 40, false);
-    this.logger = manager.getLogger();
+    this.matchData = manager.getMatchData();
   }
 
   @Override
   protected void kaboom() {
-    for (Match match : manager.getMatchData().getMatches()) {
+    for (Match match : matchData.getMatches()) {
       if (match == null || match.getPhase() != MatchPhase.LOBBY) {
         continue;
       }
@@ -54,7 +55,7 @@ public class QueueStatusTask extends BaseTask {
         }
 
         Player player = matchPlayer.getPlayer();
-        logger.sendActionBar(player, QUEUE_ACTIONBAR,
+        sendActionBar(player, QUEUE_ACTIONBAR,
             MATCHES_LIST_LOBBY.replace(
                 matchTypeString, String.valueOf(match.getArena().getId())
             ),

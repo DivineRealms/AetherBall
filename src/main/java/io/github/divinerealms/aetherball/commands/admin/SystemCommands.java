@@ -10,6 +10,7 @@ import static io.github.divinerealms.aetherball.configs.Lang.TASKS_REPORT_HEADER
 import static io.github.divinerealms.aetherball.configs.Lang.TASKS_RESET_STATS;
 import static io.github.divinerealms.aetherball.configs.Lang.TASKS_RESTART;
 import static io.github.divinerealms.aetherball.configs.Lang.USAGE;
+import static io.github.divinerealms.aetherball.utils.LoggerUtil.sendMessage;
 import static io.github.divinerealms.aetherball.utils.Permissions.PERM_ADMIN;
 import static io.github.divinerealms.aetherball.utils.Permissions.PERM_TOGGLE;
 
@@ -24,11 +25,12 @@ import co.aikar.commands.annotation.Subcommand;
 import co.aikar.commands.annotation.Syntax;
 import io.github.divinerealms.aetherball.configs.Settings;
 import io.github.divinerealms.aetherball.core.Manager;
+import io.github.divinerealms.aetherball.managers.ConfigManager;
 import io.github.divinerealms.aetherball.managers.TaskManager;
 import io.github.divinerealms.aetherball.matchmaking.MatchManager;
 import io.github.divinerealms.aetherball.matchmaking.arena.ArenaManager;
+import io.github.divinerealms.aetherball.matchmaking.logic.MatchSystem;
 import io.github.divinerealms.aetherball.tasks.BaseTask;
-import io.github.divinerealms.aetherball.utils.Logger;
 import io.github.divinerealms.aetherball.utils.TaskStats;
 import org.bukkit.command.CommandSender;
 
@@ -36,15 +38,19 @@ import org.bukkit.command.CommandSender;
 public class SystemCommands extends BaseCommand {
 
   private final Manager manager;
-  private final Logger logger;
-  private final MatchManager matchManager;
+  private final ConfigManager configManager;
+  private final MatchSystem matchSystem;
   private final ArenaManager arenaManager;
+  private final TaskManager taskManager;
+  private final MatchManager matchManager;
 
   public SystemCommands(Manager manager) {
     this.manager = manager;
-    this.logger = manager.getLogger();
-    this.matchManager = manager.getMatchManager();
+    this.configManager = manager.getConfigManager();
+    this.matchSystem = manager.getMatchSystem();
     this.arenaManager = manager.getArenaManager();
+    this.taskManager = manager.getTaskManager();
+    this.matchManager = manager.getMatchManager();
   }
 
   @Subcommand("reload")
@@ -57,9 +63,9 @@ public class SystemCommands extends BaseCommand {
 
     switch (type.toLowerCase()) {
       case "configs":
-        manager.getConfigManager().reloadAllConfigs();
+        configManager.reloadAllConfigs();
         Settings.reloadMatchTypes();
-        manager.getMatchSystem().initializeMatchTypes();
+        matchSystem.initializeMatchTypes();
         break;
       case "arenas":
         arenaManager.reloadArenas();
@@ -71,7 +77,7 @@ public class SystemCommands extends BaseCommand {
         break;
     }
 
-    logger.send(sender, RELOAD, typeUpper);
+    sendMessage(sender, RELOAD, typeUpper);
   }
 
   @Subcommand("tasks")
@@ -80,10 +86,8 @@ public class SystemCommands extends BaseCommand {
   @Syntax("[restart|reset]")
   @Description("Manage plugin tasks")
   public void onTasks(CommandSender sender, @Optional String action) {
-    TaskManager taskManager = manager.getTaskManager();
-
     if (action == null) {
-      logger.send(sender, TASKS_REPORT_HEADER,
+      sendMessage(sender, TASKS_REPORT_HEADER,
           String.valueOf(taskManager.getRunningTaskCount()),
           String.valueOf(taskManager.getTaskCount())
       );
@@ -93,7 +97,7 @@ public class SystemCommands extends BaseCommand {
         String status = task.isRunning() ? "&a✔" : "&c✘";
         String timeColor = getColorForTime(average);
 
-        logger.send(sender, TASKS_REPORT_ENTRY,
+        sendMessage(sender, TASKS_REPORT_ENTRY,
             status, task.getTaskName(),
             timeColor + String.format("%.3f", average),
             String.valueOf(task.getTotalExecutions())
@@ -102,7 +106,7 @@ public class SystemCommands extends BaseCommand {
 
       TaskStats stats = taskManager.getStats();
       double totalAverage = stats.getAveragePerTask();
-      logger.send(sender, TASKS_REPORT_FOOTER,
+      sendMessage(sender, TASKS_REPORT_FOOTER,
           getColorForTime(totalAverage) + String.format("%.3f", totalAverage)
       );
       return;
@@ -111,16 +115,16 @@ public class SystemCommands extends BaseCommand {
     switch (action.toLowerCase()) {
       case "restart":
         taskManager.restart();
-        logger.send(sender, TASKS_RESTART);
+        sendMessage(sender, TASKS_RESTART);
         break;
 
       case "reset":
         taskManager.resetAllStats();
-        logger.send(sender, TASKS_RESET_STATS);
+        sendMessage(sender, TASKS_RESET_STATS);
         break;
 
       default:
-        logger.send(sender, USAGE, "fca tasks [restart|reset]");
+        sendMessage(sender, USAGE, "fca tasks [restart|reset]");
         break;
     }
   }
@@ -136,16 +140,18 @@ public class SystemCommands extends BaseCommand {
       matchManager.clearLobbiesAndQueues();
     }
 
-    logger.send(sender, FC_TOGGLE, state ? OFF.toString() : ON.toString());
+    sendMessage(sender, FC_TOGGLE, state ? OFF.toString() : ON.toString());
   }
 
   private String getColorForTime(double ms) {
     if (ms < 0.05) {
       return "&a";
     }
+
     if (ms < 0.15) {
       return "&e";
     }
+
     return "&c";
   }
 }

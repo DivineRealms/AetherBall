@@ -33,31 +33,31 @@ public class StatsHelper {
   private static String calculateRankName(int rank) {
     switch (rank) {
       case 1:
-        return "Nub";
+        return "Noob";
       case 2:
-        return "Luzer";
+        return "Loser";
       case 3:
-        return "Beba";
+        return "Baby";
       case 4:
-        return "Učenik";
+        return "Pupil";
       case 5:
-        return "Loš";
+        return "Bad";
       case 6:
         return ":(";
       case 7:
-        return "Eh";
+        return "Meh";
       case 8:
-        return "Igrač";
+        return "Player";
       case 9:
-        return "Ok";
+        return "Okay";
       case 10:
-        return "Prosečan";
+        return "Average";
       case 11:
-        return "Dobar";
+        return "Good";
       case 12:
-        return "Odličan";
+        return "Great";
       case 13:
-        return "Kralj";
+        return "King";
       case 14:
         return "Super";
       case 15:
@@ -65,13 +65,13 @@ public class StatsHelper {
       case 16:
         return "Maradona";
       case 17:
-        return "Supermen";
+        return "Superman";
       case 18:
-        return "Bog";
+        return "God";
       case 19:
         return "h4x0r";
       default:
-        return "Nema";
+        return "None";
     }
   }
 

@@ -4,6 +4,7 @@ import static io.github.divinerealms.aetherball.configs.Lang.NOT_BANNED;
 import static io.github.divinerealms.aetherball.configs.Lang.PLAYER_BANNED;
 import static io.github.divinerealms.aetherball.configs.Lang.PLAYER_UNBANNED;
 import static io.github.divinerealms.aetherball.configs.Lang.USAGE;
+import static io.github.divinerealms.aetherball.utils.LoggerUtil.sendMessage;
 import static io.github.divinerealms.aetherball.utils.Permissions.PERM_BAN;
 import static io.github.divinerealms.aetherball.utils.Permissions.PERM_UNBAN;
 
@@ -19,7 +20,7 @@ import co.aikar.commands.annotation.Syntax;
 import io.github.divinerealms.aetherball.configs.Settings;
 import io.github.divinerealms.aetherball.core.Manager;
 import io.github.divinerealms.aetherball.managers.Utilities;
-import io.github.divinerealms.aetherball.utils.Logger;
+import io.github.divinerealms.aetherball.matchmaking.ban.BanManager;
 import java.util.concurrent.TimeUnit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -27,12 +28,10 @@ import org.bukkit.entity.Player;
 @CommandAlias("aetherballadmin|abadmin|aba|fca")
 public class BanCommands extends BaseCommand {
 
-  private final Manager manager;
-  private final Logger logger;
+  private final BanManager banManager;
 
   public BanCommands(Manager manager) {
-    this.manager = manager;
-    this.logger = manager.getLogger();
+    this.banManager = manager.getBanManager();
   }
 
   @Subcommand("ban")
@@ -53,15 +52,15 @@ public class BanCommands extends BaseCommand {
       }
 
       if (duration <= 0) {
-        logger.send(sender, USAGE, "fca ban <player> <time>");
+        sendMessage(sender, USAGE, "fca ban <player> <time>");
         return;
       }
 
-      manager.getBanManager().banPlayer(target, duration);
-      logger.send(sender, PLAYER_BANNED, target.getDisplayName(),
+      banManager.banPlayer(target, duration);
+      sendMessage(sender, PLAYER_BANNED, target.getDisplayName(),
           Utilities.formatTime(secondsLeft));
     } catch (NumberFormatException e) {
-      logger.send(sender, USAGE, "fca ban <player> <time>");
+      sendMessage(sender, USAGE, "fca ban <player> <time>");
     }
   }
 
@@ -71,8 +70,8 @@ public class BanCommands extends BaseCommand {
   @CommandCompletion("@players")
   @Description("Unban a player")
   public void onUnban(CommandSender sender, @Flags("other") Player target) {
-    manager.getBanManager().unbanPlayer(target);
-    logger.send(sender, PLAYER_UNBANNED, target.getDisplayName());
+    banManager.unbanPlayer(target);
+    sendMessage(sender, PLAYER_UNBANNED, target.getDisplayName());
   }
 
   @Subcommand("checkban")
@@ -81,8 +80,8 @@ public class BanCommands extends BaseCommand {
   @CommandCompletion("@players")
   @Description("Check if a player is banned")
   public void onCheckBan(CommandSender sender, @Flags("other") Player target) {
-    if (!manager.getBanManager().isBanned(target)) {
-      logger.send(sender, NOT_BANNED, target.getDisplayName());
+    if (!banManager.isBanned(target)) {
+      sendMessage(sender, NOT_BANNED, target.getDisplayName());
     }
   }
 }

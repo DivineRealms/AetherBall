@@ -1,6 +1,8 @@
 package io.github.divinerealms.aetherball.tasks;
 
 import static io.github.divinerealms.aetherball.configs.Lang.CLEARED_CUBES;
+import static io.github.divinerealms.aetherball.utils.LoggerUtil.broadcast;
+import static io.github.divinerealms.aetherball.utils.LoggerUtil.logConsole;
 
 import io.github.divinerealms.aetherball.core.Manager;
 import io.github.divinerealms.aetherball.utils.CubeCleaner;
@@ -22,14 +24,15 @@ public class CubeCleanerTask extends BaseTask {
   protected void kaboom() {
     cubeCleaner.clearCubes();
     if (!cubeCleaner.isEmpty()) {
-      logger.broadcast(CLEARED_CUBES, String.valueOf(cubeCleaner.getAmount()));
+      String amount = String.valueOf(cubeCleaner.getAmount());
+      broadcast(CLEARED_CUBES, amount);
     }
   }
 
   @Override
   public void start() {
     if (cubeCleaner.noPracticeAreasSet()) {
-      logger.info("&e! &dCubeCleaner &etask not started - no practice areas configured!");
+      logConsole("{prefix_error}CubeCleaner task not started - no practice areas configured!");
       return;
     }
 

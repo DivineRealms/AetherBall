@@ -13,6 +13,8 @@ import static io.github.divinerealms.aetherball.physics.PhysicsConstants.JUMP_PO
 import static io.github.divinerealms.aetherball.physics.PhysicsConstants.JUMP_POTION_DURATION;
 import static io.github.divinerealms.aetherball.physics.PhysicsConstants.KICK_POWER_SPEED_MULTIPLIER;
 import static io.github.divinerealms.aetherball.physics.PhysicsConstants.MIN_SPEED_FOR_DAMPENING;
+import static io.github.divinerealms.aetherball.utils.LoggerUtil.sendActionBar;
+import static io.github.divinerealms.aetherball.utils.LoggerUtil.sendMessage;
 import static io.github.divinerealms.aetherball.utils.Permissions.PERM_BYPASS_COOLDOWN;
 import static io.github.divinerealms.aetherball.utils.Permissions.PERM_HIT_DEBUG;
 
@@ -22,7 +24,6 @@ import io.github.divinerealms.aetherball.managers.Utilities;
 import io.github.divinerealms.aetherball.physics.PhysicsData;
 import io.github.divinerealms.aetherball.physics.touch.CubeTouchInfo;
 import io.github.divinerealms.aetherball.physics.touch.CubeTouchType;
-import io.github.divinerealms.aetherball.utils.Logger;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -43,14 +44,12 @@ import org.bukkit.scheduler.BukkitScheduler;
 public class PhysicsSystem {
 
   private final PhysicsData data;
-  private final Logger logger;
   private final BukkitScheduler scheduler;
   private final Plugin plugin;
   private final PhysicsFormulae formulae;
 
   public PhysicsSystem(Manager manager) {
     this.data = manager.getPhysicsData();
-    this.logger = manager.getLogger();
     this.scheduler = manager.getScheduler();
     this.plugin = manager.getPlugin();
     this.formulae = manager.getPhysicsFormulae();
@@ -109,8 +108,8 @@ public class PhysicsSystem {
       if (Settings.DEBUG_MODE.asBoolean()) {
         long ms = (System.nanoTime() - start) / 1_000_000;
         if (ms > Settings.DEBUG_THRESHOLD.asLong()) {
-          logger.send(PERM_HIT_DEBUG,
-              "{prefix-admin}&dPhysicsSystem#calculateKickPower() &ftook &e" + ms + "ms");
+          sendMessage(PERM_HIT_DEBUG,
+              "{prefix_debug}&dPhysicsSystem#calculateKickPower() &ftook &e" + ms + "ms");
         }
       }
     }
@@ -135,8 +134,8 @@ public class PhysicsSystem {
       if (Settings.DEBUG_MODE.asBoolean()) {
         long ms = (System.nanoTime() - start) / 1_000_000;
         if (ms > Settings.DEBUG_THRESHOLD.asLong()) {
-          logger.send(PERM_HIT_DEBUG,
-              "{prefix-admin}&dPhysicsSystem#removeCubes() &ftook &e" + ms + "ms");
+          sendMessage(PERM_HIT_DEBUG,
+              "{prefix_debug}&dPhysicsSystem#removeCubes() &ftook &e" + ms + "ms");
         }
       }
     }
@@ -164,8 +163,8 @@ public class PhysicsSystem {
       if (Settings.DEBUG_MODE.asBoolean()) {
         long ms = (System.nanoTime() - start) / 1_000_000;
         if (ms > Settings.DEBUG_THRESHOLD.asLong()) {
-          logger.send(PERM_HIT_DEBUG,
-              "{prefix-admin}&dPhysicsSystem#spawnCube() &ftook &e" + ms + "ms");
+          sendMessage(PERM_HIT_DEBUG,
+              "{prefix_debug}&dPhysicsSystem#spawnCube() &ftook &e" + ms + "ms");
         }
       }
     }
@@ -226,8 +225,8 @@ public class PhysicsSystem {
       if (Settings.DEBUG_MODE.asBoolean()) {
         long ms = (System.nanoTime() - start) / 1_000_000;
         if (ms > Settings.DEBUG_THRESHOLD.asLong()) {
-          logger.send(PERM_HIT_DEBUG,
-              "{prefix-admin}&dPhysicsSystem#removePlayer() &ftook &e" + ms + "ms");
+          sendMessage(PERM_HIT_DEBUG,
+              "{prefix_debug}&dPhysicsSystem#removePlayer() &ftook &e" + ms + "ms");
         }
       }
     }
@@ -265,7 +264,7 @@ public class PhysicsSystem {
       String timeFormatted = String.format("%.1f", timeRemainingMillis / 1000.0);
       String color = timeRemainingMillis > 50 ? "&c" : "&a";
 
-      logger.sendActionBar(player, HITDEBUG_PLAYER_WHOLE,
+      sendActionBar(player, HITDEBUG_PLAYER_WHOLE,
           isChargedHit ? HITDEBUG_PLAYER_CHARGED.replace(String.format("%.2f", finalKickPower),
               String.format("%.2f", kickResult.getPower()),
               String.format("%.2f", kickResult.getCharge()))
@@ -275,8 +274,8 @@ public class PhysicsSystem {
       if (Settings.DEBUG_MODE.asBoolean()) {
         long ms = (System.nanoTime() - start) / 1_000_000;
         if (ms > Settings.DEBUG_THRESHOLD.asLong()) {
-          logger.send(PERM_HIT_DEBUG,
-              "{prefix-admin}&dPhysicsSystem#showHits() &ftook &e" + ms + "ms");
+          sendMessage(PERM_HIT_DEBUG,
+              "{prefix_debug}&dPhysicsSystem#showHits() &ftook &e" + ms + "ms");
         }
       }
     }
@@ -307,8 +306,8 @@ public class PhysicsSystem {
       if (Settings.DEBUG_MODE.asBoolean()) {
         long ms = (System.nanoTime() - start) / 1_000_000;
         if (ms > Settings.DEBUG_THRESHOLD.asLong()) {
-          logger.send(PERM_HIT_DEBUG,
-              "{prefix-admin}&dPhysicsSystem#onHitDebug() &ftook &e" + ms + "ms");
+          sendMessage(PERM_HIT_DEBUG,
+              "{prefix_debug}&dPhysicsSystem#onHitDebug() &ftook &e" + ms + "ms");
         }
       }
     }
@@ -336,7 +335,7 @@ public class PhysicsSystem {
       if (diff < Settings.getSpawnCooldown()) {
         long remainingMs = Settings.getSpawnCooldown() - diff;
         long seconds = TimeUnit.MILLISECONDS.toSeconds(remainingMs);
-        logger.send(player, BLOCK_INTERACT_COOLDOWN, Utilities.formatTime(seconds));
+        sendMessage(player, BLOCK_INTERACT_COOLDOWN, Utilities.formatTime(seconds));
         return true;
       }
 
@@ -345,8 +344,8 @@ public class PhysicsSystem {
       if (Settings.DEBUG_MODE.asBoolean()) {
         long ms = (System.nanoTime() - start) / 1_000_000;
         if (ms > Settings.DEBUG_THRESHOLD.asLong()) {
-          logger.send(PERM_HIT_DEBUG,
-              "{prefix-admin}&dPhysicsSystem#cantSpawnYet() &ftook &e" + ms + "ms");
+          sendMessage(PERM_HIT_DEBUG,
+              "{prefix_debug}&dPhysicsSystem#cantSpawnYet() &ftook &e" + ms + "ms");
         }
       }
     }

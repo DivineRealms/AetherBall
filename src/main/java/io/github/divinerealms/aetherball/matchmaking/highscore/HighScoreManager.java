@@ -10,6 +10,8 @@ import static io.github.divinerealms.aetherball.configs.Lang.BEST_WINS;
 import static io.github.divinerealms.aetherball.configs.Lang.BEST_WINSTREAK;
 import static io.github.divinerealms.aetherball.configs.Lang.NOBODY;
 import static io.github.divinerealms.aetherball.configs.Lang.SIMPLE_FOOTER;
+import static io.github.divinerealms.aetherball.utils.LoggerUtil.logConsole;
+import static io.github.divinerealms.aetherball.utils.LoggerUtil.sendMessage;
 
 import io.github.divinerealms.aetherball.configs.PlayerData;
 import io.github.divinerealms.aetherball.configs.Settings;
@@ -17,7 +19,6 @@ import io.github.divinerealms.aetherball.core.Manager;
 import io.github.divinerealms.aetherball.managers.PlayerDataManager;
 import io.github.divinerealms.aetherball.managers.Utilities;
 import io.github.divinerealms.aetherball.matchmaking.player.StatsHelper;
-import io.github.divinerealms.aetherball.utils.Logger;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -31,7 +32,6 @@ public class HighScoreManager {
 
   private final Manager manager;
   private final Plugin plugin;
-  private final Logger logger;
   private final Utilities utilities;
   private final PlayerDataManager playerDataManager;
   private final Object highScoreLock = new Object();
@@ -67,7 +67,6 @@ public class HighScoreManager {
   public HighScoreManager(Manager manager) {
     this.manager = manager;
     this.plugin = manager.getPlugin();
-    this.logger = manager.getLogger();
     this.utilities = manager.getUtilities();
     this.playerDataManager = manager.getDataManager();
   }
@@ -102,39 +101,39 @@ public class HighScoreManager {
 
   public void showHighScores(CommandSender sender) {
     if (isUpdating) {
-      logger.send(sender, BEST_UPDATING);
+      sendMessage(sender, BEST_UPDATING);
       return;
     }
 
     if (!hasInitialData) {
-      logger.send(sender, BEST_UPDATING);
+      sendMessage(sender, BEST_UPDATING);
       return;
     }
 
-    logger.send(sender, BEST_HEADER);
+    sendMessage(sender, BEST_HEADER);
     showTopCategory(sender, topSkillNames, bestRatings);
 
-    logger.send(sender, BEST_GOALS);
+    sendMessage(sender, BEST_GOALS);
     showTopCategory(sender, topGoalsNames, mostGoals);
 
-    logger.send(sender, BEST_ASSISTS);
+    sendMessage(sender, BEST_ASSISTS);
     showTopCategory(sender, topAssistsNames, mostAssists);
 
-    logger.send(sender, BEST_OWN_GOALS);
+    sendMessage(sender, BEST_OWN_GOALS);
     showTopCategory(sender, topOwnGoalsNames, mostOwnGoals);
 
-    logger.send(sender, BEST_WINS);
+    sendMessage(sender, BEST_WINS);
     showTopCategory(sender, topWinsNames, mostWins);
 
-    logger.send(sender, BEST_WINSTREAK);
+    sendMessage(sender, BEST_WINSTREAK);
     showTopCategory(sender, topStreakNames, longestStreak);
 
-    logger.send(sender, SIMPLE_FOOTER);
+    sendMessage(sender, SIMPLE_FOOTER);
   }
 
   private void showTopCategory(CommandSender sender, String[] names, double[] values) {
     for (int i = 0; i < topScoresSize; i++) {
-      logger.send(sender, BEST_ENTRY,
+      sendMessage(sender, BEST_ENTRY,
           String.valueOf(i + 1),
           names[i],
           String.valueOf(values[i])
@@ -144,7 +143,7 @@ public class HighScoreManager {
 
   private void showTopCategory(CommandSender sender, String[] names, int[] values) {
     for (int i = 0; i < topScoresSize; i++) {
-      logger.send(sender, BEST_ENTRY,
+      sendMessage(sender, BEST_ENTRY,
           String.valueOf(i + 1),
           names[i],
           String.valueOf(values[i])
@@ -223,7 +222,7 @@ public class HighScoreManager {
 
       UUID uuid = playerDataManager.getUUID(playerName);
       if (uuid == null) {
-        logger.info("&cUUID not found for player &b" + playerName);
+        logConsole("{prefix_error}UUID not found for player " + playerName);
         continue;
       }
 

@@ -1,5 +1,7 @@
 package io.github.divinerealms.aetherball.managers;
 
+import static io.github.divinerealms.aetherball.utils.LoggerUtil.debugConsole;
+
 import io.github.divinerealms.aetherball.AetherBall;
 import io.github.divinerealms.aetherball.core.Manager;
 import io.github.divinerealms.aetherball.listeners.ChunkCheckers;
@@ -56,7 +58,7 @@ public class ListenerManager {
     pluginManager.registerEvents(playerChargeListener, plugin);
     pluginManager.registerEvents(playerMovementListener, plugin);
 
-    manager.getLogger().info("&a✔ &2Registered &e5 &2listeners.");
+    debugConsole("{prefix_success}Registered 5 listeners.");
   }
 
   private void initializeAll() {
@@ -72,6 +74,6 @@ public class ListenerManager {
 
   public void unregisterAll() {
     HandlerList.unregisterAll(plugin);
-    manager.getLogger().info("&a✔ &2Unregistered listeners.");
+    debugConsole("{prefix_success}Unregistered listeners.");
   }
 }

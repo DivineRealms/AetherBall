@@ -21,6 +21,7 @@ import org.bukkit.entity.Player;
 public class PlayerUpdateTask extends BaseTask {
 
   private final PhysicsData data;
+
   private final Set<UUID> playersToRemove = new HashSet<>();
 
   public PlayerUpdateTask(Manager manager) {

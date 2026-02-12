@@ -3,12 +3,14 @@ package io.github.divinerealms.aetherball.matchmaking.team;
 import static io.github.divinerealms.aetherball.configs.Lang.TEAM_DISBANDED;
 import static io.github.divinerealms.aetherball.configs.Lang.TEAM_INVITE_EXPIRED;
 import static io.github.divinerealms.aetherball.matchmaking.util.MatchUtils.isPlayerOnline;
+import static io.github.divinerealms.aetherball.utils.LoggerUtil.sendMessage;
 
 import io.github.divinerealms.aetherball.configs.Settings;
 import io.github.divinerealms.aetherball.core.Manager;
 import io.github.divinerealms.aetherball.matchmaking.Match;
+import io.github.divinerealms.aetherball.matchmaking.MatchManager;
 import io.github.divinerealms.aetherball.matchmaking.MatchPhase;
-import io.github.divinerealms.aetherball.utils.Logger;
+import io.github.divinerealms.aetherball.matchmaking.logic.MatchData;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -26,22 +28,25 @@ import org.bukkit.plugin.Plugin;
 public class TeamManager {
 
   private final Manager manager;
+  private final MatchManager matchManager;
+  private final MatchData matchData;
   private final Plugin plugin;
-  private final Logger logger;
+
   private final Map<Player, Map<Player, Integer>> teamInvites = new HashMap<>();
   private final Map<UUID, Team> playerTeams = new HashMap<>();
 
   public TeamManager(Manager manager) {
     this.manager = manager;
+    this.matchManager = manager.getMatchManager();
+    this.matchData = manager.getMatchData();
     this.plugin = manager.getPlugin();
-    this.logger = manager.getLogger();
   }
 
   public void invite(Player inviter, Player invited, int matchType) {
     teamInvites.put(invited, Collections.singletonMap(inviter, matchType));
     Bukkit.getScheduler().runTaskLaterAsynchronously(plugin, () -> {
       teamInvites.remove(invited);
-      logger.send(inviter, TEAM_INVITE_EXPIRED);
+      sendMessage(inviter, TEAM_INVITE_EXPIRED);
     }, Settings.getTeamExpiry());
   }
 
@@ -94,7 +99,7 @@ public class TeamManager {
     }
 
     boolean anyInMatchLobby = false;
-    Optional<Match> matchOpt = manager.getMatchManager().getMatch(leaver);
+    Optional<Match> matchOpt = matchManager.getMatch(leaver);
     if (matchOpt.isPresent()) {
       Match match = matchOpt.get();
       if (match.getPhase() == MatchPhase.LOBBY) {
@@ -103,7 +108,7 @@ public class TeamManager {
     }
 
     boolean anyInQueue = false;
-    Collection<Queue<Player>> playerQueues = manager.getMatchManager().getData().getPlayerQueues()
+    Collection<Queue<Player>> playerQueues = matchData.getPlayerQueues()
         .values();
 
     for (Queue<Player> queue : playerQueues) {
@@ -121,7 +126,7 @@ public class TeamManager {
     if (members != null) {
       for (Player player : members) {
         if (isPlayerOnline(player) && !player.equals(leaver)) {
-          logger.send(player, TEAM_DISBANDED, leaver.getName());
+          sendMessage(player, TEAM_DISBANDED, leaver.getName());
         }
       }
     }
@@ -137,7 +142,7 @@ public class TeamManager {
 
     for (Player player : team.getMembers()) {
       if (isPlayerOnline(player) && !player.equals(leaver)) {
-        logger.send(player, TEAM_DISBANDED, leaver.getName());
+        sendMessage(player, TEAM_DISBANDED, leaver.getName());
       }
     }
 

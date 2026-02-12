@@ -1,13 +1,14 @@
 package io.github.divinerealms.aetherball.commands.player;
 
-import static io.github.divinerealms.aetherball.utils.GameCommandsHelper.handleAccept;
-import static io.github.divinerealms.aetherball.utils.GameCommandsHelper.handleDecline;
-import static io.github.divinerealms.aetherball.utils.GameCommandsHelper.handleInvite;
-import static io.github.divinerealms.aetherball.utils.GameCommandsHelper.parseMatchType;
 import static io.github.divinerealms.aetherball.configs.Lang.FC_DISABLED;
 import static io.github.divinerealms.aetherball.configs.Lang.MATCH_TYPE_UNAVAILABLE;
 import static io.github.divinerealms.aetherball.configs.Lang.USAGE;
 import static io.github.divinerealms.aetherball.matchmaking.util.MatchUtils.isPlayerOnline;
+import static io.github.divinerealms.aetherball.utils.GameCommandsHelper.handleAccept;
+import static io.github.divinerealms.aetherball.utils.GameCommandsHelper.handleDecline;
+import static io.github.divinerealms.aetherball.utils.GameCommandsHelper.handleInvite;
+import static io.github.divinerealms.aetherball.utils.GameCommandsHelper.parseMatchType;
+import static io.github.divinerealms.aetherball.utils.LoggerUtil.sendMessage;
 import static io.github.divinerealms.aetherball.utils.Permissions.PERM_PLAY;
 
 import co.aikar.commands.BaseCommand;
@@ -21,18 +22,21 @@ import co.aikar.commands.annotation.Subcommand;
 import co.aikar.commands.annotation.Syntax;
 import io.github.divinerealms.aetherball.configs.Settings;
 import io.github.divinerealms.aetherball.core.Manager;
-import io.github.divinerealms.aetherball.utils.Logger;
+import io.github.divinerealms.aetherball.matchmaking.MatchManager;
+import io.github.divinerealms.aetherball.matchmaking.logic.MatchData;
 import org.bukkit.entity.Player;
 
 @CommandAlias("aetherball|ab|fc")
 public class TeamCommands extends BaseCommand {
 
   private final Manager manager;
-  private final Logger logger;
+  private final MatchData matchData;
+  private final MatchManager matchManager;
 
   public TeamCommands(Manager manager) {
     this.manager = manager;
-    this.logger = manager.getLogger();
+    this.matchData = manager.getMatchData();
+    this.matchManager = manager.getMatchManager();
   }
 
   @Subcommand("team|t")
@@ -41,8 +45,8 @@ public class TeamCommands extends BaseCommand {
   @CommandCompletion("accept|decline|@matchtypes @players")
   @Description("Team management: accept/decline invites or invite players")
   public void onTeam(Player player, String action, @Optional @Flags("other") Player target) {
-    if (!manager.getMatchManager().getData().isMatchesEnabled()) {
-      logger.send(player, FC_DISABLED);
+    if (!matchData.isMatchesEnabled()) {
+      sendMessage(player, FC_DISABLED);
       return;
     }
 
@@ -60,14 +64,14 @@ public class TeamCommands extends BaseCommand {
     Integer matchType = parseMatchType(actionLower);
     if (matchType != null && Settings.isMatchTypeEnabled(matchType)) {
       if (!isPlayerOnline(target)) {
-        logger.send(player, USAGE, getExecSubcommand());
+        sendMessage(player, USAGE, getExecSubcommand());
         return;
       }
 
       handleInvite(player, matchType, target, manager);
     } else {
-      String availableTypes = manager.getMatchManager().getAvailableTypesString();
-      logger.send(player, MATCH_TYPE_UNAVAILABLE, action, availableTypes);
+      String availableTypes = matchManager.getAvailableTypesString();
+      sendMessage(player, MATCH_TYPE_UNAVAILABLE, action, availableTypes);
     }
   }
 }

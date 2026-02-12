@@ -5,6 +5,7 @@ import static io.github.divinerealms.aetherball.configs.Lang.CUBE_CLEAR;
 import static io.github.divinerealms.aetherball.configs.Lang.CUBE_CLEAR_ALL;
 import static io.github.divinerealms.aetherball.configs.Lang.CUBE_NO_CUBES;
 import static io.github.divinerealms.aetherball.configs.Lang.CUBE_SPAWN;
+import static io.github.divinerealms.aetherball.utils.LoggerUtil.sendMessage;
 import static io.github.divinerealms.aetherball.utils.Permissions.PERM_CLEAR_CUBE;
 import static io.github.divinerealms.aetherball.utils.Permissions.PERM_CUBE;
 
@@ -17,7 +18,6 @@ import io.github.divinerealms.aetherball.core.Manager;
 import io.github.divinerealms.aetherball.matchmaking.MatchManager;
 import io.github.divinerealms.aetherball.physics.PhysicsData;
 import io.github.divinerealms.aetherball.physics.utilities.PhysicsSystem;
-import io.github.divinerealms.aetherball.utils.Logger;
 import org.bukkit.Difficulty;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
@@ -29,13 +29,11 @@ import org.bukkit.util.Vector;
 @CommandAlias("aetherball|ab|fc")
 public class CubeCommands extends BaseCommand {
 
-  private final Logger logger;
   private final MatchManager matchManager;
   private final PhysicsData physicsData;
   private final PhysicsSystem system;
 
   public CubeCommands(Manager manager) {
-    this.logger = manager.getLogger();
     this.matchManager = manager.getMatchManager();
     this.physicsData = manager.getPhysicsData();
     this.system = manager.getPhysicsSystem();
@@ -47,12 +45,12 @@ public class CubeCommands extends BaseCommand {
   @CommandAlias("cube")
   public void onCube(Player player) {
     if (player.getWorld().getDifficulty() == Difficulty.PEACEFUL) {
-      logger.send(player, "{prefix-admin}&cDifficulty ne sme biti na peaceful.");
+      sendMessage(player, "Difficulty can't be PEACEFUL.");
       return;
     }
 
     if (matchManager.getMatch(player).isPresent()) {
-      logger.send(player, COMMAND_DISABLER_CANT_USE);
+      sendMessage(player, COMMAND_DISABLER_CANT_USE);
       return;
     }
 
@@ -72,7 +70,7 @@ public class CubeCommands extends BaseCommand {
 
     system.spawnCube(spawnLoc);
     system.setButtonCooldown(player);
-    logger.send(player, CUBE_SPAWN);
+    sendMessage(player, CUBE_SPAWN);
   }
 
   @Subcommand("clearcube")
@@ -81,7 +79,7 @@ public class CubeCommands extends BaseCommand {
   @CommandAlias("clearcube")
   public void onClearCube(Player player) {
     if (matchManager.getMatch(player).isPresent()) {
-      logger.send(player, COMMAND_DISABLER_CANT_USE);
+      sendMessage(player, COMMAND_DISABLER_CANT_USE);
       return;
     }
 
@@ -97,9 +95,9 @@ public class CubeCommands extends BaseCommand {
 
     if (closest != null) {
       closest.setHealth(0);
-      logger.send(player, CUBE_CLEAR);
+      sendMessage(player, CUBE_CLEAR);
     } else {
-      logger.send(player, CUBE_NO_CUBES);
+      sendMessage(player, CUBE_NO_CUBES);
     }
   }
 
@@ -109,7 +107,7 @@ public class CubeCommands extends BaseCommand {
   @CommandAlias("clearcubes")
   public void onClearCubes(Player player) {
     if (matchManager.getMatch(player).isPresent()) {
-      logger.send(player, COMMAND_DISABLER_CANT_USE);
+      sendMessage(player, COMMAND_DISABLER_CANT_USE);
       return;
     }
 
@@ -119,7 +117,7 @@ public class CubeCommands extends BaseCommand {
       count++;
     }
 
-    logger.send(player, CUBE_CLEAR_ALL, String.valueOf(count));
+    sendMessage(player, CUBE_CLEAR_ALL, String.valueOf(count));
   }
 
   private Location getCreativeSpawnLocation(Location loc) {

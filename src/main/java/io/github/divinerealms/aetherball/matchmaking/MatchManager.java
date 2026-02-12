@@ -24,10 +24,14 @@ import static io.github.divinerealms.aetherball.matchmaking.util.MatchUtils.clea
 import static io.github.divinerealms.aetherball.matchmaking.util.MatchUtils.giveArmor;
 import static io.github.divinerealms.aetherball.matchmaking.util.MatchUtils.isPlayerOnline;
 import static io.github.divinerealms.aetherball.utils.GameCommandsHelper.isInQueueOrMatch;
+import static io.github.divinerealms.aetherball.utils.LoggerUtil.logConsole;
+import static io.github.divinerealms.aetherball.utils.LoggerUtil.sendMessage;
 
 import io.github.divinerealms.aetherball.configs.PlayerData;
 import io.github.divinerealms.aetherball.configs.Settings;
 import io.github.divinerealms.aetherball.core.Manager;
+import io.github.divinerealms.aetherball.managers.ConfigManager;
+import io.github.divinerealms.aetherball.managers.PlayerDataManager;
 import io.github.divinerealms.aetherball.managers.Utilities;
 import io.github.divinerealms.aetherball.matchmaking.arena.ArenaManager;
 import io.github.divinerealms.aetherball.matchmaking.ban.BanManager;
@@ -38,7 +42,6 @@ import io.github.divinerealms.aetherball.matchmaking.player.TeamColor;
 import io.github.divinerealms.aetherball.matchmaking.scoreboard.ScoreManager;
 import io.github.divinerealms.aetherball.matchmaking.team.Team;
 import io.github.divinerealms.aetherball.matchmaking.team.TeamManager;
-import io.github.divinerealms.aetherball.utils.Logger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -47,9 +50,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.logging.Level;
 import lombok.Getter;
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
@@ -64,7 +65,8 @@ public class MatchManager {
   private final MatchSystem system;
   private final BanManager banManager;
   private final Utilities utilities;
-  private final Logger logger;
+  private final PlayerDataManager dataManager;
+  private final ConfigManager configManager;
 
   public MatchManager(Manager manager) {
     this.manager = manager;
@@ -75,7 +77,8 @@ public class MatchManager {
     this.system = manager.getMatchSystem();
     this.banManager = manager.getBanManager();
     this.utilities = manager.getUtilities();
-    this.logger = manager.getLogger();
+    this.dataManager = manager.getDataManager();
+    this.configManager = manager.getConfigManager();
   }
 
   public synchronized void joinQueue(Player player, int matchType) {
@@ -90,7 +93,7 @@ public class MatchManager {
       }
 
       if (isInQueueOrMatch(player, manager)) {
-        logger.send(player, JOIN_ALREADYINGAME);
+        sendMessage(player, JOIN_ALREADYINGAME);
         return;
       }
     }
@@ -122,7 +125,7 @@ public class MatchManager {
         otherQueue.remove(player1);
       }
 
-      logger.send(player1, JOIN_SUCCESS, matchTypeString);
+      sendMessage(player1, JOIN_SUCCESS, matchTypeString);
       player1.setLevel(0);
     }
 
@@ -179,19 +182,19 @@ public class MatchManager {
   public void forceStartMatch(Player player) {
     Optional<Match> matchOpt = getMatch(player);
     if (matchOpt.isEmpty()) {
-      logger.send(player, MATCHES_LIST_NO_MATCHES);
+      sendMessage(player, MATCHES_LIST_NO_MATCHES);
       return;
     }
 
     Match targetMatch = matchOpt.get();
     if (targetMatch.getPhase() != MatchPhase.LOBBY) {
-      logger.send(player, MATCH_ALREADY_STARTED);
+      sendMessage(player, MATCH_ALREADY_STARTED);
       return;
     }
 
     List<MatchPlayer> allPlayers = targetMatch.getPlayers();
     if (allPlayers == null) {
-      logger.send(player, MATCHES_LIST_NO_MATCHES);
+      sendMessage(player, MATCHES_LIST_NO_MATCHES);
       return;
     }
 
@@ -215,7 +218,7 @@ public class MatchManager {
       targetMatch.setPhase(MatchPhase.STARTING);
       targetMatch.setCountdown(15);
 
-      logger.send(player, MATCHMAN_FORCE_START, "1v1");
+      sendMessage(player, MATCHMAN_FORCE_START, "1v1");
       scoreboardManager.updateScoreboard(targetMatch);
       return;
     }
@@ -277,7 +280,7 @@ public class MatchManager {
     targetMatch.setPhase(MatchPhase.STARTING);
     targetMatch.setCountdown(15);
 
-    logger.send(player, MATCHMAN_FORCE_START,
+    sendMessage(player, MATCHMAN_FORCE_START,
         Settings.getMatchTypeName(targetMatch.getArena().getType()));
     scoreboardManager.updateScoreboard(targetMatch);
   }
@@ -314,9 +317,11 @@ public class MatchManager {
 
   public void leaveMatch(Player player) {
     getMatch(player).ifPresent(match -> {
+      boolean activeMatch = match.getPhase() != MatchPhase.LOBBY;
+
       if (match.getPlayers() == null) {
-        if (match.getPhase() != MatchPhase.LOBBY) {
-          Location lobby = (Location) manager.getConfigManager().getConfig("config.yml")
+        if (activeMatch) {
+          Location lobby = (Location) configManager.getConfig("config.yml")
               .get("lobby");
 
           if (lobby != null) {
@@ -325,6 +330,7 @@ public class MatchManager {
 
           clearPlayer(player);
         }
+
         scoreboardManager.removeScoreboard(player);
         return;
       }
@@ -353,15 +359,15 @@ public class MatchManager {
       if (allNull) {
         endMatch(match);
       } else {
-        if (match.getPhase() != MatchPhase.LOBBY && !data.getOpenMatches().contains(match)) {
+        if (activeMatch && !data.getOpenMatches().contains(match)) {
           data.getOpenMatches().add(match);
         }
 
         scoreboardManager.updateScoreboard(match);
       }
 
-      if (match.getPhase() != MatchPhase.LOBBY) {
-        Location lobby = (Location) manager.getConfigManager().getConfig("config.yml")
+      if (activeMatch) {
+        Location lobby = (Location) configManager.getConfig("config.yml")
             .get("lobby");
 
         if (lobby != null) {
@@ -394,7 +400,7 @@ public class MatchManager {
     }
 
     if (matchOpt.isEmpty()) {
-      logger.send(player, TAKEPLACE_INVALID_ID, String.valueOf(matchId));
+      sendMessage(player, TAKEPLACE_INVALID_ID, String.valueOf(matchId));
       return;
     }
 
@@ -463,9 +469,9 @@ public class MatchManager {
 
       match.setTakePlaceNeeded(false);
       match.setLastTakePlaceAnnounceTick(0);
-      logger.send(player, TAKEPLACE_SUCCESS, String.valueOf(match.getArena().getId()));
+      sendMessage(player, TAKEPLACE_SUCCESS, String.valueOf(match.getArena().getId()));
     } else {
-      logger.send(player, TAKEPLACE_FULL, String.valueOf(matchId));
+      sendMessage(player, TAKEPLACE_FULL, String.valueOf(matchId));
     }
   }
 
@@ -489,7 +495,7 @@ public class MatchManager {
 
       Player player = matchPlayer.getPlayer();
       if (match.getPhase() == MatchPhase.ENDED) {
-        PlayerData data = manager.getDataManager().get(player);
+        PlayerData data = dataManager.get(player);
 
         boolean cleanSheet = false;
         if (matchPlayer.getTeamColor() == TeamColor.RED && match.getScoreBlue() == 0) {
@@ -506,12 +512,12 @@ public class MatchManager {
           }
 
           manager.getEconomy().depositPlayer(player, Settings.ECONOMY_TIE.asDouble());
-          logger.send(player, MATCH_TIED);
-          logger.send(player, MATCH_TIED_CREDITS);
+          sendMessage(player, MATCH_TIED);
+          sendMessage(player, MATCH_TIED_CREDITS);
 
           if (cleanSheet) {
             manager.getEconomy().depositPlayer(player, Settings.ECONOMY_CLEAN_SHEET.asDouble());
-            logger.send(player, MATCH_CLEAN_SHEET_BONUS);
+            sendMessage(player, MATCH_CLEAN_SHEET_BONUS);
           }
         } else {
           if (matchPlayer.getTeamColor() == winner) {
@@ -527,17 +533,18 @@ public class MatchManager {
               if ((int) data.get("winstreak") > 0 && (int) data.get("winstreak") % 5 == 0) {
                 manager.getEconomy()
                     .depositPlayer(player, Settings.ECONOMY_WIN_STREAK.asDouble());
-                logger.send(player, MATCH_WINSTREAK_CREDITS, String.valueOf(data.get("winstreak")));
+                sendMessage(player, MATCH_WINSTREAK_CREDITS,
+                    String.valueOf(data.get("winstreak")));
               }
             }
 
             manager.getEconomy().depositPlayer(player, Settings.ECONOMY_VICTORY.asDouble());
-            logger.send(player, MATCH_TIMES_UP, winningTeam);
-            logger.send(player, MATCH_WIN_CREDITS);
+            sendMessage(player, MATCH_TIMES_UP, winningTeam);
+            sendMessage(player, MATCH_WIN_CREDITS);
 
             if (cleanSheet) {
               manager.getEconomy().depositPlayer(player, Settings.ECONOMY_CLEAN_SHEET.asDouble());
-              logger.send(player, MATCH_CLEAN_SHEET_BONUS);
+              sendMessage(player, MATCH_CLEAN_SHEET_BONUS);
             }
           } else {
             if (shouldCount) {
@@ -545,7 +552,7 @@ public class MatchManager {
               data.add("losses");
               data.add("matches");
             }
-            logger.send(player, MATCH_TIMES_UP, winningTeam);
+            sendMessage(player, MATCH_TIMES_UP, winningTeam);
           }
         }
 
@@ -555,10 +562,10 @@ public class MatchManager {
           data.set("owngoals", (int) data.get("owngoals") + matchPlayer.getOwnGoals());
         }
 
-        manager.getDataManager().savePlayerData(player.getName());
+        dataManager.savePlayerData(player.getName());
       }
 
-      Location lobby = (Location) manager.getConfigManager().getConfig("config.yml").get("lobby");
+      Location lobby = (Location) configManager.getConfig("config.yml").get("lobby");
       if (lobby != null) {
         player.teleport(lobby);
       }
@@ -586,8 +593,7 @@ public class MatchManager {
       try {
         system.processQueues();
       } catch (Exception exception) {
-        Bukkit.getLogger()
-            .log(Level.SEVERE, "Error processing queues: " + exception.getMessage(), exception);
+        logConsole("{prefix_error}Error processing queues", exception.getMessage());
       }
       return;
     }
@@ -601,18 +607,18 @@ public class MatchManager {
       try {
         system.updateMatch(match);
       } catch (Exception exception) {
-        String arenaId =
-            (match.getArena() != null) ? String.valueOf(match.getArena().getId()) : "unknown";
-        Bukkit.getLogger().log(Level.SEVERE,
-            "Error updating match (arena=" + arenaId + "): " + exception.getMessage(), exception);
+        String arenaId = match.getArena() != null
+            ? String.valueOf(match.getArena().getId())
+            : "unknown";
+        logConsole("{prefix_error}Error updating match (arena=" + arenaId + ")",
+            exception.getMessage());
       }
     }
 
     try {
       system.processQueues();
     } catch (Exception exception) {
-      Bukkit.getLogger()
-          .log(Level.SEVERE, "Error processing queues: " + exception.getMessage(), exception);
+      logConsole("{prefix_error}Error processing queues", exception.getMessage());
     }
   }
 
@@ -792,7 +798,7 @@ public class MatchManager {
           Player player = matchPlayer.getPlayer();
           clearPlayer(player);
           scoreboardManager.removeScoreboard(player);
-          logger.send(player, MATCHMAN_FORCE_END,
+          sendMessage(player, MATCHMAN_FORCE_END,
               Settings.getMatchTypeName(match.getArena().getType()));
         }
       }
@@ -831,7 +837,7 @@ public class MatchManager {
   public void teamChat(Player sender, String message) {
     Optional<Match> matchOpt = getMatch(sender);
     if (matchOpt.isEmpty()) {
-      logger.send(sender, LEAVE_NOT_INGAME);
+      sendMessage(sender, LEAVE_NOT_INGAME);
       return;
     }
 
@@ -877,7 +883,7 @@ public class MatchManager {
 
       Player player = matchPlayer.getPlayer();
       if (matchPlayer.getTeamColor() == teamColor) {
-        logger.send(player, formattedMessage);
+        sendMessage(player, formattedMessage);
       }
     }
   }

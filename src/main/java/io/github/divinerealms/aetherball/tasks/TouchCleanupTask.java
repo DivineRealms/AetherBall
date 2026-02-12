@@ -40,7 +40,8 @@ public class TouchCleanupTask extends BaseTask {
   }
 
   private void cleanupLastTouches(long now) {
-    Map<UUID, Map<CubeTouchType, CubeTouchInfo>> lastTouches = data.getLastTouches();
+    Map<UUID, Map<CubeTouchType, CubeTouchInfo>> lastTouches = data
+        .getLastTouches();
     if (lastTouches.isEmpty()) {
       return;
     }

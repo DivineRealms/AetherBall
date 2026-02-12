@@ -1,5 +1,8 @@
 package io.github.divinerealms.aetherball.tasks;
 
+import static io.github.divinerealms.aetherball.utils.LoggerUtil.debugConsole;
+import static io.github.divinerealms.aetherball.utils.LoggerUtil.logConsole;
+
 import io.github.divinerealms.aetherball.core.Manager;
 import io.github.divinerealms.aetherball.matchmaking.highscore.HighScoreManager;
 import org.bukkit.Bukkit;
@@ -30,7 +33,7 @@ public class HighScoresTask extends BaseTask {
 
   public void startUpdateCycle() {
     if (highScoreManager.isUpdating()) {
-      logger.info("&e! &d" + getTaskName() + " &6update already in progress.");
+      logConsole("{prefix_warn}" + getTaskName() + " update already in progress.");
       return;
     }
 
@@ -39,12 +42,12 @@ public class HighScoresTask extends BaseTask {
     long duration = System.currentTimeMillis() - startTime;
 
     int totalPlayers = highScoreManager.getTotalPlayerFiles();
-    logger.info("&a✔ &2Started &d" + getTaskName() + " &2update (&e" + totalPlayers
-        + " &2total player files)");
+    debugConsole("{prefix_success}Started " + getTaskName() + " update (" + totalPlayers
+        + " total player files)");
 
     int processedCount = highScoreManager.getProcessedCount();
     int skippedCount = highScoreManager.getSkippedCount();
-    logger.info("&a✔ &d" + getTaskName() + " &2update completed in &e" + duration + "ms &afor &e"
+    debugConsole("{prefix_success}" + getTaskName() + " update completed in " + duration + "ms for "
         + processedCount + " players (skipped " + skippedCount + ")");
   }
 }

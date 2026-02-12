@@ -2,7 +2,6 @@ package io.github.divinerealms.aetherball.commands.player;
 
 import static io.github.divinerealms.aetherball.configs.Lang.FC_DISABLED;
 import static io.github.divinerealms.aetherball.configs.Lang.JOIN_INVALIDTYPE;
-import static io.github.divinerealms.aetherball.configs.Lang.LEAVE_QUEUE_ACTIONBAR;
 import static io.github.divinerealms.aetherball.configs.Lang.LEFT;
 import static io.github.divinerealms.aetherball.configs.Lang.STATSSET_IS_NOT_A_NUMBER;
 import static io.github.divinerealms.aetherball.configs.Lang.TAKEPLACE_INGAME;
@@ -13,6 +12,7 @@ import static io.github.divinerealms.aetherball.utils.GameCommandsHelper.handleQ
 import static io.github.divinerealms.aetherball.utils.GameCommandsHelper.joinQueue;
 import static io.github.divinerealms.aetherball.utils.GameCommandsHelper.parseMatchType;
 import static io.github.divinerealms.aetherball.utils.GameCommandsHelper.showOpenMatches;
+import static io.github.divinerealms.aetherball.utils.LoggerUtil.sendMessage;
 import static io.github.divinerealms.aetherball.utils.Permissions.PERM_PLAY;
 
 import co.aikar.commands.BaseCommand;
@@ -23,11 +23,14 @@ import co.aikar.commands.annotation.Description;
 import co.aikar.commands.annotation.Optional;
 import co.aikar.commands.annotation.Subcommand;
 import co.aikar.commands.annotation.Syntax;
-import io.github.divinerealms.aetherball.configs.Settings;
 import io.github.divinerealms.aetherball.core.Manager;
 import io.github.divinerealms.aetherball.matchmaking.Match;
 import io.github.divinerealms.aetherball.matchmaking.MatchManager;
-import io.github.divinerealms.aetherball.utils.Logger;
+import io.github.divinerealms.aetherball.matchmaking.ban.BanManager;
+import io.github.divinerealms.aetherball.matchmaking.highscore.HighScoreManager;
+import io.github.divinerealms.aetherball.matchmaking.logic.MatchData;
+import io.github.divinerealms.aetherball.matchmaking.logic.MatchSystem;
+import io.github.divinerealms.aetherball.matchmaking.team.TeamManager;
 import java.util.List;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -36,11 +39,21 @@ import org.bukkit.entity.Player;
 public class GameCommands extends BaseCommand {
 
   private final Manager manager;
-  private final Logger logger;
+  private final MatchManager matchManager;
+  private final MatchSystem matchSystem;
+  private final MatchData matchData;
+  private final TeamManager teamManager;
+  private final BanManager banManager;
+  private final HighScoreManager highScoreManager;
 
   public GameCommands(Manager manager) {
     this.manager = manager;
-    this.logger = manager.getLogger();
+    this.matchManager = manager.getMatchManager();
+    this.matchSystem = manager.getMatchSystem();
+    this.matchData = manager.getMatchData();
+    this.teamManager = manager.getTeamManager();
+    this.banManager = manager.getBanManager();
+    this.highScoreManager = manager.getHighscoreManager();
   }
 
   @CommandAlias("fcjoin|fcj")
@@ -52,8 +65,8 @@ public class GameCommands extends BaseCommand {
   public void onJoin(Player player, String matchType) {
     Integer type = parseMatchType(matchType);
     if (type == null) {
-      String availableTypes = manager.getMatchManager().getAvailableTypesString();
-      logger.send(player, JOIN_INVALIDTYPE, matchType, availableTypes);
+      String availableTypes = matchManager.getAvailableTypesString();
+      sendMessage(player, JOIN_INVALIDTYPE, matchType, availableTypes);
       return;
     }
 
@@ -65,7 +78,7 @@ public class GameCommands extends BaseCommand {
   @CommandPermission(PERM_PLAY)
   @Description("Leave current match or queue")
   public void onLeave(Player player) {
-    java.util.Optional<Match> matchOpt = manager.getMatchManager().getMatch(player);
+    java.util.Optional<Match> matchOpt = matchManager.getMatch(player);
 
     if (matchOpt.isPresent()) {
       Match match = matchOpt.get();
@@ -74,11 +87,9 @@ public class GameCommands extends BaseCommand {
         handleInProgressLeave(player, match, manager);
       }
 
-      manager.getMatchManager().leaveMatch(player);
-      logger.send(player, LEFT);
-      logger.sendActionBar(player, LEAVE_QUEUE_ACTIONBAR,
-          Settings.getMatchTypeName(match.getArena().getType()));
-      manager.getTeamManager().forceDisbandTeam(player);
+      matchManager.leaveMatch(player);
+      sendMessage(player, LEFT);
+      teamManager.forceDisbandTeam(player);
     } else {
       handleQueueLeave(player, manager);
     }
@@ -90,27 +101,26 @@ public class GameCommands extends BaseCommand {
   @Syntax("[matchId|list]")
   @Description("Take an open spot in an ongoing match")
   public void onTakePlace(Player player, @Optional String arg) {
-    MatchManager matchManager = manager.getMatchManager();
-    if (!matchManager.getData().isMatchesEnabled()) {
-      logger.send(player, FC_DISABLED);
+    if (!matchData.isMatchesEnabled()) {
+      sendMessage(player, FC_DISABLED);
       return;
     }
 
-    if (manager.getBanManager().isBanned(player)) {
+    if (banManager.isBanned(player)) {
       return;
     }
 
     if (matchManager.getMatch(player).isPresent()) {
-      logger.send(player, TAKEPLACE_INGAME);
+      sendMessage(player, TAKEPLACE_INGAME);
       return;
     }
 
-    if (matchManager.getData().getOpenMatches().isEmpty()) {
-      logger.send(player, TAKEPLACE_NOPLACE);
+    if (matchData.getOpenMatches().isEmpty()) {
+      sendMessage(player, TAKEPLACE_NOPLACE);
       return;
     }
 
-    List<Match> openMatches = matchManager.getData().getOpenMatches();
+    List<Match> openMatches = matchData.getOpenMatches();
 
     if (arg == null) {
       Match openMatch = openMatches.iterator().next();
@@ -119,7 +129,7 @@ public class GameCommands extends BaseCommand {
     }
 
     if (arg.equalsIgnoreCase("list")) {
-      showOpenMatches(player, openMatches, manager);
+      showOpenMatches(player, openMatches);
       return;
     }
 
@@ -127,7 +137,7 @@ public class GameCommands extends BaseCommand {
       int matchId = Integer.parseInt(arg);
       matchManager.takePlace(player, matchId);
     } catch (NumberFormatException e) {
-      logger.send(player, STATSSET_IS_NOT_A_NUMBER, arg);
+      sendMessage(player, STATSSET_IS_NOT_A_NUMBER, arg);
     }
   }
 
@@ -136,7 +146,7 @@ public class GameCommands extends BaseCommand {
   @Syntax("<message>")
   @Description("Send a message to your team")
   public void onTeamChat(Player player, String message) {
-    manager.getMatchManager().teamChat(player, message);
+    matchManager.teamChat(player, message);
   }
 
   @CommandAlias("stats")
@@ -147,13 +157,12 @@ public class GameCommands extends BaseCommand {
   public void onStats(CommandSender sender, @Optional String targetName) {
     if (sender instanceof Player) {
       Player player = (Player) sender;
-      manager.getMatchSystem()
-          .checkStats(targetName != null ? targetName : player.getName(), sender);
+      matchSystem.checkStats(targetName != null ? targetName : player.getName(), sender);
     } else {
       if (targetName == null) {
-        logger.send(sender, "&cYou need to specify a player.");
+        sendMessage(sender, "{prefix_error}You need to specify a player.");
       } else {
-        manager.getMatchSystem().checkStats(targetName, sender);
+        matchSystem.checkStats(targetName, sender);
       }
     }
   }
@@ -162,6 +171,6 @@ public class GameCommands extends BaseCommand {
   @Subcommand("highscores|best")
   @Description("View top players leaderboard")
   public void onHighScores(CommandSender sender) {
-    manager.getHighscoreManager().showHighScores(sender);
+    highScoreManager.showHighScores(sender);
   }
 }

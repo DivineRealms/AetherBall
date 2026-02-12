@@ -7,6 +7,9 @@ import static io.github.divinerealms.aetherball.configs.Lang.NO_PERM_PARAMETERS;
 import static io.github.divinerealms.aetherball.configs.Lang.PLAYER_NOT_FOUND;
 import static io.github.divinerealms.aetherball.configs.Lang.UNKNOWN_COMMAND;
 import static io.github.divinerealms.aetherball.matchmaking.util.MatchUtils.isPlayerOnline;
+import static io.github.divinerealms.aetherball.utils.LoggerUtil.debugConsole;
+import static io.github.divinerealms.aetherball.utils.LoggerUtil.logConsole;
+import static io.github.divinerealms.aetherball.utils.LoggerUtil.sendMessage;
 import static io.github.divinerealms.aetherball.utils.Permissions.PERM_ADMIN;
 
 import co.aikar.commands.BukkitCommandCompletionContext;
@@ -50,7 +53,6 @@ import io.github.divinerealms.aetherball.physics.utilities.PhysicsFormulae;
 import io.github.divinerealms.aetherball.physics.utilities.PhysicsSystem;
 import io.github.divinerealms.aetherball.utils.CubeCleaner;
 import io.github.divinerealms.aetherball.utils.DisableCommands;
-import io.github.divinerealms.aetherball.utils.Logger;
 import io.github.divinerealms.aetherball.utils.Placeholders;
 import io.github.divinerealms.aetherball.utils.PlayerSettings;
 import java.lang.reflect.Field;
@@ -63,7 +65,6 @@ import java.util.Set;
 import java.util.StringJoiner;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.logging.Level;
 import java.util.stream.Collectors;
 import lombok.Getter;
 import lombok.Setter;
@@ -91,7 +92,6 @@ public class Manager {
   @Getter
   private static Manager instance;
   private final AetherBall plugin;
-  private final Logger logger;
   private final Utilities utilities;
   private final ConfigManager configManager;
   private final PlayerDataManager dataManager;
@@ -132,7 +132,6 @@ public class Manager {
 
     this.plugin = plugin;
     this.configManager = new ConfigManager(plugin, "");
-    this.logger = new Logger(this);
     this.sendBanner();
 
     this.dataManager = new PlayerDataManager(this);
@@ -155,7 +154,7 @@ public class Manager {
     this.scheduler = plugin.getServer().getScheduler();
 
     this.physicsData = new PhysicsData();
-    this.physicsFormulae = new PhysicsFormulae(this);
+    this.physicsFormulae = new PhysicsFormulae();
     this.physicsSystem = new PhysicsSystem(this);
 
     this.cubeCleaner = new CubeCleaner(this);
@@ -218,11 +217,9 @@ public class Manager {
       try {
         commandManager.unregisterCommands();
         clearBukkitCommandMap();
-        logger.info("&e⟳ &6Unregistered old ACF commands.");
+        debugConsole("{prefix_success}Unregistered old ACF commands.");
       } catch (Exception exception) {
-        Bukkit.getLogger()
-            .log(Level.SEVERE, "&cFailed to unregister old commands: " + exception.getMessage(),
-                exception);
+        logConsole("{prefix_error}Failed to unregister old commands", exception.getMessage());
       }
     }
 
@@ -233,7 +230,7 @@ public class Manager {
     registerAdminCommands();
     dynamicCommandRegistry.reloadCommands();
 
-    logger.info("&a✔ &2Registered commands via &eACF &2successfully.");
+    debugConsole("{prefix_success}Registered commands via ACF successfully.");
   }
 
   private void configureACF() {
@@ -296,7 +293,7 @@ public class Manager {
     Settings.setFile(settings);
 
     for (Lang value : Lang.values()) {
-      setDefaultIfMissing(lang, value.getPath(), value.getDefault());
+      setDefaultIfMissing(lang, value.getPath(), value.getDef());
     }
 
     lang.options().copyDefaults(true);
@@ -322,17 +319,17 @@ public class Manager {
       this.tabAPI = TabAPI.getInstance();
     } else {
       this.tabAPI = null;
-      logger.info("&eTAB plugin not found. Scoreboard features will be disabled.");
+      logConsole("{prefix_warn}TAB plugin not found. Scoreboard features will be disabled.");
     }
 
-    logger.info("&a✔ &2Hooked into &dLuckPerms&2, &dTAB &2and &dVault &2successfully!");
+    debugConsole("{prefix_success}Hooked into LuckPerms, TAB and Vault successfully!");
   }
 
   public void reloadTabAPI() {
     if (plugin.getServer().getPluginManager().isPluginEnabled("TAB")) {
       plugin.getServer().getScheduler().runTask(plugin, () -> {
         this.tabAPI = TabAPI.getInstance();
-        logger.info("&a✔ &2Re-hooked into &dTAB &2successfully!");
+        debugConsole("{prefix_success}Re-hooked into TAB successfully!");
         if (scoreboardManager != null) {
           scoreboardManager.refreshTabAPI();
         }
@@ -343,7 +340,7 @@ public class Manager {
       });
     } else {
       this.tabAPI = null;
-      logger.info("&eTAB plugin not found. Scoreboard features will be disabled.");
+      logConsole("{prefix_warn}TAB plugin not found. Scoreboard features will be disabled.");
     }
   }
 
@@ -378,8 +375,9 @@ public class Manager {
           }
         }
       } catch (IllegalArgumentException exception) {
-        plugin.getLogger().log(Level.WARNING,
-            "Invalid particle effect found for player " + player.getName() + ": " + effect);
+        logConsole(
+            "{prefix_warn}Invalid particle effect found for player " + player.getName() + ": "
+                + effect, exception.getMessage());
       }
     }
 
@@ -436,8 +434,7 @@ public class Manager {
     };
 
     for (String line : banner) {
-      plugin.getServer().getConsoleSender()
-          .sendMessage(logger.getConsolePrefix() + logger.color(line));
+      logConsole(line);
     }
   }
 
@@ -476,8 +473,7 @@ public class Manager {
         return false;
       });
     } catch (Exception exception) {
-      Bukkit.getLogger()
-          .log(Level.WARNING, "Failed to clear command map: " + exception.getMessage(), exception);
+      logConsole("{prefix_warn}Failed to clear command map", exception.getMessage());
     }
   }
 
@@ -492,11 +488,10 @@ public class Manager {
           commandManager.unregisterCommands();
           clearBukkitCommandMap();
           commandManager = null;
-          logger.info("&e⟳ &6Unregistered ACF commands during cleanup.");
+          debugConsole("{prefix_success}Unregistered ACF commands during cleanup.");
         } catch (Exception exception) {
-          Bukkit.getLogger().log(Level.SEVERE,
-              "&cFailed to unregister commands during cleanup: " + exception.getMessage(),
-              exception);
+          logConsole("{prefix_error}Failed to unregister commands during cleanup",
+              exception.getMessage());
         }
       }
       if (listenerManager != null) {
@@ -510,13 +505,12 @@ public class Manager {
       cachedPlayers.clear();
       instance = null;
     } catch (Exception exception) {
-      Bukkit.getLogger()
-          .log(Level.SEVERE, "Error in cleanup: " + exception.getMessage(), exception);
+      logConsole("{prefix_error}Error in cleanup", exception.getMessage());
     } finally {
       if (Settings.DEBUG_MODE.asBoolean()) {
         long ms = (System.nanoTime() - start) / 1_000_000;
         if (ms > Settings.DEBUG_THRESHOLD.asLong()) {
-          logger.send(PERM_ADMIN, "{prefix-admin}&dCleanup &ftook &e" + ms + "ms &f(threshold: "
+          sendMessage(PERM_ADMIN, "{prefix_debug}&dCleanup &ftook &e" + ms + "ms &f(threshold: "
               + Settings.DEBUG_THRESHOLD.asLong() + "ms)");
         }
       }

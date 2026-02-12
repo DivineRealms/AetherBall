@@ -1,5 +1,7 @@
 package io.github.divinerealms.aetherball.managers;
 
+import static io.github.divinerealms.aetherball.utils.LoggerUtil.logConsole;
+
 import io.github.divinerealms.aetherball.configs.Lang;
 import java.io.File;
 import java.io.IOException;
@@ -8,7 +10,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import lombok.Getter;
-import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.Plugin;
@@ -85,7 +86,7 @@ public class ConfigManager {
 
   public void saveConfig(String name) {
     if (readOnlyConfigs.contains(name)) {
-      Bukkit.getLogger().info("Skipping save for read-only config: " + name);
+      logConsole("{prefix_info}Skipping save for read-only config: " + name);
       return;
     }
 
@@ -96,7 +97,7 @@ public class ConfigManager {
       try {
         cfg.save(file);
       } catch (IOException exception) {
-        plugin.getLogger().info("Could not save config to " + file);
+        logConsole("{prefix_error}Could not save config to " + file, exception.getMessage());
       }
     }
   }
@@ -112,7 +113,7 @@ public class ConfigManager {
           : folderName + File.separator + name;
       if (plugin.getResource(resourcePath) != null) {
         plugin.saveResource(resourcePath, false);
-        plugin.getLogger().info("Copied default config from JAR: " + resourcePath);
+        logConsole("{prefix_info}Copied default config from JAR: " + resourcePath);
       }
     } catch (Exception ignored) {
     }

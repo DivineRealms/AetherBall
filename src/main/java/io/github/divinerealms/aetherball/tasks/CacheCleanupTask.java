@@ -1,6 +1,7 @@
 package io.github.divinerealms.aetherball.tasks;
 
 import static io.github.divinerealms.aetherball.matchmaking.util.MatchUtils.isPlayerOnline;
+import static io.github.divinerealms.aetherball.utils.LoggerUtil.debugConsole;
 
 import io.github.divinerealms.aetherball.core.Manager;
 import org.bukkit.entity.Player;
@@ -24,7 +25,7 @@ public class CacheCleanupTask extends BaseTask {
     }
 
     if (removed > 0) {
-      logger.info("&2Cleaned up &e" + removed + " &2stale player references.");
+      debugConsole("{prefix_info}Cleaned up " + removed + " stale player references.");
     }
   }
 }

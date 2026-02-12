@@ -4,9 +4,9 @@ import static io.github.divinerealms.aetherball.configs.Lang.ADMIN_STATSET;
 import static io.github.divinerealms.aetherball.configs.Lang.CLEAR_STATS_SUCCESS;
 import static io.github.divinerealms.aetherball.configs.Lang.FORCE_LEAVE;
 import static io.github.divinerealms.aetherball.configs.Lang.PLAYER_NOT_FOUND;
-import static io.github.divinerealms.aetherball.configs.Lang.PREFIX_ADMIN;
 import static io.github.divinerealms.aetherball.configs.Lang.STATSSET_IS_NOT_A_NUMBER;
 import static io.github.divinerealms.aetherball.configs.Lang.STATSSET_NOT_A_STAT;
+import static io.github.divinerealms.aetherball.utils.LoggerUtil.sendMessage;
 import static io.github.divinerealms.aetherball.utils.Permissions.PERM_ADMIN;
 import static io.github.divinerealms.aetherball.utils.Permissions.PERM_CLEAR_STATS;
 import static io.github.divinerealms.aetherball.utils.Permissions.PERM_FORCE_LEAVE;
@@ -25,7 +25,6 @@ import io.github.divinerealms.aetherball.configs.PlayerData;
 import io.github.divinerealms.aetherball.core.Manager;
 import io.github.divinerealms.aetherball.managers.PlayerDataManager;
 import io.github.divinerealms.aetherball.matchmaking.MatchManager;
-import io.github.divinerealms.aetherball.utils.Logger;
 import java.util.Arrays;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -35,14 +34,12 @@ public class PlayerCommands extends BaseCommand {
 
   private final Manager manager;
   private final AetherBall plugin;
-  private final Logger logger;
   private final MatchManager matchManager;
   private final PlayerDataManager dataManager;
 
   public PlayerCommands(Manager manager) {
     this.manager = manager;
     this.plugin = manager.getPlugin();
-    this.logger = manager.getLogger();
     this.matchManager = manager.getMatchManager();
     this.dataManager = manager.getDataManager();
   }
@@ -56,7 +53,7 @@ public class PlayerCommands extends BaseCommand {
       String amountStr) {
     PlayerData playerData = dataManager.get(target);
     if (playerData == null) {
-      logger.send(sender, PLAYER_NOT_FOUND);
+      sendMessage(sender, PLAYER_NOT_FOUND);
       return;
     }
 
@@ -67,7 +64,7 @@ public class PlayerCommands extends BaseCommand {
       try {
         amount = Integer.parseInt(amountStr);
       } catch (NumberFormatException e) {
-        logger.send(sender, STATSSET_IS_NOT_A_NUMBER, amountStr);
+        sendMessage(sender, STATSSET_IS_NOT_A_NUMBER, amountStr);
         return;
       }
     }
@@ -82,12 +79,12 @@ public class PlayerCommands extends BaseCommand {
       int finalAmount = clear ? 0 : amount;
       Arrays.asList(validStats).forEach(s -> playerData.set(s, finalAmount));
     } else {
-      logger.send(sender, STATSSET_NOT_A_STAT, stat);
+      sendMessage(sender, STATSSET_NOT_A_STAT, stat);
       return;
     }
 
     dataManager.savePlayerData(target.getName());
-    logger.send(sender, ADMIN_STATSET, stat, target.getName(), String.valueOf(amount));
+    sendMessage(sender, ADMIN_STATSET, stat, target.getName(), String.valueOf(amount));
   }
 
   @CommandAlias("forceleave|fl")
@@ -98,7 +95,7 @@ public class PlayerCommands extends BaseCommand {
   @Description("Force a player to leave their match")
   public void onForceLeave(CommandSender sender, @Flags("other") Player target) {
     matchManager.leaveMatch(target);
-    logger.send(sender, FORCE_LEAVE, target.getDisplayName());
+    sendMessage(sender, FORCE_LEAVE, target.getDisplayName());
   }
 
   @CommandAlias("refreshprefix|rp")
@@ -109,11 +106,11 @@ public class PlayerCommands extends BaseCommand {
   @Description("Refresh player's prefix cache")
   public void onRefreshPrefix(CommandSender sender, @Flags("other") Player target) {
     manager.cachePrefixedName(target);
-    logger.send(sender, PREFIX_ADMIN + "Refreshing prefix for " + target.getName() + "...");
+    sendMessage(sender, "Refreshing prefix for " + target.getName() + "...");
 
     plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
       String refreshed = manager.getPrefixedName(target.getUniqueId());
-      logger.send(sender, PREFIX_ADMIN + "Refreshed: " + refreshed);
+      sendMessage(sender, "Refreshed: " + refreshed);
     }, 20L);
   }
 
@@ -122,6 +119,6 @@ public class PlayerCommands extends BaseCommand {
   @Description("Clear all player statistics")
   public void onClearStats(CommandSender sender) {
     dataManager.clearAllStats();
-    logger.send(sender, CLEAR_STATS_SUCCESS);
+    sendMessage(sender, CLEAR_STATS_SUCCESS);
   }
 }

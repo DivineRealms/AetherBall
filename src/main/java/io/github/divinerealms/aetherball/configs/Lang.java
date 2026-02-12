@@ -1,13 +1,19 @@
 package io.github.divinerealms.aetherball.configs;
 
+import java.util.HashMap;
+import java.util.Map;
 import lombok.Getter;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.FileConfiguration;
 
 @Getter
 public enum Lang {
-  PREFIX("prefix", "&7[&eFC&7]"),
-  PREFIX_ADMIN("prefix-admin", "&7[&cAdmin&7]"),
+  INFO("prefix.info", "&8▎ &r"),
+  SUCCESS("prefix.success", "&a▎ &r"),
+  ERROR("prefix.error", "&4▎ &c"),
+  WARN("prefix.warn", "&6▎ &e"),
+  OTHER("prefix.other", "&b▎ &r"),
+  DEBUG("prefix.debug", "&9▎ &e[&oDEBUG&e] &f"),
 
   BANNER_PLAYER("banner.player", String.join(System.lineSeparator(),
       "&9        __",
@@ -17,25 +23,25 @@ public enum Lang {
       "&b     '.&f/  \\&b.'      &9&nhttps://github.com/DivineRealms/AetherBall",
       "&9        \"\"",
       "&r &r",
-      "{prefix}&aType &e/fc help &afor a list of available commands.")),
+      "&aType &e/fc help &afor a list of available commands.")),
 
-  NO_PERM("no-perm.single", "{prefix}&cInsufficient permissions."),
+  NO_PERM("no-perm.single", "{prefix_error}Insufficient permissions."),
   NO_PERM_PARAMETERS("no-perm.parameters",
-      "{prefix}&cYou don't have permission for command &6/&e{1}&c!"),
-  UNKNOWN_COMMAND("unknown-command", "{prefix}&cUnknown command."),
-  USAGE("usage", "{prefix}Usage: /{0}"),
-  PLAYER_NOT_FOUND("player-not-found", "&cPlayer not found."),
+      "{prefix_error}You don't have permission for command &6/&e{1}&c!"),
+  UNKNOWN_COMMAND("unknown-command", "{prefix_error}Unknown command."),
+  USAGE("usage", "{prefix_warn}Usage: /{0}"),
+  PLAYER_NOT_FOUND("player-not-found", "{prefix_error}Player not found."),
   ON("toggle.on", "&aON"),
   OFF("toggle.off", "&cOFF"),
 
-  RELOAD("reload", "{prefix-admin}AetherBall reloaded!"),
-  FC_TOGGLE("toggle.status", "{prefix-admin}AetherBall Matches turned {0}"),
-  ADMIN_STATSET("statset", "{prefix-admin}Updated {0} for player {1} to {2}"),
+  RELOAD("reload", "{prefix_success}AetherBall reloaded!"),
+  FC_TOGGLE("toggle.status", "{prefix_success}AetherBall Matches turned {0}"),
+  ADMIN_STATSET("statset", "{prefix_success}Updated {0} for player {1} to {2}"),
 
-  MATCHMAN_FORCE_START("matchman.force-start", "{prefix-admin}Started {0} match."),
-  MATCHMAN_FORCE_END("matchman.force-end", "{prefix-admin}Ended {0} match."),
+  MATCHMAN_FORCE_START("matchman.force-start", "{prefix_success}Started {0} match."),
+  MATCHMAN_FORCE_END("matchman.force-end", "{prefix_success}Ended {0} match."),
 
-  FORCE_LEAVE("force-leave", "{prefix-admin}Removed player {0}&f from all matches/lobbies."),
+  FORCE_LEAVE("force-leave", "{prefix_success}Removed player {0}&f from all matches/lobbies."),
 
   HITDEBUG_PLAYER_WHOLE("debug.hits-player.whole", "{0}{1}"),
   HITDEBUG_PLAYER_CHARGED("debug.hits-player.charged",
@@ -44,61 +50,58 @@ public enum Lang {
   HITDEBUG_PLAYER_COOLDOWN("debug.hits-player.cooldown", "&8 [&fCD: {0}{1}ms&8]"),
   HITDEBUG_WHOLE("debug.hits.whole", "{0}"),
   HITDEBUG_CHARGED("debug.hits.charged",
-      "{prefix}&dCharged &8| {0} &8| {1}KP &8| &e{2}PW&7, &d{3}CH"),
-  HITDEBUG_REGULAR("debug.hits.regular", "{prefix}&aRegular &8| {0} &8| &a{1}KP"),
+      "&dCharged &8| {0} &8| {1}KP &8| &e{2}PW&7, &d{3}CH"),
+  HITDEBUG_REGULAR("debug.hits.regular", "&aRegular &8| {0} &8| &a{1}KP"),
   HITDEBUG_VELOCITY_CAP("debug.hits.velocity-cap",
-      "{prefix}&cVelocity Cap Triggered! &7Speed: &e{0} &7-> &a{1} &7| Hitter: &f{2}"),
-
-  OR("or", "&e|&b"),
+      "{prefix_debug}Velocity Cap Triggered! &7Speed: &e{0} &7-> &a{1} &7| Hitter: &f{2}"),
 
   JOIN_SUCCESS("join.success",
-      "&b[Coach] You've joined the {0} lobby. Wait for players to gather..."),
-  JOIN_INVALIDTYPE("join.invalid-arena-type",
-      String.join(System.lineSeparator(), "&c{0} is not a valid arena type",
-          "&b/fc setuparena [3v3{1}4v4]")),
-  JOIN_ALREADYINGAME("join.already-in-game", "&cYou are already in a game"),
-  JOIN_NOARENA("join.no-arena", "&cNo arena found."),
+      "{prefix_success}&b[Coach] You've joined the {0} lobby. Wait for players to gather..."),
+  JOIN_INVALIDTYPE("join.invalid-arena-type", "{prefix_error}{0} is not a valid arena type"),
+  JOIN_ALREADYINGAME("join.already-in-game", "{prefix_error}You are already in a game"),
+  JOIN_NOARENA("join.no-arena", "{prefix_error}No arena found."),
 
-  TEAM_USAGE("team.usage",
-      String.join(System.lineSeparator(), "&b/fc team [3v3{0}4v4] [player]",
-          "&b/fc team accept/decline/cancel")),
-  TEAM_NO_REQUEST("team.no-request", "&cThere is no team request to accept"),
+  TEAM_NO_REQUEST("team.no-request", "{prefix_error}There is no team request to accept"),
   TEAM_ACCEPT_OTHER("team.accept.other",
-      String.join(System.lineSeparator(), "{prefix}&aYou successfully teamed with {0}",
-          "&aYou must wait for a team slot to open, this won't take long")),
+      String.join(System.lineSeparator(), "{prefix_success}You successfully teamed with {0}",
+          "{prefix_info}You must wait for a team slot to open, this won't take long")),
   TEAM_ACCEPT_SELF("team.accept.self",
-      String.join(System.lineSeparator(), "{prefix}&aYou successfully teamed with {0}",
-          "&aYou must wait for a team slot to open, this won't take long")),
-  TEAM_DECLINE_OTHER("team.decline.other", "{prefix}&a{0} declined your team request"),
-  TEAM_DECLINE_SELF("team.decline.self", "{prefix}&aYou successfully declined the team request"),
-  TEAM_ALREADY_IN_TEAM("team.already-in-team", "&cYou're already in a team"),
-  TEAM_ALREADY_IN_TEAM_2("team.already-in-team-2", "&c{0} is already in a team"),
+      String.join(System.lineSeparator(), "{prefix_success}You successfully teamed with {0}",
+          "{prefix_info}You must wait for a team slot to open, this won't take long")),
+  TEAM_DECLINE_OTHER("team.decline.other", "{prefix_error}{0} declined your team request"),
+  TEAM_DECLINE_SELF("team.decline.self",
+      "{prefix_success}You successfully declined the team request"),
+  TEAM_ALREADY_IN_TEAM("team.already-in-team", "{prefix_error}You're already in a team"),
+  TEAM_ALREADY_IN_TEAM_2("team.already-in-team-2", "{prefix_error}{0} is already in a team"),
   TEAM_WANTS_TO_TEAM_OTHER("team.wants-to-team.other",
       String.join(System.lineSeparator(),
-          "{prefix}&a{0} wants to team with you for a {1}v{1} match",
-          "&b/fc team accept &aor &b/fc team decline &ato respond to the team request")),
+          "{prefix_info}&b{0} &fwants to team with you for a &e{1}v{1} match",
+          "{prefix_info}&e/fc team accept &for &e/fc team decline &fto respond to the team request")),
   TEAM_WANTS_TO_TEAM_SELF("team.wants-to-team.self",
       String.join(System.lineSeparator(),
-          "{prefix}&aYou successfully sent {0} a team request for a {1}v{1} match",
-          "&b/fc team cancel &ato cancel this")),
-  TEAM_ALREADY_IN_GAME("team.already-in-game", "&c{0} is already in a game"),
-  TEAM_NOT_ONLINE("team.not-online", "&c{0} is not online"),
-  TEAM_DISBANDED("team.disbanded", "&cYour team was disbanded because {0} left."),
-  TEAM_INVITE_EXPIRED("team.invite-expired", "{prefix}&cTeam request has expired."),
+          "{prefix_info}You successfully sent &b{0} &fa team request for a &e{1}v{1} match",
+          "{prefix_info}&e/fc team cancel &fto cancel this")),
+  TEAM_ALREADY_IN_GAME("team.already-in-game", "{prefix_error}{0} is already in a game"),
+  TEAM_NOT_ONLINE("team.not-online", "{prefix_error}{0} is not online"),
+  TEAM_DISBANDED("team.disbanded", "{prefix_error}Your team was disbanded because {0} left."),
+  TEAM_INVITE_EXPIRED("team.invite-expired", "{prefix_error}Team request has expired."),
 
-  TAKEPLACE_SUCCESS("takeplace.success", "&b[Coach] You've taken a spot in match #{0}"),
-  TAKEPLACE_INGAME("takeplace.already-ingame", "&cYou are already in a match"),
-  TAKEPLACE_NOPLACE("takeplace.no-place", "&cThere is no available spot"),
-  TAKEPLACE_AVAILABLE_HEADER("takeplace.available.header", "&eAvailable matches to join:"),
+  TAKEPLACE_SUCCESS("takeplace.success",
+      "{prefix_success}&b[Coach] You've taken a spot in match #{0}"),
+  TAKEPLACE_INGAME("takeplace.already-ingame", "{prefix_error}You are already in a match"),
+  TAKEPLACE_NOPLACE("takeplace.no-place", "{prefix_error}There is no available spot"),
+  TAKEPLACE_AVAILABLE_HEADER("takeplace.available.header",
+      "{prefix_info}Available matches to join:"),
   TAKEPLACE_AVAILABLE_ENTRY("takeplace.available.entry",
-      "&e- Match #{0} &7({1}) - &a{2} &7slots open"),
-  TAKEPLACE_INVALID_ID("takeplace.invalid-id", "&cCould not find an open match with ID #{0}."),
-  TAKEPLACE_FULL("takeplace.full", "&cMatch #{0} is already full."),
+      "{prefix_info}&e- Match #{0} &7({1}) - &a{2} &7slots open"),
+  TAKEPLACE_INVALID_ID("takeplace.invalid-id",
+      "{prefix_error}Could not find an open match with ID #{0}."),
+  TAKEPLACE_FULL("takeplace.full", "{prefix_error}Match #{0} is already full."),
 
-  STATS_NONE("stats.none", "&c{0} has never played AetherBall"),
+  STATS_NONE("stats.none", "{prefix_error}{0} has never played AetherBall"),
   STATS("stats.info", String.join(System.lineSeparator(),
       "&e---------------------------------------------",
-      "&r {prefix}&6{0} statistics:",
+      "&r &6{0} statistics:",
       "&r &r",
       "&7 Matches played: &f{1}",
       "&7 Match record: &a{2}W &c{3}L &9{4}T",
@@ -111,93 +114,96 @@ public enum Lang {
       "&7&o Use &6/&efc stats &2<&aplayer-name&2> &7&ofor others...",
       "&e---------------------------------------------")),
 
-  LEAVE_NOT_INGAME("leave.not-ingame", "&cYou are not even in a match"),
-  LEFT("leave.left", "{prefix}&aYou left the match."),
+  LEAVE_NOT_INGAME("leave.not-ingame", "{prefix_error}You are not even in a match"),
+  LEFT("leave.left", "{prefix_success}You left the match."),
   LEAVE_LOSING("leave.losing",
-      "{prefix}&cYou left while losing! You were fined ${0} and cannot join for {1} minutes."),
+      "{prefix_error}You left while losing! You were fined &e${0} &cand cannot join for &e{1} minutes&c."),
 
-  UNDO("undo", "{prefix}&aUndo successful"),
+  UNDO("undo", "{prefix_success}Undo successful"),
 
-  CLEAR_STATS_SUCCESS("clear-stats.success", "{prefix}&aYou successfully wiped {0}'s stats"),
+  CLEAR_STATS_SUCCESS("clear-stats.success", "{prefix_success}You successfully wiped {0}'s stats"),
 
-  STATSSET_IS_NOT_A_NUMBER("stats-set.is-not-a-number", "&c{0} is not a number"),
+  STATSSET_IS_NOT_A_NUMBER("stats-set.is-not-a-number", "{prefix_error}{0} is not a number"),
   STATSSET_NOT_A_STAT("stats-set.not-a-stat",
-      String.join(System.lineSeparator(), "&c{0} is not a stat, choose from:",
-          "&7wins, matches, ties, goals, streak, store, all")),
+      String.join(System.lineSeparator(), "{prefix_error}{0} is not a stat, choose from:",
+          "{prefix_info}&7wins, matches, ties, goals, streak, store, all")),
 
   SETUP_ARENA_START("setup-arena.start",
-      String.join(System.lineSeparator(), "{prefix}&aYou just started setting up an arena",
-          "&aIf you got here by accident, use &b/fc undo",
-          "&aStep 1: Stand in the center block behind the blue goal line facing the red goal, then use &b/fc set")),
+      String.join(System.lineSeparator(), "{prefix_info}You just started setting up an arena",
+          "{prefix_info}If you got here by accident, use &e/fc undo",
+          "{prefix_info}&7Step 1: &fStand in the center block behind the blue goal line facing the &cred &fgoal, then use &e/fc set")),
   SETUP_ARENA_FIRST_SET("setup-arena.first-set",
-      String.join(System.lineSeparator(), "{prefix}&aFirst location successfully set.",
-          "&aNow do the same for the red goal")),
-  SETUP_ARENA_SUCCESS("setup-arena.success", "{prefix}&aYou successfully set up the arena"),
+      String.join(System.lineSeparator(), "{prefix_success}First location successfully set.",
+          "{prefix_info}Now do the same for the other goal")),
+  SETUP_ARENA_SUCCESS("setup-arena.success", "{prefix_success}You successfully set up the arena"),
 
-  CLEAR_ARENAS_SUCCESS("clear-arenas.success", "{prefix}&aYou successfully wiped all arenas"),
+  CLEAR_ARENAS_SUCCESS("clear-arenas.success", "{prefix_success}You successfully wiped all arenas"),
   CLEAR_ARENAS_TYPE_SUCCESS("clear-arenas.type-success",
-      "{prefix-admin}&aSuccessfully cleared &e{0} &aarenas!"),
-  ALREADY_ENOUGH_CUBES("already-enough-cubes", "&cThere are already enough cubes"),
+      "{prefix_success}Successfully cleared &e{0} &farenas!"),
+  ALREADY_ENOUGH_CUBES("already-enough-cubes", "{prefix_error}There are already enough cubes"),
 
-  BALANCE("balance", "{prefix}&aYou currently have #{0}"),
+  BALANCE("balance", "{prefix_info}You currently have &e#{0}"),
 
   TAKE_PLACE_ANNOUNCEMENT_LOBBY("match.tkp-announcement.lobby",
-      "{prefix}&6&lSUBSTITUTION: &aSomeone left {0}&a during the discussion phase."),
+      "{prefix_info}&6&lSUBSTITUTION: &fSomeone left {0}&f during the discussion phase."),
   TAKE_PLACE_ANNOUNCEMENT_MATCH("match.tkp-announcement.match", String.join(System.lineSeparator(),
-      "{prefix}&6&lSUBSTITUTION: &aSomeone left {0}&a!",
-      "&aScore: {1} &f{2} - {3} {4} &7(time remaining: &e{5}&7)",
-      "&aType &e/tkp <id> &ato take their place!")),
+      "{prefix_warn}&6&lSUBSTITUTION: &fSomeone left {0}&f!",
+      "{prefix_warn}&fScore: {1} &f{2} - {3} {4} &7(time remaining: &e{5}&7)",
+      "{prefix_warn}&fType &e/tkp <id> &ato take their place!")),
 
-  CUBE_SPAWN("cube.spawn", "&aYou spawned a cube"),
-  CUBE_CLEAR("cube.clear", "&aCleared nearest cube"),
-  CUBE_CLEAR_ALL("cube.clear-all", "&aCleared {0} cube{1}"),
-  CUBE_NO_CUBES("cube.no-cube", "&cNo cubes near you"),
+  CUBE_SPAWN("cube.spawn", "{prefix_success}You spawned a cube"),
+  CUBE_CLEAR("cube.clear", "{prefix_success}Cleared nearest cube"),
+  CUBE_CLEAR_ALL("cube.clear-all", "{prefix_success}Cleared {0} cube{1}"),
+  CUBE_NO_CUBES("cube.no-cube", "{prefix_error}No cubes near you"),
 
   COMMAND_DISABLER_ALREADY_ADDED("command-disabler.already-added",
-      "&cThis command was already added"),
+      "{prefix_error}This command was already added"),
   COMMAND_DISABLER_SUCCESS("command-disabler.added-successfully",
-      "&aYou successfully added command /{0} to the list of disabled commands"),
+      "{prefix_success}You successfully added command &e/{0} &fto the list of disabled commands"),
   COMMAND_DISABLER_SUCCESS_REMOVE("command-disabler.removed-successfully",
-      "&aYou successfully removed command /{0} from the list of disabled commands"),
-  COMMAND_DISABLER_WASNT_ADDED("command-disabler.wasnt-added", "&cThis command wasn't even added"),
-  COMMAND_DISABLER_LIST("command-disabler.list", "&6List of disabled commands:"),
+      "{prefix_success}You successfully removed command &e/{0} &ffrom the list of disabled commands"),
+  COMMAND_DISABLER_WASNT_ADDED("command-disabler.wasnt-added",
+      "{prefix_error}This command wasn't even added"),
+  COMMAND_DISABLER_LIST("command-disabler.list", "{prefix_info}List of disabled commands:"),
   COMMAND_DISABLER_CANT_USE("command-disabler.cant-use",
-      "&cYou cannot use this command during a match"),
+      "{prefix_error}You cannot use this command during a match"),
 
   STARTING("match.starting", String.join(System.lineSeparator(),
-      "{prefix}&aThere are enough players to start, the match will begin in 30 seconds. You now have time to discuss your strategy.",
-      "&2TIP: &aChoose someone to be goalkeeper.", "&aUse &b/tc [Message] &afor team chat.")),
+      "{prefix_other}There are enough players to start, the match will begin in 30 seconds.",
+      "{prefix_other}You now have time to discuss your strategy.",
+      "{prefix_other}&3TIP: &fChoose someone to be goalkeeper.",
+      "{prefix_other}Use &e/tc [Message] &ffor team chat.")),
   TEAMCHAT_RED("match.tc-red", "&cTC {0}&f: "),
   TEAMCHAT_BLUE("match.tc-blue", "&1TC {0}&f: "),
-  MATCH_STARTED("match.started", "{prefix}&aThe match has started, good luck"),
-  MATCH_ALREADY_STARTED("match.already-started", "{prefix}&cMatch has already started."),
-  MATCH_PROCEED("match.proceed", "{prefix}&aThe match will now proceed"),
-  MATCH_TIMES_UP("match.times-up", "{prefix}&aTime's up! The {0} team has won"),
-  MATCH_WIN_CREDITS("match.win-credits", "{prefix}&aYou got 15 credits for winning"),
+  MATCH_STARTED("match.started", "{prefix_other}The match has started, good luck"),
+  MATCH_ALREADY_STARTED("match.already-started", "{prefix_error}Match has already started."),
+  MATCH_PROCEED("match.proceed", "{prefix_other}The match will now proceed"),
+  MATCH_TIMES_UP("match.times-up", "{prefix_other}Time's up! The {0} team has won"),
+  MATCH_WIN_CREDITS("match.win-credits", "{prefix_other}You got 15 credits for winning"),
   MATCH_WINSTREAK_CREDITS("match.winstreak-credits",
-      "{prefix}&6&lYou get 100 credits bonus for winning {0} times in a row!!!"),
-  MATCH_TIED("match.tied", "{prefix}&aTime's up! The game is tied"),
-  MATCH_TIED_CREDITS("match.tied-credits", "{prefix}&aYou got 5 credits for a tie"),
-  MATCH_SCORE_CREDITS("match.score-credits", "{prefix}&aYou got 10 credits for scoring"),
+      "{prefix_other}&6&lYou get 100 credits bonus for winning {0} times in a row!!!"),
+  MATCH_TIED("match.tied", "{prefix_other}Time's up! The game is tied"),
+  MATCH_TIED_CREDITS("match.tied-credits", "{prefix_other}You got 5 credits for a tie"),
+  MATCH_SCORE_CREDITS("match.score-credits", "{prefix_other}You got 10 credits for scoring"),
   MATCH_CLEAN_SHEET_BONUS("match.clean-sheet-bonus",
-      "{prefix}&aYou got 30 credits for a clean sheet"),
-  MATCH_ASSIST_CREDITS("match.assist-credits", "{prefix}&aYou got 5 credits for an assist"),
+      "{prefix_other}You got 30 credits for a clean sheet"),
+  MATCH_ASSIST_CREDITS("match.assist-credits", "{prefix_other}You got 5 credits for an assist"),
   MATCH_SCORE_HATTRICK("match.score-hattrick",
-      "{prefix}&6&lYou get 100 credits bonus for a hat-trick"),
+      "{prefix_other}&6&lYou get 100 credits bonus for a hat-trick"),
   MATCH_HATTRICK("match.hattrick", "&6&lHAT-TRICK!!!"),
   MATCH_GOALLL("match.goalll", "&6&lGOOOOAL!!!"),
   MATCH_GOAL("match.goal", String.join(System.lineSeparator(),
-      "{prefix}{0} &a{1} scored a goal for the {2} team from {3} blocks away and got assisted by {4}")),
+      "{0} &a{1} scored a goal for the {2} team from {3} blocks away and got assisted by {4}")),
   MATCH_GOAL_ASSIST("match.goal-assist", "Assist: {0}"),
   MATCH_SCORE_STATS("match.score-stats",
       String.join(System.lineSeparator(), "&aIt is now {0}-{1} Red-Blue",
-          "&aThe match will continue in 10 seconds")),
+          "{prefix_other}The match will continue in 10 seconds")),
   MATCH_SCORE_OWN_GOAL_ANNOUNCE("match.score-own-goal-announce",
-      "{prefix}&6&lOWN GOAL! &a{0} scored a goal for the opposing team"),
+      "&6&lOWN GOAL! &a{0} scored a goal for the opposing team"),
   MATCH_PREVENT_ABUSE("match.prevent-abuse",
-      "{prefix}&cCommand abuse is prohibited during the match."),
+      "{prefix_error}Command abuse is prohibited during the match."),
   MATCH_TYPE_UNAVAILABLE("match.type-unavailable",
-      "{prefix}&e{0} &cmatches are not available. Available: &a{1}"),
+      "{prefix_error}&e{0} &cmatches are not available. Available: &a{1}"),
   LEAVE_QUEUE_ACTIONBAR("match.leave-queue-actionbar", "&cYou left the {0} queue..."),
   PLAYER_PLACEHOLDERS("match.player-placeholders", "%luckperms_prefix%%player_name%"),
 
@@ -212,7 +218,7 @@ public enum Lang {
   QUEUE_ACTIONBAR("match.queue-actionbar", "{0} &8┃ {1} &7({2}&7/&a{3}&7)"),
 
   BEST_HEADER("best.header",
-      String.join(System.lineSeparator(), "{prefix}&6All AetherBall highscores:",
+      String.join(System.lineSeparator(), "&6All AetherBall highscores:",
           "&bBest ratings:")),
   BEST_ENTRY("best.entry", "&7{0}. {1} - {2}"),
   BEST_GOALS("best.most-goals", "&bMost goals:"),
@@ -221,7 +227,7 @@ public enum Lang {
   BEST_WINS("best.most-wins", "&bMost wins:"),
   BEST_WINSTREAK("best.winstreak", "&bLongest win streak:"),
   BEST_UPDATING("best.updating",
-      "{prefix}&cHighscores are not yet available. Try again in a few seconds..."),
+      "&cHighscores are not yet available. Try again in a few seconds..."),
 
   NOBODY("nobody", "nobody"),
 
@@ -279,7 +285,7 @@ public enum Lang {
   )),
   HELP_HEADER("help.header", "&e-------------[ &6&lAetherBall Help &e]----------------"),
   HELP_FOOTER("help.footer", "&e---------------------------------------------"),
-  HELP_USAGE("help.usage", "{prefix}&cUsage: &e{command} &a{syntax}"),
+  HELP_USAGE("help.usage", "&cUsage: &e{command} &a{syntax}"),
   HELP_CATEGORIZED("help.categorized", String.join(System.lineSeparator(),
       "&e-------------[ &6&lAetherBall Help &e]----------------",
       "&r &r",
@@ -385,46 +391,48 @@ public enum Lang {
       "&6  ┗ &e{3}",
       "&r &r"
   )),
-  SCOREBOARD_FOOTER("scoreboard.footer", "&6   &nplay.CoalBox.xyz&r  "),
+  SCOREBOARD_FOOTER("scoreboard.footer", "&b   &ndivinerealms.net&r  "),
 
   RED("red", "&cRed"),
   BLUE("blue", "&9Blue"),
-  INGAME_ONLY("ingame-only", "&cIn-game only command."),
+  INGAME_ONLY("ingame-only", "{prefix_error}In-game only command."),
 
-  PRACTICE_AREAS_EMPTY("practice-areas-empty", "&cNo practice zones defined. Not clearing cubes."),
+  PRACTICE_AREAS_EMPTY("practice-areas-empty",
+      "{prefix_error}No practice zones defined. Not clearing cubes."),
 
   CLEARED_CUBES("cleared-cubes", "&bℹ Cleared &e{0} cube(s) &ffrom practice zones &bℹ"),
   CLEARED_CUBE_INGAME("cleared-cube-ingame",
-      "{prefix}Cube was cleared during the match! Respawning it."),
+      "{prefix_other}Cube was cleared during the match! Respawning it."),
 
   PRACTICE_AREA_SET("practice-area-set",
-      "{prefix}&fSuccessfully set practice zone &b{0}&f (&o{1}, {2}, {3}&f)."),
+      "{prefix_success}Successfully set practice zone &b{0}&f (&o{1}, {2}, {3}&f)."),
 
   FC_DISABLED("fc-disabled",
-      "{prefix}&cJoining matches is temporarily disabled by an admin."),
+      "{prefix_error}Joining matches is temporarily disabled by an admin."),
 
-  TOGGLES_KICK("toggles.kick", "{prefix}Kick sound is {0}&f!"),
-  TOGGLES_GOAL("toggles.goal", "{prefix}Goal sound is {0}&f!"),
-  TOGGLES_PARTICLES("toggles.particles", "{prefix}Particle trails are {0}&f!"),
-  TOGGLES_PARTICLES_MODE("toggles.particles-mode", "{prefix}Particle trail mode set to: &a{0}"),
-  TOGGLES_HIT_DEBUG("toggles.hit-debug", "{prefix}Hit debug is {0}&f!"),
+  TOGGLES_KICK("toggles.kick", "{prefix_success}Kick sound is {0}&f!"),
+  TOGGLES_GOAL("toggles.goal", "{prefix_success}Goal sound is {0}&f!"),
+  TOGGLES_PARTICLES("toggles.particles", "{prefix_success}Particle trails are {0}&f!"),
+  TOGGLES_PARTICLES_MODE("toggles.particles-mode",
+      "{prefix_success}Particle trail mode set to: &a{0}"),
+  TOGGLES_HIT_DEBUG("toggles.hit-debug", "{prefix_success}Hit debug is {0}&f!"),
 
-  INVALID_TYPE("type.invalid", "{prefix}That &e{0} &fcannot be used."),
-  INVALID_COLOR("type.invalid-color", "{prefix}Color &e{0} &fcannot be used."),
-  AVAILABLE_TYPE("type.available", "{prefix}Available &e{0}&f: &e{1}"),
+  INVALID_TYPE("type.invalid", "{prefix_error}That &e{0} &fcannot be used."),
+  INVALID_COLOR("type.invalid-color", "{prefix_error}Color &e{0} &fcannot be used."),
+  AVAILABLE_TYPE("type.available", "{prefix_info}Available &e{0}&f: &e{1}"),
   SOUND("type.sound", "sound"),
   PARTICLE("type.particle", "particle"),
   COLOR("type.color", "color"),
 
-  SET_SOUND_KICK("set.sound.kick", "{prefix}Kick sound set to: &e{0}"),
-  SET_SOUND_GOAL("set.sound.goal", "{prefix}Goal sound set to: &e{0}"),
-  SET_PARTICLE("set.particle.regular", "{prefix}Particle set to: &e{0}"),
+  SET_SOUND_KICK("set.sound.kick", "{prefix_success}Kick sound set to: &e{0}"),
+  SET_SOUND_GOAL("set.sound.goal", "{prefix_success}Goal sound set to: &e{0}"),
+  SET_PARTICLE("set.particle.regular", "{prefix_success}Particle set to: &e{0}"),
   SET_PARTICLE_REDSTONE("set.particle.redstone",
-      "{prefix}Particle set to &e{0} &fwith color {1}"),
-  SET_BUILD_MODE("set.build-mode.self", "{prefix}Build mode {0}&f!"),
-  SET_BUILD_MODE_OTHER("set.build-mode.other", "{prefix}Build mode for &b{0}&f is {1}&f!"),
+      "{prefix_success}Particle set to &e{0} &fwith color {1}"),
+  SET_BUILD_MODE("set.build-mode.self", "{prefix_success}Build mode {0}&f!"),
+  SET_BUILD_MODE_OTHER("set.build-mode.other", "{prefix_success}Build mode for &b{0}&f is {1}&f!"),
   SET_GOAL_CELEBRATION("set.goal-celebration",
-      "{prefix}You set your goal celebration style to: &e{0}"),
+      "{prefix_success}You set your goal celebration style to: &e{0}"),
   GM_EPIC_TITLE_1("goal-messages.epic.title-1", "&c&lOWN GOAL!"),
   GM_EPIC_TITLE_1_GOAL("goal-messages.epic.title-1-goal", "&e&lGOOOOAL!"),
   GM_EPIC_TITLE_1_HATTY("goal-messages.epic.title-1-hattrick", "&6&l⚡ HAT-TRICK! ⚡"),
@@ -447,17 +455,18 @@ public enum Lang {
   GM_DEFAULT_TITLE_HATTY("goal-messages.default.title-hattrick", "&6&lHAT-TRICK!"),
   GM_DEFAULT_SUBTITLE_OWN("goal-messages.default.subtitle-own", "&7{0} &8→ &c{1}"),
   GM_DEFAULT_SUBTITLE_GOAL("goal-messages.default.subtitle-goal", "&7{0} &8┃ &e{1} blocks{2}"),
-  GM_DEFAULT_ACTIONBAR("goal-mesasages.default.actionbar", "{0} &f{1} - {2} {3}"),
+  GM_DEFAULT_ACTIONBAR("goal-messages.default.actionbar", "{0} &f{1} - {2} {3}"),
   GM_ASSISTS_TEXT("goal-messages.assists-text", "&7 (&f{0}&7)"),
 
   SET_BLOCK_TOO_FAR("set.block.too-far",
-      "{prefix-admin}&cYou must be looking at a block within 5 blocks of you."),
-  SET_BLOCK_SUCCESS("set.block.success", "{prefix-admin}&aSuccessfully set &e{0} &abutton!"),
+      "{prefix_error}You must be looking at a block within 5 blocks of you."),
+  SET_BLOCK_SUCCESS("set.block.success", "{prefix_success}Successfully set &e{0} &fbutton!"),
 
   BLOCK_INTERACT_COOLDOWN("block-interact-cooldown",
-      "{prefix}&cWait &e{0} before using this again."),
+      "{prefix_error}Wait &e{0} &cbefore using this again."),
 
-  MATCHES_LIST_NO_MATCHES("matches.list.no-matches", "&cThere are currently no active matches..."),
+  MATCHES_LIST_NO_MATCHES("matches.list.no-matches",
+      "{prefix_error}There are currently no active matches..."),
   MATCHES_LIST_WAITING("matches.list.waiting", "&8&oWaiting for players..."),
   MATCHES_LIST_STARTING("matches.list.starting", "&eStarting in &c{0}s"),
   MATCHES_LIST_LOBBY("matches.list.lobby", "&6 &l[{0} Lobby {1}]"),
@@ -470,7 +479,7 @@ public enum Lang {
   MATCHES_LIST_WAITINGPLAYERS("matches.list.players.waiting", "&f Queue&7: &r{0}"),
   MATCHES_LIST_HEADER("matches.list.header", String.join(System.lineSeparator(),
       "&e---------------------------------------------",
-      "&r {prefix}&eList of active matches:",
+      "&r &eList of active matches:",
       "&r &r")),
   MATCHES_LIST_FOOTER("matches.list.footer", String.join(System.lineSeparator(),
       "&r &r",
@@ -488,20 +497,23 @@ public enum Lang {
       "&7 &lOverall Average Tick Time: &a{0}ms",
       "&e---------------------------------------------")),
   TASKS_RESTART("plugin-stats.report.tasks.restart",
-      "{prefix-admin}&aAll tasks have been restarted."),
+      "{prefix_success}All tasks have been restarted."),
   TASKS_RESET_STATS("plugin-stats.report.tasks.reset-stats",
-      "{prefix-admin}&aAll task statistics have been reset."),
+      "{prefix_success}All task statistics have been reset."),
 
-  PLAYER_BANNED("bans.success", "{prefix-admin}{0} &chas been banned from FC for &e{1}&c."),
-  PLAYER_UNBANNED("bans.unbanned", "{prefix-admin}{0} &ahas been unbanned."),
-  BAN_REMAINING("bans.remaining", "{prefix-admin}{0} &cis banned for another &e{1}&c."),
-  NOT_BANNED("bans.not-banned", "{prefix-admin}{0} &cis not banned."),
+  PLAYER_BANNED("bans.success", "{prefix_success}&b{0} &fhas been banned from FC for &e{1}&f."),
+  PLAYER_UNBANNED("bans.unbanned", "{prefix_success}&b{0} &fhas been unbanned."),
+  BAN_REMAINING("bans.remaining", "{prefix_info}&b{0} &fis banned for another &e{1}&f."),
+  NOT_BANNED("bans.not-banned", "{prefix_error}&b{0} &cis not banned."),
 
   SIMPLE_FOOTER("simple-footer", "&e---------------------------------------------");
 
   private static FileConfiguration LANG;
   private final String path;
   private final String def;
+
+  private static final Map<String, String> CONSOLE_PREFIX_CACHE = new HashMap<>();
+  private static final Map<String, String> PLAYER_PREFIX_CACHE = new HashMap<>();
 
   Lang(String path, String start) {
     this.path = path;
@@ -510,26 +522,70 @@ public enum Lang {
 
   public static void setFile(FileConfiguration config) {
     LANG = config;
+    rebuildPrefixCache();
   }
 
-  public String getDefault() {
-    return this.def;
+  /**
+   * Rebuilds the prefix caches for both console and player output.
+   * <p>
+   * Should be called automatically when language configuration changes via setFile().
+   * </p>
+   */
+  public static void rebuildPrefixCache() {
+    CONSOLE_PREFIX_CACHE.clear();
+    PLAYER_PREFIX_CACHE.clear();
+
+    for (Lang prefix : new Lang[]{INFO, SUCCESS, ERROR, WARN, OTHER, DEBUG}) {
+      String tag = "{prefix_" + prefix.name().toLowerCase() + "}";
+      CONSOLE_PREFIX_CACHE.put(tag, "[" + prefix.name() + "] ");
+      PLAYER_PREFIX_CACHE.put(tag, getColoredPrefix(prefix));
+    }
   }
 
-  public String replace(String... args) {
+  /**
+   * Gets the colored prefix string for a prefix Lang constant.
+   *
+   * @param prefixLang the prefix Lang constant (INFO, SUCCESS, ERROR, etc.)
+   * @return the colored prefix string
+   */
+  private static String getColoredPrefix(Lang prefixLang) {
     if (LANG == null) {
-      return ChatColor.translateAlternateColorCodes('&', def);
+      return color(prefixLang.def);
+    }
+
+    String prefix = LANG.getString(prefixLang.path, prefixLang.def);
+    return color(prefix);
+  }
+
+  /**
+   * Replaces placeholders in the Lang message with provided arguments.
+   * <p>
+   * Automatically handles {prefix_type} placeholders using player-friendly colored prefixes. For
+   * console output, use {@link #replace(boolean, String...)} with forConsole=true.
+   * </p>
+   *
+   * @param args optional arguments for {0}, {1}, etc. placeholder replacement
+   * @return the formatted and colored message string with player prefixes
+   */
+  public String replace(String... args) {
+    return replace(false, args);
+  }
+
+  /**
+   * Replaces placeholders in the Lang message with provided arguments and handles prefix
+   * substitution based on output context.
+   *
+   * @param forConsole if true, uses [TYPE] format; if false, uses colored player prefixes
+   * @param args       optional arguments for {0}, {1}, etc. placeholder replacement
+   * @return the formatted and colored message string
+   */
+  public String replace(boolean forConsole, String... args) {
+    if (LANG == null) {
+      String message = replacePrefixes(def, forConsole);
+      return color(message);
     }
 
     String value = LANG.getString(this.path, this.def);
-
-    if (value.contains("{prefix}")) {
-      value = value.replace("{prefix}", PREFIX.toString());
-    }
-
-    if (value.contains("{prefix-admin}")) {
-      value = value.replace("{prefix-admin}", PREFIX_ADMIN.toString());
-    }
 
     if (args != null && args.length > 0) {
       for (int i = 0; i < args.length; i++) {
@@ -539,7 +595,40 @@ public enum Lang {
       }
     }
 
-    return ChatColor.translateAlternateColorCodes('&', value);
+    value = replacePrefixes(value, forConsole);
+    return color(value);
+  }
+
+  /**
+   * Replaces all {prefix_type} placeholders in a message.
+   *
+   * @param message    the message containing prefix placeholders
+   * @param forConsole if true, uses [TYPE] format; if false, uses colored prefixes
+   * @return message with prefix placeholders replaced
+   */
+  public static String replacePrefixes(String message, boolean forConsole) {
+    if (message == null) {
+      return "";
+    }
+
+    String result = message;
+    Map<String, String> cache = forConsole ? CONSOLE_PREFIX_CACHE : PLAYER_PREFIX_CACHE;
+
+    for (Map.Entry<String, String> entry : cache.entrySet()) {
+      result = result.replace(entry.getKey(), entry.getValue());
+    }
+
+    return result;
+  }
+
+  /**
+   * Translates alternate color codes in the given message using the '&' character.
+   *
+   * @param message the string containing alternate color codes
+   * @return the formatted string with color codes translated
+   */
+  public static String color(String message) {
+    return ChatColor.translateAlternateColorCodes('&', message);
   }
 
   @Override

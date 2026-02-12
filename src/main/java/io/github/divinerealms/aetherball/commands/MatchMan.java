@@ -2,6 +2,7 @@ package io.github.divinerealms.aetherball.commands;
 
 import static io.github.divinerealms.aetherball.configs.Lang.MATCHES_LIST_NO_MATCHES;
 import static io.github.divinerealms.aetherball.configs.Lang.MATCHMAN_FORCE_END;
+import static io.github.divinerealms.aetherball.utils.LoggerUtil.sendMessage;
 import static io.github.divinerealms.aetherball.utils.Permissions.PERM_MATCHMAN;
 
 import co.aikar.commands.BaseCommand;
@@ -14,7 +15,6 @@ import io.github.divinerealms.aetherball.core.Manager;
 import io.github.divinerealms.aetherball.matchmaking.Match;
 import io.github.divinerealms.aetherball.matchmaking.MatchManager;
 import io.github.divinerealms.aetherball.matchmaking.MatchPhase;
-import io.github.divinerealms.aetherball.utils.Logger;
 import java.util.Optional;
 import org.bukkit.entity.Player;
 
@@ -23,11 +23,9 @@ import org.bukkit.entity.Player;
 @Description("Manipulate AetherBall matches")
 public class MatchMan extends BaseCommand {
 
-  private final Logger logger;
   private final MatchManager matchManager;
 
   public MatchMan(Manager manager) {
-    this.logger = manager.getLogger();
     this.matchManager = manager.getMatchManager();
   }
 
@@ -51,10 +49,10 @@ public class MatchMan extends BaseCommand {
         match.setPhase(MatchPhase.ENDED);
       }
 
-      logger.send(player, MATCHMAN_FORCE_END,
+      sendMessage(player, MATCHMAN_FORCE_END,
           Settings.getMatchTypeName(match.getArena().getType()));
     } else {
-      logger.send(player, MATCHES_LIST_NO_MATCHES);
+      sendMessage(player, MATCHES_LIST_NO_MATCHES);
     }
   }
 }

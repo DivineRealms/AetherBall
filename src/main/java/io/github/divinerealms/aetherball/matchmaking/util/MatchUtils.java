@@ -45,6 +45,9 @@ import static io.github.divinerealms.aetherball.configs.Lang.MATCH_SCORE_OWN_GOA
 import static io.github.divinerealms.aetherball.configs.Lang.MATCH_SCORE_STATS;
 import static io.github.divinerealms.aetherball.configs.Lang.NOBODY;
 import static io.github.divinerealms.aetherball.configs.Lang.RED;
+import static io.github.divinerealms.aetherball.utils.LoggerUtil.sendActionBar;
+import static io.github.divinerealms.aetherball.utils.LoggerUtil.sendMessage;
+import static io.github.divinerealms.aetherball.utils.LoggerUtil.title;
 
 import io.github.divinerealms.aetherball.configs.Settings;
 import io.github.divinerealms.aetherball.core.Manager;
@@ -54,7 +57,6 @@ import io.github.divinerealms.aetherball.matchmaking.MatchPhase;
 import io.github.divinerealms.aetherball.matchmaking.arena.Arena;
 import io.github.divinerealms.aetherball.matchmaking.player.MatchPlayer;
 import io.github.divinerealms.aetherball.matchmaking.player.TeamColor;
-import io.github.divinerealms.aetherball.utils.Logger;
 import io.github.divinerealms.aetherball.utils.PlayerSettings;
 import java.util.ArrayList;
 import java.util.List;
@@ -128,7 +130,7 @@ public class MatchUtils {
 
       boolean allNull = true;
       for (MatchPlayer matchPlayer : match.getPlayers()) {
-        if (!isPlayerOnline(matchPlayer)) {
+        if (isPlayerOnline(matchPlayer)) {
           allNull = false;
           break;
         }
@@ -236,27 +238,27 @@ public class MatchUtils {
       boolean isHatTrick, boolean isViewerScorer,
       String scorerName, String assistText,
       String teamColorText, double distance,
-      Match match, Logger logger, Plugin plugin) {
+      Match match, Plugin plugin) {
     String distanceString = String.format("%.0f", distance);
     String redTeam = RED.toString(), blueTeam = BLUE.toString();
 
     switch (style) {
       case "epic":
         displayEpicGoal(player, ownGoal, isHatTrick, isViewerScorer, scorerName, assistText,
-            teamColorText, distanceString, redTeam, blueTeam, match, logger, plugin);
+            teamColorText, distanceString, redTeam, blueTeam, match, plugin);
         break;
 
       case "simple":
-        displaySimpleGoal(player, ownGoal, scorerName, distanceString, logger);
+        displaySimpleGoal(player, ownGoal, scorerName, distanceString);
         break;
 
       case "minimal":
-        displayMinimalGoal(player, ownGoal, scorerName, redTeam, blueTeam, match, logger);
+        displayMinimalGoal(player, ownGoal, scorerName, redTeam, blueTeam, match);
         break;
 
       default:
         displayDefaultGoal(player, ownGoal, isHatTrick, isViewerScorer, scorerName, assistText,
-            teamColorText, distanceString, redTeam, blueTeam, match, logger);
+            teamColorText, distanceString, redTeam, blueTeam, match);
         break;
     }
   }
@@ -269,7 +271,7 @@ public class MatchUtils {
   private static void displayEpicGoal(Player player, boolean ownGoal, boolean isHatTrick,
       boolean isViewerScorer, String scorerName, String assistText,
       String teamColorText, String distance, String redTeam,
-      String blueTeam, Match match, Logger logger, Plugin plugin) {
+      String blueTeam, Match match, Plugin plugin) {
     String initialTitle = ownGoal
         ? GM_EPIC_TITLE_1.toString()
         : isHatTrick
@@ -282,7 +284,7 @@ public class MatchUtils {
             ? GM_EPIC_SUBTITLE_1_SCORER.toString()
             : GM_EPIC_SUBTITLE_1_OTHER.replace(scorerName);
 
-    logger.title(player, initialTitle, initialSubtitle, 5, 35, 10);
+    title(player, initialTitle, initialSubtitle, 5, 35, 10);
 
     Bukkit.getScheduler().runTaskLater(plugin, () -> {
       String secondTitle = ownGoal
@@ -297,7 +299,7 @@ public class MatchUtils {
                   : assistText
           );
 
-      logger.title(player, secondTitle, secondSubtitle, 0, 35, 10);
+      title(player, secondTitle, secondSubtitle, 0, 35, 10);
     }, 40L);
 
     Bukkit.getScheduler().runTaskLater(plugin, () -> {
@@ -310,26 +312,25 @@ public class MatchUtils {
           blueTeam
       );
 
-      logger.title(player, thirdTitle, thirdSubtitle, 0, 30, 10);
+      title(player, thirdTitle, thirdSubtitle, 0, 30, 10);
     }, 80L);
   }
 
   private static void displaySimpleGoal(Player player, boolean ownGoal,
-      String scorerName, String distance,
-      Logger logger) {
+      String scorerName, String distance) {
     String title = ownGoal
         ? GM_SIMPLE_TITLE.toString()
         : GM_SIMPLE_TITLE_GOAL.toString();
 
     String subtitle = GM_SIMPLE_SUBTITLE.replace(scorerName, distance);
 
-    logger.title(player, title, subtitle, 5, 40, 10);
+    title(player, title, subtitle, 5, 40, 10);
   }
 
   private static void displayMinimalGoal(Player player, boolean ownGoal,
       String scorerName, String redTeam,
-      String blueTeam, Match match, Logger logger) {
-    logger.sendActionBar(player, ownGoal
+      String blueTeam, Match match) {
+    sendActionBar(player, ownGoal
             ? GM_MINIMAL_OWN
             : GM_MINIMAL_GOAL,
         scorerName, redTeam,
@@ -344,7 +345,7 @@ public class MatchUtils {
       String scorerName, String assistText,
       String teamColorText, String distance,
       String redTeam, String blueTeam,
-      Match match, Logger logger) {
+      Match match) {
     String title = ownGoal
         ? GM_DEFAULT_TITLE_OWN.toString()
         : isHatTrick
@@ -359,9 +360,9 @@ public class MatchUtils {
             ? ""
             : assistText);
 
-    logger.title(player, title, subtitle, 10, 50, 10);
+    title(player, title, subtitle, 10, 50, 10);
 
-    logger.sendActionBar(player, GM_DEFAULT_ACTIONBAR,
+    sendActionBar(player, GM_DEFAULT_ACTIONBAR,
         redTeam, String.valueOf(match.getScoreRed()),
         String.valueOf(match.getScoreBlue()), blueTeam
     );
@@ -438,25 +439,25 @@ public class MatchUtils {
     return new ScoringResult(scorer, assister, ownGoal, scoringTeam);
   }
 
-  public static void awardCreditsForGoal(ScoringResult result, Logger logger,
+  public static void awardCreditsForGoal(ScoringResult result,
       Manager manager) {
     MatchPlayer scorer = result.getScorer();
     MatchPlayer assister = result.getAssister();
 
     if (isPlayerOnline(scorer)) {
       Player scoringPlayer = scorer.getPlayer();
-      logger.send(scoringPlayer, MATCH_SCORE_CREDITS);
+      sendMessage(scoringPlayer, MATCH_SCORE_CREDITS);
       manager.getEconomy().depositPlayer(scoringPlayer, Settings.ECONOMY_GOAL.asDouble());
 
       if (scorer.getGoals() > 0 && scorer.getGoals() % 3 == 0) {
-        logger.send(scoringPlayer, MATCH_SCORE_HATTRICK);
+        sendMessage(scoringPlayer, MATCH_SCORE_HATTRICK);
         manager.getEconomy().depositPlayer(scoringPlayer, Settings.ECONOMY_HAT_TRICK.asDouble());
       }
     }
 
     if (isPlayerOnline(assister)) {
       Player assistingPlayer = assister.getPlayer();
-      logger.send(assistingPlayer, MATCH_ASSIST_CREDITS);
+      sendMessage(assistingPlayer, MATCH_ASSIST_CREDITS);
       manager.getEconomy().depositPlayer(assistingPlayer, Settings.ECONOMY_ASSIST.asDouble());
     }
   }
@@ -489,7 +490,7 @@ public class MatchUtils {
   }
 
   public static void broadcastGoalMessage(Match match, ScoringResult result,
-      Location goalLoc, Manager manager, Logger logger) {
+      Location goalLoc, Manager manager) {
     String prefixedScorer = NOBODY.toString();
     String prefixedAssister = null;
 
@@ -511,12 +512,12 @@ public class MatchUtils {
       }
     }
 
-    sendGoalMessages(match, result, prefixedScorer, prefixedAssister, goalLoc, manager, logger);
+    sendGoalMessages(match, result, prefixedScorer, prefixedAssister, goalLoc, manager);
   }
 
   private static void sendGoalMessages(Match match, ScoringResult result,
       String prefixedScorer, String prefixedAssister,
-      Location goalLoc, Manager manager, Logger logger) {
+      Location goalLoc, Manager manager) {
     boolean isHatTrick = isHatTrickGoal(result);
     String teamColorText = result.getScoringTeam() == TeamColor.RED
         ? RED.toString()
@@ -555,11 +556,11 @@ public class MatchUtils {
 
       displayGoalMessage(player, goalMessageStyle, result.isOwnGoal(), isHatTrick,
           isViewerScorer, prefixedScorer, assistText, teamColorText,
-          distance, match, logger, manager.getPlugin()
+          distance, match, manager.getPlugin()
       );
 
-      logger.send(player, goalMessage);
-      logger.send(player, MATCH_SCORE_STATS,
+      sendMessage(player, goalMessage);
+      sendMessage(player, MATCH_SCORE_STATS,
           String.valueOf(match.getScoreRed()),
           String.valueOf(match.getScoreBlue())
       );

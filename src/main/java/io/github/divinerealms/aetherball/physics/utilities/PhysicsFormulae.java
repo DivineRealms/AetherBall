@@ -4,22 +4,15 @@ import static io.github.divinerealms.aetherball.physics.PhysicsConstants.BALL_TO
 import static io.github.divinerealms.aetherball.physics.PhysicsConstants.CUBE_HITBOX_ADJUSTMENT;
 import static io.github.divinerealms.aetherball.physics.PhysicsConstants.RANDOM;
 import static io.github.divinerealms.aetherball.physics.PhysicsConstants.VERTICAL_INTERACTION_OFFSET;
+import static io.github.divinerealms.aetherball.utils.LoggerUtil.sendMessage;
 import static io.github.divinerealms.aetherball.utils.Permissions.PERM_HIT_DEBUG;
 
 import io.github.divinerealms.aetherball.configs.Settings;
-import io.github.divinerealms.aetherball.core.Manager;
-import io.github.divinerealms.aetherball.utils.Logger;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 
 public class PhysicsFormulae {
-
-  private final Logger logger;
-
-  public PhysicsFormulae(Manager manager) {
-    this.logger = manager.getLogger();
-  }
 
   /**
    * Calculates the squared distance between two locations, optimized for physics calculations. This
@@ -47,8 +40,8 @@ public class PhysicsFormulae {
       if (Settings.DEBUG_MODE.asBoolean()) {
         long ms = (System.nanoTime() - start) / 1_000_000;
         if (ms > Settings.DEBUG_THRESHOLD.asLong()) {
-          logger.send(PERM_HIT_DEBUG,
-              "{prefix-admin}&dPhysicsFormulae#getDistanceSquared() &ftook &e" + ms + "ms");
+          sendMessage(PERM_HIT_DEBUG,
+              "{prefix_debug}&dPhysicsFormulae#getDistanceSquared() &ftook &e" + ms + "ms");
         }
       }
     }
@@ -86,8 +79,8 @@ public class PhysicsFormulae {
       if (Settings.DEBUG_MODE.asBoolean()) {
         long ms = (System.nanoTime() - start) / 1_000_000;
         if (ms > Settings.DEBUG_THRESHOLD.asLong()) {
-          logger.send(PERM_HIT_DEBUG,
-              "{prefix-admin}&dPhysicsFormulae#getPerpendicularDistanceSquared() &ftook &e" + ms
+          sendMessage(PERM_HIT_DEBUG,
+              "{prefix_debug}&dPhysicsFormulae#getPerpendicularDistanceSquared() &ftook &e" + ms
                   + "ms");
         }
       }
@@ -175,8 +168,8 @@ public class PhysicsFormulae {
       if (Settings.DEBUG_MODE.asBoolean()) {
         long ms = (System.nanoTime() - start) / 1_000_000;
         if (ms > Settings.DEBUG_THRESHOLD.asLong()) {
-          logger.send(PERM_HIT_DEBUG,
-              "{prefix-admin}&dPhysicsFormulae#capKickPower() &ftook &e" + ms + "ms");
+          sendMessage(PERM_HIT_DEBUG,
+              "{prefix_debug}&dPhysicsFormulae#capKickPower() &ftook &e" + ms + "ms");
         }
       }
     }

@@ -1,9 +1,11 @@
 package io.github.divinerealms.aetherball.managers;
 
+import static io.github.divinerealms.aetherball.utils.LoggerUtil.debugConsole;
+import static io.github.divinerealms.aetherball.utils.LoggerUtil.logConsole;
+
 import io.github.divinerealms.aetherball.configs.PlayerData;
 import io.github.divinerealms.aetherball.configs.Settings;
 import io.github.divinerealms.aetherball.core.Manager;
-import io.github.divinerealms.aetherball.utils.Logger;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Queue;
@@ -11,7 +13,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.logging.Level;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
@@ -21,7 +22,6 @@ public class PlayerDataManager {
   private final Manager manager;
   private final Plugin plugin;
   private final ConfigManager configManager;
-  private final Logger logger;
   private final Map<String, PlayerData> playerCache = new ConcurrentHashMap<>();
 
   private final FileConfiguration uuidConfig;
@@ -35,7 +35,6 @@ public class PlayerDataManager {
     this.manager = manager;
     this.plugin = manager.getPlugin();
     this.configManager = manager.getConfigManager();
-    this.logger = manager.getLogger();
     configManager.createNewFile("player_uuids.yml", "Cache of player UUIDs");
     this.uuidConfig = configManager.getConfig("player_uuids.yml");
 
@@ -165,27 +164,27 @@ public class PlayerDataManager {
           savePlayerData(playerName);
           totalSaved++;
         } catch (Exception exception) {
-          plugin.getLogger()
-              .log(Level.SEVERE, "Failed to save player data for " + playerName, exception);
+          logConsole("{prefix_error}Failed to save player data for " + playerName,
+              exception.getMessage());
         }
         processed++;
       }
 
-      logger.info("Auto saved " + totalSaved + " player data file(s) this batch.");
+      debugConsole("{prefix_success}Auto saved " + totalSaved + " player data file(s) this batch.");
 
       if (uuidsChanged) {
         uuidsChanged = false;
         try {
           configManager.saveConfig("player_uuids.yml");
-          logger.info("Saved updated player UUIDs.");
+          debugConsole("{prefix_success}Saved updated player UUIDs.");
         } catch (Exception exception) {
-          plugin.getLogger().log(Level.SEVERE, "Failed to save UUID config", exception);
+          logConsole("{prefix_error}Failed to save UUID config", exception.getMessage());
         }
       }
 
       if (!dataQueue.isEmpty()) {
-        logger.info(
-            dataQueue.size() + " player data file(s) remaining in queue, scheduling next batch...");
+        debugConsole("{prefix_info}" + dataQueue.size()
+            + " player data file(s) remaining in queue, scheduling next batch...");
         scheduleSave();
       }
     });
@@ -199,13 +198,13 @@ public class PlayerDataManager {
       try {
         configManager.saveConfig("player_uuids.yml");
         uuidsChanged = false;
-        logger.info("&a✔ &2Saved all player UUIDs.");
+        debugConsole("{prefix_success}Saved all player UUIDs.");
       } catch (Exception exception) {
-        plugin.getLogger().log(Level.SEVERE, "Failed to save UUID config.", exception);
+        logConsole("{prefix_error}Failed to save UUID config.", exception.getMessage());
       }
     }
 
-    logger.info("&a✔ &2Saved all player data.");
+    debugConsole("{prefix_success}Saved all player data.");
   }
 
   public void savePlayerData(String playerName) {

@@ -2,17 +2,18 @@ package io.github.divinerealms.aetherball.listeners;
 
 import static io.github.divinerealms.aetherball.configs.Lang.CUBE_CLEAR;
 import static io.github.divinerealms.aetherball.configs.Lang.HITDEBUG_WHOLE;
+import static io.github.divinerealms.aetherball.utils.LoggerUtil.sendMessage;
 import static io.github.divinerealms.aetherball.utils.Permissions.PERM_CLEAR_CUBE;
 import static io.github.divinerealms.aetherball.utils.Permissions.PERM_HIT_DEBUG;
 
 import io.github.divinerealms.aetherball.configs.Settings;
 import io.github.divinerealms.aetherball.core.Manager;
+import io.github.divinerealms.aetherball.matchmaking.MatchManager;
 import io.github.divinerealms.aetherball.physics.PhysicsData;
 import io.github.divinerealms.aetherball.physics.touch.CubeTouchInfo;
 import io.github.divinerealms.aetherball.physics.touch.CubeTouchType;
 import io.github.divinerealms.aetherball.physics.utilities.PhysicsSystem;
 import io.github.divinerealms.aetherball.physics.utilities.PlayerKickResult;
-import io.github.divinerealms.aetherball.utils.Logger;
 import io.github.divinerealms.aetherball.utils.PlayerSettings;
 import java.util.Map;
 import java.util.UUID;
@@ -22,54 +23,66 @@ import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Slime;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitScheduler;
 import org.bukkit.util.Vector;
 
-public class CubeKickListener implements Listener {
+/**
+ * Handles player interactions with cube entities through left-click attacks.
+ * <p>
+ * Replaces standard entity damage behavior with custom physics-driven kicking mechanics, including
+ * velocity application, cooldown management, sound effects, and debug feedback.
+ * </p>
+ */
+public class CubeKickListener extends BaseListener {
 
   private final Manager manager;
   private final BukkitScheduler scheduler;
   private final Plugin plugin;
-  private final Logger logger;
   private final PhysicsSystem system;
   private final PhysicsData data;
+  private final MatchManager matchManager;
 
   public CubeKickListener(Manager manager) {
     this.manager = manager;
     this.scheduler = manager.getScheduler();
     this.plugin = manager.getPlugin();
-    this.logger = manager.getLogger();
     this.system = manager.getPhysicsSystem();
     this.data = manager.getPhysicsData();
+    this.matchManager = manager.getMatchManager();
   }
 
   /**
    * Handles custom hit detection for cube entities when attacked by players.
-   * <p>Replaces standard attack behavior with physics-driven logic such as applying
-   * kick velocity, cooldown tracking, and custom hit effects.</p>
+   * <p>
+   * Replaces standard attack behavior with physics-driven logic including velocity application,
+   * cooldown tracking, power calculations, and debug feedback. Creative mode players with
+   * appropriate permissions can instantly remove cubes.
+   * </p>
    *
    * @param event the {@link EntityDamageByEntityEvent} triggered when one entity damages another
    */
   @EventHandler
   public void leftClick(EntityDamageByEntityEvent event) {
-    long start = System.nanoTime();
-    try {
+    monitoredExecution(() -> {
+      // Only process Slime entities (cubes).
       if (!(event.getEntity() instanceof Slime)) {
         return;
       }
 
+      // Only process player attacks.
       if (!(event.getDamager() instanceof Player)) {
         return;
       }
 
+      // Only handle direct entity attacks, not projectiles or other damage causes.
       if (event.getCause() != EntityDamageEvent.DamageCause.ENTITY_ATTACK) {
         return;
       }
 
+      // Only process tracked physics cubes.
       if (!data.getCubes().contains((Slime) event.getEntity())) {
         return;
       }
@@ -78,22 +91,23 @@ public class CubeKickListener implements Listener {
       Player player = (Player) event.getDamager();
       UUID playerId = player.getUniqueId();
 
-      // Creative players can remove cubes directly.
+      // Creative players with permission can instantly remove cubes.
       if (player.getGameMode() == GameMode.CREATIVE && player.hasPermission(PERM_CLEAR_CUBE)) {
         cube.setHealth(0);
-        logger.send(player, CUBE_CLEAR);
+        sendMessage(player, CUBE_CLEAR);
         return;
       }
 
-      // Prevent unauthorized players from interacting.
+      // Prevent unauthorized players from interacting with cubes.
       if (system.notAllowedToInteract(player)) {
         return;
       }
 
-      // Check & Enforce cooldown.
+      // Determine kick type: charged (sneaking) or regular.
       CubeTouchType kickType =
           player.isSneaking() ? CubeTouchType.CHARGED_KICK : CubeTouchType.REGULAR_KICK;
 
+      // Check if player is still on cooldown for this kick type.
       Map<CubeTouchType, CubeTouchInfo> touches = data.getLastTouches().get(playerId);
       if (touches != null && touches.containsKey(kickType)) {
         CubeTouchInfo lastTouch = touches.get(kickType);
@@ -101,55 +115,51 @@ public class CubeKickListener implements Listener {
 
         if (elapsed < kickType.getCooldown()) {
           event.setCancelled(true);
-          return; // Still on cooldown.
+          return; // Still on cooldown, prevent kick.
         }
-        // Cooldown expired, allow kick and update below.
       }
 
-      // Calculate kick result.
+      // Calculate kick power based on player state and settings.
       PlayerKickResult kickResult = system.calculateKickPower(player);
 
-      // Compute final kick direction and apply impulse.
+      // Apply kick velocity to cube: direction from player's view + vertical boost.
       Vector kick = player.getLocation().getDirection().normalize()
           .multiply(kickResult.getFinalKickPower()).setY(Settings.KICK_VERTICAL_BOOST.asDouble());
       cube.setVelocity(cube.getVelocity().add(kick));
 
-      // Update cooldown entry (overwrites old one if exists).
+      // Update cooldown timestamp for this kick type.
       data.getLastTouches().computeIfAbsent(playerId, k -> new ConcurrentHashMap<>())
           .put(kickType, new CubeTouchInfo(System.currentTimeMillis(), kickType));
 
-      // Record interaction.
+      // Record player action for tracking and notify match manager.
       system.recordPlayerAction(player);
-      manager.getMatchManager().kick(player);
+      matchManager.kick(player);
 
-      // Sound effects.
+      // Play cube kick sound at cube location.
       cube.getWorld().playSound(cube.getLocation(), Sound.SLIME_WALK, 0.75F, 1.0F);
 
-      // Schedule post-processing for player sound feedback and debug info.
+      // Schedule async tasks for player feedback (sounds and debug info).
       scheduler.runTask(plugin, () -> {
+        // Play personalized kick sound if player has it enabled.
         PlayerSettings playerSettings = manager.getPlayerSettings(player);
         if (playerSettings != null && playerSettings.isKickSoundEnabled()) {
           player.playSound(player.getLocation(), playerSettings.getKickSound(), 0.5F, 1.0F);
         }
 
+        // Send debug information to nearby players with debug permission.
         if (data.isHitDebugEnabled()) {
-          logger.send(PERM_HIT_DEBUG, player.getLocation(), 100, HITDEBUG_WHOLE,
+          sendMessage(PERM_HIT_DEBUG, player.getLocation(), 100, HITDEBUG_WHOLE,
               system.onHitDebug(player, kickResult));
         }
 
+        // Show visual hit feedback if player has it enabled.
         if (data.getCubeHits().contains(playerId)) {
           system.showHits(player, kickResult);
         }
       });
 
+      // Cancel the damage event to prevent standard Minecraft damage behavior.
       event.setCancelled(true);
-    } finally {
-      if (Settings.DEBUG_MODE.asBoolean()) {
-        long ms = (System.nanoTime() - start) / 1_000_000;
-        if (ms > Settings.DEBUG_THRESHOLD.asLong()) {
-          logger.send("group.fcfa", "{prefix-admin}&dCubeKickListener &ftook &e" + ms + "ms");
-        }
-      }
-    }
+    });
   }
 }
