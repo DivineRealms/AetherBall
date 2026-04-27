@@ -1,39 +1,25 @@
 package io.github.divinerealms.aetherball.commands.player;
 
-import static io.github.divinerealms.aetherball.configs.Lang.FC_DISABLED;
-import static io.github.divinerealms.aetherball.configs.Lang.JOIN_INVALIDTYPE;
-import static io.github.divinerealms.aetherball.configs.Lang.LEFT;
-import static io.github.divinerealms.aetherball.configs.Lang.STATSSET_IS_NOT_A_NUMBER;
-import static io.github.divinerealms.aetherball.configs.Lang.TAKEPLACE_INGAME;
-import static io.github.divinerealms.aetherball.configs.Lang.TAKEPLACE_NOPLACE;
-import static io.github.divinerealms.aetherball.matchmaking.util.MatchUtils.shouldPreventAbuse;
-import static io.github.divinerealms.aetherball.utils.GameCommandsHelper.handleInProgressLeave;
-import static io.github.divinerealms.aetherball.utils.GameCommandsHelper.handleQueueLeave;
-import static io.github.divinerealms.aetherball.utils.GameCommandsHelper.joinQueue;
-import static io.github.divinerealms.aetherball.utils.GameCommandsHelper.parseMatchType;
-import static io.github.divinerealms.aetherball.utils.GameCommandsHelper.showOpenMatches;
-import static io.github.divinerealms.aetherball.utils.LoggerUtil.sendMessage;
-import static io.github.divinerealms.aetherball.utils.Permissions.PERM_PLAY;
-
 import co.aikar.commands.BaseCommand;
-import co.aikar.commands.annotation.CommandAlias;
-import co.aikar.commands.annotation.CommandCompletion;
-import co.aikar.commands.annotation.CommandPermission;
-import co.aikar.commands.annotation.Description;
-import co.aikar.commands.annotation.Optional;
-import co.aikar.commands.annotation.Subcommand;
-import co.aikar.commands.annotation.Syntax;
-import io.github.divinerealms.aetherball.core.Manager;
+import co.aikar.commands.annotation.*;
+import io.github.divinerealms.aetherball.managers.Manager;
 import io.github.divinerealms.aetherball.matchmaking.Match;
 import io.github.divinerealms.aetherball.matchmaking.MatchManager;
-import io.github.divinerealms.aetherball.matchmaking.ban.BanManager;
-import io.github.divinerealms.aetherball.matchmaking.highscore.HighScoreManager;
+import io.github.divinerealms.aetherball.matchmaking.BanManager;
+import io.github.divinerealms.aetherball.matchmaking.HighScoreManager;
 import io.github.divinerealms.aetherball.matchmaking.logic.MatchData;
 import io.github.divinerealms.aetherball.matchmaking.logic.MatchSystem;
-import io.github.divinerealms.aetherball.matchmaking.team.TeamManager;
-import java.util.List;
+import io.github.divinerealms.aetherball.matchmaking.TeamManager;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+
+import java.util.List;
+
+import static io.github.divinerealms.aetherball.configs.Lang.*;
+import static io.github.divinerealms.aetherball.utils.MatchUtils.shouldPreventAbuse;
+import static io.github.divinerealms.aetherball.utils.GameCommandsHelper.*;
+import static io.github.divinerealms.aetherball.utils.LoggerUtil.sendMessage;
+import static io.github.divinerealms.aetherball.utils.Permissions.PERM_PLAY;
 
 @CommandAlias("aetherball|ab|fc")
 public class GameCommands extends BaseCommand {
@@ -123,8 +109,8 @@ public class GameCommands extends BaseCommand {
     List<Match> openMatches = matchData.getOpenMatches();
 
     if (arg == null) {
-      Match openMatch = openMatches.iterator().next();
-      matchManager.takePlace(player, openMatch.getArena().getId());
+      Match openMatch = openMatches.getFirst();
+      matchManager.takePlace(player, openMatch.getArena().id());
       return;
     }
 
@@ -155,8 +141,7 @@ public class GameCommands extends BaseCommand {
   @CommandCompletion("@players")
   @Description("View player statistics")
   public void onStats(CommandSender sender, @Optional String targetName) {
-    if (sender instanceof Player) {
-      Player player = (Player) sender;
+    if (sender instanceof Player player) {
       matchSystem.checkStats(targetName != null ? targetName : player.getName(), sender);
     } else {
       if (targetName == null) {

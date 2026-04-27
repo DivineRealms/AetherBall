@@ -1,4 +1,4 @@
-package io.github.divinerealms.aetherball.matchmaking.highscore;
+package io.github.divinerealms.aetherball.matchmaking;
 
 import static io.github.divinerealms.aetherball.configs.Lang.BEST_ASSISTS;
 import static io.github.divinerealms.aetherball.configs.Lang.BEST_ENTRY;
@@ -15,15 +15,17 @@ import static io.github.divinerealms.aetherball.utils.LoggerUtil.sendMessage;
 
 import io.github.divinerealms.aetherball.configs.PlayerData;
 import io.github.divinerealms.aetherball.configs.Settings;
-import io.github.divinerealms.aetherball.core.Manager;
+import io.github.divinerealms.aetherball.managers.Manager;
 import io.github.divinerealms.aetherball.managers.PlayerDataManager;
 import io.github.divinerealms.aetherball.managers.Utilities;
 import io.github.divinerealms.aetherball.matchmaking.player.StatsHelper;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+
 import lombok.Getter;
 import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.Plugin;

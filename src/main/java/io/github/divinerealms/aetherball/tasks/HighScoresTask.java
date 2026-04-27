@@ -3,8 +3,8 @@ package io.github.divinerealms.aetherball.tasks;
 import static io.github.divinerealms.aetherball.utils.LoggerUtil.debugConsole;
 import static io.github.divinerealms.aetherball.utils.LoggerUtil.logConsole;
 
-import io.github.divinerealms.aetherball.core.Manager;
-import io.github.divinerealms.aetherball.matchmaking.highscore.HighScoreManager;
+import io.github.divinerealms.aetherball.managers.Manager;
+import io.github.divinerealms.aetherball.matchmaking.HighScoreManager;
 import org.bukkit.Bukkit;
 
 public class HighScoresTask extends BaseTask {

@@ -1,13 +1,14 @@
 package io.github.divinerealms.aetherball.configs;
 
+import lombok.Getter;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.FileConfiguration;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import lombok.Getter;
-import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.file.FileConfiguration;
 
 @SuppressWarnings("unused")
 @Getter
@@ -40,6 +41,10 @@ public enum Settings {
   ECONOMY_HAT_TRICK("Matchmaking.Economy.Hat_Trick", 150),
   ECONOMY_WIN_STREAK("Matchmaking.Economy.Win_Streak", 100),
   ECONOMY_CLEAN_SHEET("Matchmaking.Economy.Clean_Sheet", 75),
+
+  // ===================== MATCHMAKING - DUELS =====================
+  DUEL_REQUEST_EXPIRY("Matchmaking.Duels.Request_Expiry", 120),
+  DUEL_ENABLED("Matchmaking.Duels.Enabled", true),
 
   // ==================== CUBE SPAWN SETTINGS ====================
   CUBE_MAX_PER_AREA("Cube.Max_Per_Area", 10),
@@ -133,23 +138,7 @@ public enum Settings {
 
   // ==================== DYNAMIC MATCH TYPE SYSTEM ====================
 
-  @Getter
-  public static class MatchTypeConfig {
-
-    private final int type;
-    private final boolean enabled;
-    private final long duration;
-    private final int maxScore;
-    private final boolean countStats;
-
-    public MatchTypeConfig(int type, boolean enabled, long duration, int maxScore,
-        boolean countStats) {
-      this.type = type;
-      this.enabled = enabled;
-      this.duration = duration;
-      this.maxScore = maxScore;
-      this.countStats = countStats;
-    }
+  public record MatchTypeConfig(int type, boolean enabled, long duration, int maxScore, boolean countStats) {
   }
 
   private static void loadMatchTypes() {
@@ -198,17 +187,17 @@ public enum Settings {
 
   public static long getMatchDuration(int type) {
     MatchTypeConfig config = MATCH_TYPE_CACHE.get(type);
-    return config != null ? config.getDuration() : 300L;
+    return config != null ? config.duration() : 300L;
   }
 
   public static int getMaxScore(int type) {
     MatchTypeConfig config = MATCH_TYPE_CACHE.get(type);
-    return config != null ? config.getMaxScore() : 10;
+    return config != null ? config.maxScore() : 10;
   }
 
   public static boolean shouldCountStats(int type) {
     MatchTypeConfig config = MATCH_TYPE_CACHE.get(type);
-    return config != null && config.isCountStats();
+    return config != null && config.countStats();
   }
 
   @SuppressWarnings("BooleanMethodIsAlwaysInverted")
@@ -223,7 +212,7 @@ public enum Settings {
   public static List<Integer> getEnabledMatchTypes() {
     List<Integer> types = new ArrayList<>();
     for (Map.Entry<Integer, MatchTypeConfig> entry : MATCH_TYPE_CACHE.entrySet()) {
-      if (entry.getValue().isEnabled()) {
+      if (entry.getValue().enabled()) {
         types.add(entry.getKey());
       }
     }

@@ -1,38 +1,25 @@
-package io.github.divinerealms.aetherball.matchmaking.scoreboard;
-
-import static io.github.divinerealms.aetherball.configs.Lang.BLUE;
-import static io.github.divinerealms.aetherball.configs.Lang.MATCHES_LIST_LOBBY;
-import static io.github.divinerealms.aetherball.configs.Lang.MATCHES_LIST_MATCH;
-import static io.github.divinerealms.aetherball.configs.Lang.MATCHES_LIST_STARTING;
-import static io.github.divinerealms.aetherball.configs.Lang.MATCHES_LIST_WAITING;
-import static io.github.divinerealms.aetherball.configs.Lang.NOBODY;
-import static io.github.divinerealms.aetherball.configs.Lang.RED;
-import static io.github.divinerealms.aetherball.configs.Lang.SCOREBOARD_FOOTER;
-import static io.github.divinerealms.aetherball.configs.Lang.SCOREBOARD_LINES_BLUE_PLAYERS_ENTRY;
-import static io.github.divinerealms.aetherball.configs.Lang.SCOREBOARD_LINES_LOBBY;
-import static io.github.divinerealms.aetherball.configs.Lang.SCOREBOARD_LINES_MATCH;
-import static io.github.divinerealms.aetherball.configs.Lang.SCOREBOARD_LINES_RED_PLAYERS_ENTRY;
-import static io.github.divinerealms.aetherball.configs.Lang.SCOREBOARD_LINES_WAITING_PLAYERS_ENTRY;
-import static io.github.divinerealms.aetherball.matchmaking.util.MatchUtils.isPlayerOnline;
+package io.github.divinerealms.aetherball.matchmaking;
 
 import io.github.divinerealms.aetherball.configs.Settings;
-import io.github.divinerealms.aetherball.core.Manager;
+import io.github.divinerealms.aetherball.managers.Manager;
 import io.github.divinerealms.aetherball.managers.Utilities;
-import io.github.divinerealms.aetherball.matchmaking.Match;
-import io.github.divinerealms.aetherball.matchmaking.MatchPhase;
 import io.github.divinerealms.aetherball.matchmaking.player.MatchPlayer;
 import io.github.divinerealms.aetherball.matchmaking.player.TeamColor;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 import me.neznamy.tab.api.TabAPI;
 import me.neznamy.tab.api.TabPlayer;
 import me.neznamy.tab.api.scoreboard.Scoreboard;
 import me.neznamy.tab.api.scoreboard.ScoreboardManager;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
+
+import static io.github.divinerealms.aetherball.configs.Lang.*;
+import static io.github.divinerealms.aetherball.utils.MatchUtils.isPlayerOnline;
 
 public class ScoreManager {
 
@@ -63,11 +50,11 @@ public class ScoreManager {
       }
     }
 
-    String type = Settings.getMatchTypeName(match.getArena().getType());
-    String title = MATCHES_LIST_LOBBY.replace(type, String.valueOf(match.getArena().getId()));
+    String type = Settings.getMatchTypeName(match.getArena().type());
+    String title = MATCHES_LIST_LOBBY.replace(type, String.valueOf(match.getArena().id()));
     List<String> lines = Arrays.asList(buildLobbyScoreboard(match).split(System.lineSeparator()));
     String scoreboardName =
-        "FCLobby" + match.getArena().getId() + "_" + UUID.randomUUID().toString().substring(0, 8);
+        "FCLobby" + match.getArena().id() + "_" + UUID.randomUUID().toString().substring(0, 8);
     Scoreboard newScoreboard = scoreboardManager.createScoreboard(scoreboardName, title, lines);
     match.setLobbyScoreboard(newScoreboard);
   }
@@ -92,11 +79,11 @@ public class ScoreManager {
       }
     }
 
-    String type = Settings.getMatchTypeName(match.getArena().getType());
-    String title = MATCHES_LIST_MATCH.replace(type, String.valueOf(match.getArena().getId()));
+    String type = Settings.getMatchTypeName(match.getArena().type());
+    String title = MATCHES_LIST_MATCH.replace(type, String.valueOf(match.getArena().id()));
     List<String> lines = Arrays.asList(buildMatchScoreboard(match).split(System.lineSeparator()));
     String scoreboardName =
-        "FCMatch" + match.getArena().getId() + "_" + UUID.randomUUID().toString().substring(0, 8);
+        "FCMatch" + match.getArena().id() + "_" + UUID.randomUUID().toString().substring(0, 8);
     Scoreboard newScoreboard = scoreboardManager.createScoreboard(scoreboardName, title, lines);
     match.setMatchScoreboard(newScoreboard);
   }
@@ -214,7 +201,7 @@ public class ScoreManager {
     StringBuilder playersListBuilder = new StringBuilder();
     if (match.getPhase() == MatchPhase.STARTING) {
       for (int i = 0; i < redPlayers.size(); i++) {
-        if (playersListBuilder.length() > 0) {
+        if (!playersListBuilder.isEmpty()) {
           playersListBuilder.append(System.lineSeparator());
         }
         playersListBuilder.append(SCOREBOARD_LINES_RED_PLAYERS_ENTRY.replace(String.valueOf(i + 1),
@@ -227,7 +214,7 @@ public class ScoreManager {
       }
 
       for (int i = 0; i < bluePlayers.size(); i++) {
-        if (i > 0 || (!redPlayers.isEmpty() && playersListBuilder.length() > 0
+        if (i > 0 || (!redPlayers.isEmpty() && !playersListBuilder.isEmpty()
             && !playersListBuilder.toString().endsWith(System.lineSeparator()))) {
           if (i > 0) {
             playersListBuilder.append(System.lineSeparator());
@@ -248,7 +235,7 @@ public class ScoreManager {
     }
 
     String playersList =
-        playersListBuilder.length() == 0 ? NOBODY.toString() : playersListBuilder.toString();
+        playersListBuilder.isEmpty() ? NOBODY.toString() : playersListBuilder.toString();
 
     String status = match.getPhase() == MatchPhase.LOBBY ? MATCHES_LIST_WAITING.toString()
         : MATCHES_LIST_STARTING.replace(String.valueOf(match.getCountdown()));
@@ -258,7 +245,7 @@ public class ScoreManager {
   }
 
   private String buildMatchScoreboard(Match match) {
-    long matchDuration = Settings.getMatchDuration(match.getArena().getType());
+    long matchDuration = Settings.getMatchDuration(match.getArena().type());
     long elapsedMillis = System.currentTimeMillis() - match.getStartTime();
     long remainingSeconds = matchDuration - TimeUnit.MILLISECONDS.toSeconds(elapsedMillis);
 

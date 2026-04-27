@@ -2,9 +2,10 @@ package io.github.divinerealms.aetherball.configs;
 
 import io.github.divinerealms.aetherball.managers.ConfigManager;
 import io.github.divinerealms.aetherball.managers.PlayerDataManager;
-import java.io.File;
 import lombok.Getter;
 import org.bukkit.configuration.file.FileConfiguration;
+
+import java.io.File;
 
 public class PlayerData {
 
@@ -49,6 +50,7 @@ public class PlayerData {
     set(key, current + 1);
   }
 
+  @SuppressWarnings("unused")
   public void remove(String key) {
     int current = (int) get(key);
     set(key, current > 0

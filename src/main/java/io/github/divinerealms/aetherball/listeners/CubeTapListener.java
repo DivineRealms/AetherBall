@@ -3,11 +3,13 @@ package io.github.divinerealms.aetherball.listeners;
 import static io.github.divinerealms.aetherball.physics.PhysicsConstants.CUBE_JUMP_RIGHT_CLICK;
 
 import io.github.divinerealms.aetherball.configs.Settings;
-import io.github.divinerealms.aetherball.core.Manager;
+import io.github.divinerealms.aetherball.managers.Manager;
 import io.github.divinerealms.aetherball.matchmaking.MatchManager;
 import io.github.divinerealms.aetherball.physics.PhysicsData;
 import io.github.divinerealms.aetherball.physics.utilities.PhysicsSystem;
+
 import java.util.UUID;
+
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Slime;
@@ -48,7 +50,7 @@ public class CubeTapListener extends BaseListener {
   public void rightClick(PlayerInteractEntityEvent event) {
     monitoredExecution(() -> {
       // Only process Slime entities (cubes).
-      if (!(event.getRightClicked() instanceof Slime)) {
+      if (!(event.getRightClicked() instanceof Slime cube)) {
         return;
       }
 
@@ -57,7 +59,6 @@ public class CubeTapListener extends BaseListener {
         return;
       }
 
-      Slime cube = (Slime) event.getRightClicked();
       Player player = event.getPlayer();
       UUID cubeId = cube.getUniqueId();
 

@@ -11,22 +11,24 @@ import static io.github.divinerealms.aetherball.configs.Lang.MATCHES_LIST_FOOTER
 import static io.github.divinerealms.aetherball.configs.Lang.MATCHES_LIST_HEADER;
 import static io.github.divinerealms.aetherball.configs.Lang.MATCHES_LIST_NO_MATCHES;
 import static io.github.divinerealms.aetherball.configs.Lang.NO_PERM_PARAMETERS;
-import static io.github.divinerealms.aetherball.matchmaking.util.MatchUtils.getFormattedMatches;
+import static io.github.divinerealms.aetherball.utils.MatchUtils.getFormattedMatches;
 import static io.github.divinerealms.aetherball.utils.LoggerUtil.sendMessage;
 import static io.github.divinerealms.aetherball.utils.Permissions.PERM_PLAY;
 
 import io.github.divinerealms.aetherball.configs.Settings;
-import io.github.divinerealms.aetherball.core.Manager;
+import io.github.divinerealms.aetherball.managers.Manager;
 import io.github.divinerealms.aetherball.matchmaking.MatchManager;
-import io.github.divinerealms.aetherball.matchmaking.ban.BanManager;
-import io.github.divinerealms.aetherball.matchmaking.highscore.HighScoreManager;
+import io.github.divinerealms.aetherball.matchmaking.BanManager;
+import io.github.divinerealms.aetherball.matchmaking.HighScoreManager;
 import io.github.divinerealms.aetherball.matchmaking.logic.MatchData;
 import io.github.divinerealms.aetherball.matchmaking.logic.MatchSystem;
 import io.github.divinerealms.aetherball.physics.PhysicsData;
 import io.github.divinerealms.aetherball.physics.utilities.PhysicsSystem;
+
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+
 import org.bukkit.ChatColor;
 import org.bukkit.DyeColor;
 import org.bukkit.Location;

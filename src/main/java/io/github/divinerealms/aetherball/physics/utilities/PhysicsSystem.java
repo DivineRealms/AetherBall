@@ -1,35 +1,11 @@
 package io.github.divinerealms.aetherball.physics.utilities;
 
-import static io.github.divinerealms.aetherball.configs.Lang.BLOCK_INTERACT_COOLDOWN;
-import static io.github.divinerealms.aetherball.configs.Lang.HITDEBUG_CHARGED;
-import static io.github.divinerealms.aetherball.configs.Lang.HITDEBUG_PLAYER_CHARGED;
-import static io.github.divinerealms.aetherball.configs.Lang.HITDEBUG_PLAYER_COOLDOWN;
-import static io.github.divinerealms.aetherball.configs.Lang.HITDEBUG_PLAYER_REGULAR;
-import static io.github.divinerealms.aetherball.configs.Lang.HITDEBUG_PLAYER_WHOLE;
-import static io.github.divinerealms.aetherball.configs.Lang.HITDEBUG_REGULAR;
-import static io.github.divinerealms.aetherball.physics.PhysicsConstants.CHARGE_BASE_VALUE;
-import static io.github.divinerealms.aetherball.physics.PhysicsConstants.CHARGE_MULTIPLIER;
-import static io.github.divinerealms.aetherball.physics.PhysicsConstants.JUMP_POTION_AMPLIFIER;
-import static io.github.divinerealms.aetherball.physics.PhysicsConstants.JUMP_POTION_DURATION;
-import static io.github.divinerealms.aetherball.physics.PhysicsConstants.KICK_POWER_SPEED_MULTIPLIER;
-import static io.github.divinerealms.aetherball.physics.PhysicsConstants.MIN_SPEED_FOR_DAMPENING;
-import static io.github.divinerealms.aetherball.utils.LoggerUtil.sendActionBar;
-import static io.github.divinerealms.aetherball.utils.LoggerUtil.sendMessage;
-import static io.github.divinerealms.aetherball.utils.Permissions.PERM_BYPASS_COOLDOWN;
-import static io.github.divinerealms.aetherball.utils.Permissions.PERM_HIT_DEBUG;
-
 import io.github.divinerealms.aetherball.configs.Settings;
-import io.github.divinerealms.aetherball.core.Manager;
+import io.github.divinerealms.aetherball.managers.Manager;
 import io.github.divinerealms.aetherball.managers.Utilities;
 import io.github.divinerealms.aetherball.physics.PhysicsData;
 import io.github.divinerealms.aetherball.physics.touch.CubeTouchInfo;
 import io.github.divinerealms.aetherball.physics.touch.CubeTouchType;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.entity.Entity;
@@ -40,6 +16,16 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitScheduler;
+
+import java.util.*;
+import java.util.concurrent.TimeUnit;
+
+import static io.github.divinerealms.aetherball.configs.Lang.*;
+import static io.github.divinerealms.aetherball.physics.PhysicsConstants.*;
+import static io.github.divinerealms.aetherball.utils.LoggerUtil.sendActionBar;
+import static io.github.divinerealms.aetherball.utils.LoggerUtil.sendMessage;
+import static io.github.divinerealms.aetherball.utils.Permissions.PERM_BYPASS_COOLDOWN;
+import static io.github.divinerealms.aetherball.utils.Permissions.PERM_HIT_DEBUG;
 
 public class PhysicsSystem {
 
@@ -121,7 +107,7 @@ public class PhysicsSystem {
   public void removeCubes() {
     long start = System.nanoTime();
     try {
-      List<Entity> entities = plugin.getServer().getWorlds().get(0).getEntities();
+      List<Entity> entities = plugin.getServer().getWorlds().getFirst().getEntities();
       for (Entity entity : entities) {
         if (entity instanceof Slime) {
           ((Slime) entity).setHealth(0);
@@ -246,7 +232,7 @@ public class PhysicsSystem {
     try {
       UUID playerId = player.getUniqueId();
       boolean isChargedHit = kickResult.isChargedHit();
-      double finalKickPower = kickResult.getFinalKickPower();
+      double finalKickPower = kickResult.finalKickPower();
       CubeTouchType type = isChargedHit ? CubeTouchType.CHARGED_KICK : CubeTouchType.REGULAR_KICK;
 
       Map<CubeTouchType, CubeTouchInfo> touches = data.getLastTouches().get(playerId);
@@ -266,8 +252,8 @@ public class PhysicsSystem {
 
       sendActionBar(player, HITDEBUG_PLAYER_WHOLE,
           isChargedHit ? HITDEBUG_PLAYER_CHARGED.replace(String.format("%.2f", finalKickPower),
-              String.format("%.2f", kickResult.getPower()),
-              String.format("%.2f", kickResult.getCharge()))
+              String.format("%.2f", kickResult.power()),
+              String.format("%.2f", kickResult.charge()))
               : HITDEBUG_PLAYER_REGULAR.replace(String.format("%.2f", finalKickPower)),
           HITDEBUG_PLAYER_COOLDOWN.replace(color, timeFormatted));
     } finally {
@@ -295,13 +281,13 @@ public class PhysicsSystem {
     long start = System.nanoTime();
     try {
       String coloredKickPower =
-          result.getFinalKickPower() != result.getBaseKickPower() ? "&c" : "&a";
+          result.finalKickPower() != result.baseKickPower() ? "&c" : "&a";
       return result.isChargedHit() ? HITDEBUG_CHARGED.replace(player.getDisplayName(),
-          coloredKickPower + String.format("%.2f", result.getFinalKickPower()),
-          String.format("%.2f", result.getBaseKickPower()),
-          String.format("%.2f", result.getPower()), String.format("%.2f", result.getCharge()))
+          coloredKickPower + String.format("%.2f", result.finalKickPower()),
+          String.format("%.2f", result.baseKickPower()),
+          String.format("%.2f", result.power()), String.format("%.2f", result.charge()))
           : HITDEBUG_REGULAR.replace(player.getDisplayName(),
-              String.format("%.2f", result.getFinalKickPower()));
+          String.format("%.2f", result.finalKickPower()));
     } finally {
       if (Settings.DEBUG_MODE.asBoolean()) {
         long ms = (System.nanoTime() - start) / 1_000_000;
@@ -359,5 +345,9 @@ public class PhysicsSystem {
    */
   public void setButtonCooldown(Player player) {
     data.getButtonCooldowns().put(player.getUniqueId(), System.currentTimeMillis());
+  }
+
+  public record PlayerKickResult(double power, double charge, double baseKickPower,
+                                 double finalKickPower, boolean isChargedHit) {
   }
 }

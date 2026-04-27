@@ -8,7 +8,7 @@ import static io.github.divinerealms.aetherball.configs.Lang.ON;
 import static io.github.divinerealms.aetherball.configs.Lang.SET_BUILD_MODE;
 import static io.github.divinerealms.aetherball.configs.Lang.SET_BUILD_MODE_OTHER;
 import static io.github.divinerealms.aetherball.configs.Lang.TEAM_ALREADY_IN_GAME;
-import static io.github.divinerealms.aetherball.matchmaking.util.MatchUtils.shouldPreventAbuse;
+import static io.github.divinerealms.aetherball.utils.MatchUtils.shouldPreventAbuse;
 import static io.github.divinerealms.aetherball.utils.LoggerUtil.sendMessage;
 import static io.github.divinerealms.aetherball.utils.Permissions.PERM_BUILD;
 import static io.github.divinerealms.aetherball.utils.Permissions.PERM_BUILD_OTHER;
@@ -21,7 +21,7 @@ import co.aikar.commands.annotation.Description;
 import co.aikar.commands.annotation.Flags;
 import co.aikar.commands.annotation.Optional;
 import co.aikar.commands.annotation.Syntax;
-import io.github.divinerealms.aetherball.core.Manager;
+import io.github.divinerealms.aetherball.managers.Manager;
 import io.github.divinerealms.aetherball.matchmaking.Match;
 import io.github.divinerealms.aetherball.matchmaking.MatchManager;
 import io.github.divinerealms.aetherball.utils.PlayerSettings;
@@ -46,7 +46,7 @@ public class BuildCommand extends BaseCommand {
   @Description("Toggle build mode for yourself or another player")
   public void onBuild(CommandSender sender, @Optional @Flags("other") Player target) {
     if (target == null) {
-      if (!(sender instanceof Player)) {
+      if (!(sender instanceof Player player)) {
         sendMessage(sender, "{prefix_error}You must specify a player from console.");
         return;
       }
@@ -56,7 +56,6 @@ public class BuildCommand extends BaseCommand {
         return;
       }
 
-      Player player = (Player) sender;
       java.util.Optional<Match> matchOpt = matchManager.getMatch(player);
       if (matchOpt.isPresent() && shouldPreventAbuse(matchOpt.get().getPhase())) {
         sendMessage(player, COMMAND_DISABLER_CANT_USE);

@@ -4,7 +4,7 @@ import static io.github.divinerealms.aetherball.configs.Lang.CLEARED_CUBES;
 import static io.github.divinerealms.aetherball.utils.LoggerUtil.broadcast;
 import static io.github.divinerealms.aetherball.utils.LoggerUtil.logConsole;
 
-import io.github.divinerealms.aetherball.core.Manager;
+import io.github.divinerealms.aetherball.managers.Manager;
 import io.github.divinerealms.aetherball.utils.CubeCleaner;
 
 /**

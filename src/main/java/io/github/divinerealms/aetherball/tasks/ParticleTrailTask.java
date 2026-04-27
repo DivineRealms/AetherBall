@@ -8,14 +8,16 @@ import static io.github.divinerealms.aetherball.physics.PhysicsConstants.GLOW_TA
 import static io.github.divinerealms.aetherball.physics.PhysicsConstants.MAX_PARTICLE_DISTANCE_SQUARED;
 import static io.github.divinerealms.aetherball.physics.PhysicsConstants.PARTICLE_Y_OFFSET;
 
-import io.github.divinerealms.aetherball.core.Manager;
+import io.github.divinerealms.aetherball.managers.Manager;
 import io.github.divinerealms.aetherball.managers.Utilities;
 import io.github.divinerealms.aetherball.physics.PhysicsData;
 import io.github.divinerealms.aetherball.utils.PlayerSettings;
+
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+
 import net.minecraft.server.v1_8_R3.EnumParticle;
 import org.bukkit.Color;
 import org.bukkit.Location;
@@ -163,7 +165,7 @@ public class ParticleTrailTask extends BaseTask {
   }
 
   private void renderTrail(Player player, EnumParticle particle, PlayerSettings settings,
-      int trailPoints, double prevX, double prevY, double prevZ, double x, double y, double z) {
+                           int trailPoints, double prevX, double prevY, double prevZ, double x, double y, double z) {
     for (int i = 0; i < trailPoints; i++) {
       double t = (double) i / Math.max(trailPoints - 1, 1);
 

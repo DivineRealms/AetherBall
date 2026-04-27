@@ -3,7 +3,7 @@ package io.github.divinerealms.aetherball.commands.player;
 import static io.github.divinerealms.aetherball.configs.Lang.MATCHES_LIST_FOOTER;
 import static io.github.divinerealms.aetherball.configs.Lang.MATCHES_LIST_HEADER;
 import static io.github.divinerealms.aetherball.configs.Lang.MATCHES_LIST_NO_MATCHES;
-import static io.github.divinerealms.aetherball.matchmaking.util.MatchUtils.getFormattedMatches;
+import static io.github.divinerealms.aetherball.utils.MatchUtils.getFormattedMatches;
 import static io.github.divinerealms.aetherball.utils.LoggerUtil.sendMessage;
 
 import co.aikar.commands.BaseCommand;
@@ -11,9 +11,11 @@ import co.aikar.commands.annotation.CatchUnknown;
 import co.aikar.commands.annotation.CommandAlias;
 import co.aikar.commands.annotation.Default;
 import co.aikar.commands.annotation.Description;
-import io.github.divinerealms.aetherball.core.Manager;
+import io.github.divinerealms.aetherball.managers.Manager;
 import io.github.divinerealms.aetherball.matchmaking.logic.MatchData;
+
 import java.util.List;
+
 import org.bukkit.command.CommandSender;
 
 @CommandAlias("matches|queues|q")

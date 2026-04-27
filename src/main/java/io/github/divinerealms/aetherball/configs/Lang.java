@@ -1,10 +1,11 @@
 package io.github.divinerealms.aetherball.configs;
 
-import java.util.HashMap;
-import java.util.Map;
 import lombok.Getter;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.FileConfiguration;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @Getter
 public enum Lang {
@@ -85,6 +86,7 @@ public enum Lang {
   TEAM_NOT_ONLINE("team.not-online", "{prefix_error}{0} is not online"),
   TEAM_DISBANDED("team.disbanded", "{prefix_error}Your team was disbanded because {0} left."),
   TEAM_INVITE_EXPIRED("team.invite-expired", "{prefix_error}Team request has expired."),
+  TEAM_YOURSELF("team.yourself", "{prefix_error}You can't send a team invite to yourself."),
 
   TAKEPLACE_SUCCESS("takeplace.success",
       "{prefix_success}&b[Coach] You've taken a spot in match #{0}"),
@@ -97,6 +99,35 @@ public enum Lang {
   TAKEPLACE_INVALID_ID("takeplace.invalid-id",
       "{prefix_error}Could not find an open match with ID #{0}."),
   TAKEPLACE_FULL("takeplace.full", "{prefix_error}Match #{0} is already full."),
+
+  DUEL_REQUEST_SENT("duel.request-sent", "{prefix_success}Duel request sent to &b{0}&f!"),
+  DUEL_REQUEST_RECEIVED("duel.request-received",
+      String.join(System.lineSeparator(),
+          "{prefix_info}&b{0} &fwants to duel you!",
+          "{prefix_info}&e/1v1 accept &for &e/1v1 decline &fto respond")),
+  DUEL_REQUEST_EXPIRY("duel.request-expiry", "{prefix_error}Your duel request has expired."),
+  DUEL_ALREADY_SENT("duel.already-sent", "{prefix_error}You already have a pending duel request!"),
+  DUEL_NO_PENDING_REQUEST("duel.no-pending-request",
+      "{prefix_error}You don't have any pending duel requests."),
+  DUEL_NO_OUTGOING_REQUEST("duel.no-outgoing-request",
+      "{prefix_error}You don't have any outgoing duel requests."),
+  DUEL_SENDER_OFFLINE("duel.sender-offline",
+      "{prefix_error}The player who sent the duel request is no longer online."),
+  DUEL_SENDER_IN_MATCH("duel.sender-in-match", "{prefix_error}&b{0} &cis already in a match."),
+  DUEL_YOU_IN_MATCH("duel.you-in-match", "{prefix_error}You are already in a match!"),
+  DUEL_ACCEPTED_ACCEPTOR("duel.accepted-acceptor",
+      "{prefix_success}You accepted &b{0}'s &fduel request!"),
+  DUEL_ACCEPTED_SENDER("duel.accepted-sender",
+      "{prefix_success}&b{0} &faccepted your duel request!"),
+  DUEL_DECLINED_DECLINER("duel.declined-decliner",
+      "{prefix_success}You declined the duel request."),
+  DUEL_DECLINED_SENDER("duel.declined-sender", "{prefix_error}&b{0} &cdeclined your duel request."),
+  DUEL_CANCELED_SENDER("duel.canceled-sender", "{prefix_success}You canceled your duel request."),
+  DUEL_CANCELED_TARGET("duel.canceled-target", "{prefix_info}&b{0} &fcanceled their duel request."),
+  DUEL_EXPIRED_SENDER("duel.expired-sender", "{prefix_error}Your duel request has expired."),
+  DUEL_EXPIRED_TARGET("duel.expired-target", "{prefix_error}The duel request has expired."),
+  DUEL_PLAYER_NOT_FOUND("duel.player-not-found", "{prefix_error}Player &b{0} &cis not online."),
+  DUEL_CANNOT_DUEL_SELF("duel.cannot-duel-self", "{prefix_error}You cannot duel yourself!"),
 
   STATS_NONE("stats.none", "{prefix_error}{0} has never played AetherBall"),
   STATS("stats.info", String.join(System.lineSeparator(),
@@ -505,6 +536,18 @@ public enum Lang {
   PLAYER_UNBANNED("bans.unbanned", "{prefix_success}&b{0} &fhas been unbanned."),
   BAN_REMAINING("bans.remaining", "{prefix_info}&b{0} &fis banned for another &e{1}&f."),
   NOT_BANNED("bans.not-banned", "{prefix_error}&b{0} &cis not banned."),
+
+  CONFIGURATION("admin.configuration", String.join(System.lineSeparator(),
+      "&7▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬",
+      "&r &r",
+      "&r  Regular KP: &e{0} &7(cooldown: {1})",
+      "&r  Charged KP: &e{2} &7(cooldown: {3})",
+      "&r  Soft KP Cap: &e{4}",
+      "&r  Maximum KP: &e{5}",
+      "&r  Rise Cooldown: &e{6}",
+      "&r  Kick Vertical Boost: &e{7}",
+      "&r &r",
+      "&7▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬")),
 
   SIMPLE_FOOTER("simple-footer", "&e---------------------------------------------");
 

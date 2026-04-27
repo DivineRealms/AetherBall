@@ -3,7 +3,6 @@ package io.github.divinerealms.aetherball.managers;
 import static io.github.divinerealms.aetherball.utils.LoggerUtil.debugConsole;
 
 import io.github.divinerealms.aetherball.AetherBall;
-import io.github.divinerealms.aetherball.core.Manager;
 import io.github.divinerealms.aetherball.listeners.ChunkCheckers;
 import io.github.divinerealms.aetherball.listeners.CubeDamageListener;
 import io.github.divinerealms.aetherball.listeners.CubeKickListener;

@@ -1,17 +1,19 @@
 package io.github.divinerealms.aetherball.tasks;
 
-import static io.github.divinerealms.aetherball.matchmaking.util.MatchUtils.isPlayerOnline;
+import static io.github.divinerealms.aetherball.utils.MatchUtils.isPlayerOnline;
 import static io.github.divinerealms.aetherball.physics.PhysicsConstants.CHARGE_BASE_VALUE;
 import static io.github.divinerealms.aetherball.physics.PhysicsConstants.CHARGE_RECOVERY_RATE;
 import static io.github.divinerealms.aetherball.physics.PhysicsConstants.EXP_UPDATE_INTERVAL_TICKS;
 
-import io.github.divinerealms.aetherball.core.Manager;
+import io.github.divinerealms.aetherball.managers.Manager;
 import io.github.divinerealms.aetherball.physics.PhysicsData;
+
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+
 import org.bukkit.entity.Player;
 
 /**

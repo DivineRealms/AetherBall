@@ -1,6 +1,6 @@
 package io.github.divinerealms.aetherball.listeners;
 
-import io.github.divinerealms.aetherball.core.Manager;
+import io.github.divinerealms.aetherball.managers.Manager;
 import io.github.divinerealms.aetherball.physics.PhysicsData;
 import org.bukkit.entity.Slime;
 import org.bukkit.event.EventHandler;

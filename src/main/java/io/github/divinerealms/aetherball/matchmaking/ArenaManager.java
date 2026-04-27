@@ -1,15 +1,8 @@
-package io.github.divinerealms.aetherball.matchmaking.arena;
-
-import static io.github.divinerealms.aetherball.utils.LoggerUtil.debugConsole;
-import static io.github.divinerealms.aetherball.utils.LoggerUtil.logConsole;
+package io.github.divinerealms.aetherball.matchmaking;
 
 import io.github.divinerealms.aetherball.configs.Settings;
-import io.github.divinerealms.aetherball.core.Manager;
 import io.github.divinerealms.aetherball.managers.ConfigManager;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import io.github.divinerealms.aetherball.managers.Manager;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.Location;
@@ -17,6 +10,14 @@ import org.bukkit.Server;
 import org.bukkit.World;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import static io.github.divinerealms.aetherball.utils.LoggerUtil.debugConsole;
+import static io.github.divinerealms.aetherball.utils.LoggerUtil.logConsole;
 
 @Getter
 public class ArenaManager {
@@ -105,10 +106,10 @@ public class ArenaManager {
     configManager.saveConfig("arenas.yml");
     addArena(type, blueSpawn, redSpawn);
 
-    Arena newArena = arenas.get(arenas.size() - 1);
+    Arena newArena = arenas.getLast();
 
     debugConsole(
-        "{prefix_success}Created " + typeString + " arena (ID: " + newArena.getId() + ") at " +
+        "{prefix_success}Created " + typeString + " arena (ID: " + newArena.id() + ") at " +
             formatLocation(blueSpawn) + " and " + formatLocation(redSpawn));
   }
 
@@ -177,7 +178,7 @@ public class ArenaManager {
     config.set("arenas." + typeString, null);
     configManager.saveConfig("arenas.yml");
 
-    arenas.removeIf(arena -> arena.getType() == type);
+    arenas.removeIf(arena -> arena.type() == type);
 
     reassignArenaIds();
 
@@ -187,7 +188,7 @@ public class ArenaManager {
   @SuppressWarnings("BooleanMethodIsAlwaysInverted")
   public boolean hasArenaForType(int matchType) {
     for (Arena arena : arenas) {
-      if (arena.getType() == matchType) {
+      if (arena.type() == matchType) {
         return true;
       }
     }
@@ -197,7 +198,7 @@ public class ArenaManager {
   public int getArenaCountType(int matchType) {
     int count = 0;
     for (Arena arena : arenas) {
-      if (arena.getType() == matchType) {
+      if (arena.type() == matchType) {
         count++;
       }
     }
@@ -210,12 +211,12 @@ public class ArenaManager {
       Arena oldArena = arenas.get(i);
       Arena newArena = new Arena(
           i + 1,
-          oldArena.getType(),
-          oldArena.getBlueSpawn(),
-          oldArena.getRedSpawn(),
-          oldArena.getCenter(),
+          oldArena.type(),
+          oldArena.blueSpawn(),
+          oldArena.redSpawn(),
+          oldArena.center(),
           oldArena.isXAxis(),
-          oldArena.isRedIsGreater()
+          oldArena.redIsGreater()
       );
       newArenas.add(newArena);
     }
@@ -238,5 +239,9 @@ public class ArenaManager {
     public ArenaSetup(int type) {
       this.type = type;
     }
+  }
+
+  public record Arena(int id, int type, Location blueSpawn, Location redSpawn,
+                      Location center, boolean isXAxis, boolean redIsGreater) {
   }
 }

@@ -29,12 +29,14 @@ import co.aikar.commands.annotation.Optional;
 import co.aikar.commands.annotation.Subcommand;
 import co.aikar.commands.annotation.Syntax;
 import io.github.divinerealms.aetherball.configs.Settings;
-import io.github.divinerealms.aetherball.core.Manager;
+import io.github.divinerealms.aetherball.managers.Manager;
 import io.github.divinerealms.aetherball.managers.ConfigManager;
 import io.github.divinerealms.aetherball.matchmaking.MatchManager;
-import io.github.divinerealms.aetherball.matchmaking.arena.ArenaManager;
+import io.github.divinerealms.aetherball.matchmaking.ArenaManager;
+
 import java.util.Map;
 import java.util.Set;
+
 import org.bukkit.DyeColor;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -96,7 +98,7 @@ public class ArenaCommands extends BaseCommand {
       int type = entry.getKey();
       String typeName = Settings.getMatchTypeName(type);
       int count = arenaManager.getArenaCountType(type);
-      String status = entry.getValue().isEnabled() ? "&a✔" : "&c✘";
+      String status = entry.getValue().enabled() ? "&a✔" : "&c✘";
 
       sendMessage(sender, "{prefix_info}" + status + " &e" + typeName + " Arenas: &f" + count);
     }

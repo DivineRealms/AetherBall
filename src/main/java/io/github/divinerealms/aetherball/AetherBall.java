@@ -2,9 +2,11 @@ package io.github.divinerealms.aetherball;
 
 import static io.github.divinerealms.aetherball.utils.LoggerUtil.logConsole;
 
-import io.github.divinerealms.aetherball.core.Manager;
+import io.github.divinerealms.aetherball.managers.Manager;
 import io.github.divinerealms.aetherball.utils.LoggerUtil;
+
 import java.util.logging.Level;
+
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class AetherBall extends JavaPlugin {

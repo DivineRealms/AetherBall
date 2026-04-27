@@ -1,16 +1,16 @@
 package io.github.divinerealms.aetherball.matchmaking;
 
-import io.github.divinerealms.aetherball.matchmaking.arena.Arena;
 import io.github.divinerealms.aetherball.matchmaking.player.MatchPlayer;
-import java.util.List;
 import lombok.Data;
 import me.neznamy.tab.api.scoreboard.Scoreboard;
 import org.bukkit.entity.Slime;
 
+import java.util.List;
+
 @Data
 public class Match {
 
-  private final Arena arena;
+  private final ArenaManager.Arena arena;
   private final List<MatchPlayer> players;
   private MatchPhase phase;
   private int countdown, scoreRed, scoreBlue, tick;
@@ -20,7 +20,7 @@ public class Match {
   private long startTime, lastTakePlaceAnnounceTick;
   private boolean takePlaceNeeded;
 
-  public Match(Arena arena, List<MatchPlayer> players) {
+  public Match(ArenaManager.Arena arena, List<MatchPlayer> players) {
     if (arena == null) {
       throw new IllegalArgumentException("Cannot create match with null arena!");
     }

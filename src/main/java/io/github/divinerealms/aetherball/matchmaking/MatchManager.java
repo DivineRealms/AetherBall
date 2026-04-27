@@ -1,58 +1,27 @@
 package io.github.divinerealms.aetherball.matchmaking;
 
-import static io.github.divinerealms.aetherball.configs.Lang.BLUE;
-import static io.github.divinerealms.aetherball.configs.Lang.JOIN_ALREADYINGAME;
-import static io.github.divinerealms.aetherball.configs.Lang.JOIN_SUCCESS;
-import static io.github.divinerealms.aetherball.configs.Lang.LEAVE_NOT_INGAME;
-import static io.github.divinerealms.aetherball.configs.Lang.MATCHES_LIST_NO_MATCHES;
-import static io.github.divinerealms.aetherball.configs.Lang.MATCHMAN_FORCE_END;
-import static io.github.divinerealms.aetherball.configs.Lang.MATCHMAN_FORCE_START;
-import static io.github.divinerealms.aetherball.configs.Lang.MATCH_ALREADY_STARTED;
-import static io.github.divinerealms.aetherball.configs.Lang.MATCH_CLEAN_SHEET_BONUS;
-import static io.github.divinerealms.aetherball.configs.Lang.MATCH_TIED;
-import static io.github.divinerealms.aetherball.configs.Lang.MATCH_TIED_CREDITS;
-import static io.github.divinerealms.aetherball.configs.Lang.MATCH_TIMES_UP;
-import static io.github.divinerealms.aetherball.configs.Lang.MATCH_WINSTREAK_CREDITS;
-import static io.github.divinerealms.aetherball.configs.Lang.MATCH_WIN_CREDITS;
-import static io.github.divinerealms.aetherball.configs.Lang.RED;
-import static io.github.divinerealms.aetherball.configs.Lang.TAKEPLACE_FULL;
-import static io.github.divinerealms.aetherball.configs.Lang.TAKEPLACE_INVALID_ID;
-import static io.github.divinerealms.aetherball.configs.Lang.TAKEPLACE_SUCCESS;
-import static io.github.divinerealms.aetherball.configs.Lang.TEAMCHAT_BLUE;
-import static io.github.divinerealms.aetherball.configs.Lang.TEAMCHAT_RED;
-import static io.github.divinerealms.aetherball.matchmaking.util.MatchUtils.clearPlayer;
-import static io.github.divinerealms.aetherball.matchmaking.util.MatchUtils.giveArmor;
-import static io.github.divinerealms.aetherball.matchmaking.util.MatchUtils.isPlayerOnline;
-import static io.github.divinerealms.aetherball.utils.GameCommandsHelper.isInQueueOrMatch;
-import static io.github.divinerealms.aetherball.utils.LoggerUtil.logConsole;
-import static io.github.divinerealms.aetherball.utils.LoggerUtil.sendMessage;
-
 import io.github.divinerealms.aetherball.configs.PlayerData;
 import io.github.divinerealms.aetherball.configs.Settings;
-import io.github.divinerealms.aetherball.core.Manager;
 import io.github.divinerealms.aetherball.managers.ConfigManager;
+import io.github.divinerealms.aetherball.managers.Manager;
 import io.github.divinerealms.aetherball.managers.PlayerDataManager;
 import io.github.divinerealms.aetherball.managers.Utilities;
-import io.github.divinerealms.aetherball.matchmaking.arena.ArenaManager;
-import io.github.divinerealms.aetherball.matchmaking.ban.BanManager;
 import io.github.divinerealms.aetherball.matchmaking.logic.MatchData;
 import io.github.divinerealms.aetherball.matchmaking.logic.MatchSystem;
 import io.github.divinerealms.aetherball.matchmaking.player.MatchPlayer;
 import io.github.divinerealms.aetherball.matchmaking.player.TeamColor;
-import io.github.divinerealms.aetherball.matchmaking.scoreboard.ScoreManager;
-import io.github.divinerealms.aetherball.matchmaking.team.Team;
-import io.github.divinerealms.aetherball.matchmaking.team.TeamManager;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import lombok.Getter;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
+
+import java.util.*;
+import java.util.concurrent.ConcurrentLinkedQueue;
+
+import static io.github.divinerealms.aetherball.configs.Lang.*;
+import static io.github.divinerealms.aetherball.utils.MatchUtils.*;
+import static io.github.divinerealms.aetherball.utils.GameCommandsHelper.isInQueueOrMatch;
+import static io.github.divinerealms.aetherball.utils.LoggerUtil.logConsole;
+import static io.github.divinerealms.aetherball.utils.LoggerUtil.sendMessage;
 
 @Getter
 public class MatchManager {
@@ -83,7 +52,7 @@ public class MatchManager {
 
   public synchronized void joinQueue(Player player, int matchType) {
     String matchTypeString = Settings.getMatchTypeName(matchType);
-    Team team = teamManager.getTeam(player);
+    TeamManager.Team team = teamManager.getTeam(player);
     List<Player> playersToQueue =
         team != null ? new ArrayList<>(team.getMembers()) : Collections.singletonList(player);
 
@@ -101,7 +70,7 @@ public class MatchManager {
     Match existingLobby = null;
     for (Match match : data.getMatches()) {
       if (match.getPhase() == MatchPhase.LOBBY && match.getArena() != null
-          && match.getArena().getType() == matchType) {
+          && match.getArena().type() == matchType) {
         int nullCount = 0;
         for (MatchPlayer matchPlayer : match.getPlayers()) {
           if (!isPlayerOnline(matchPlayer)) {
@@ -223,24 +192,13 @@ public class MatchManager {
       return;
     }
 
-    int arenaSize = (targetMatch.getArena() != null) ? targetMatch.getArena().getType() : 1;
+    int arenaSize = (targetMatch.getArena() != null) ? targetMatch.getArena().type() : 1;
     int requiredPlayers = arenaSize * 2;
 
     List<MatchPlayer> finalPlayerLineup = new ArrayList<>();
     List<MatchPlayer> soloPlayers = new ArrayList<>();
 
-    Team foundTeam = null;
-    for (MatchPlayer matchPlayer : playersInLobby) {
-      if (!isPlayerOnline(matchPlayer)) {
-        continue;
-      }
-
-      Team team = teamManager.getTeam(matchPlayer.getPlayer());
-      if (team != null) {
-        foundTeam = team;
-        break;
-      }
-    }
+    TeamManager.Team foundTeam = MatchSystem.findTeam(playersInLobby, teamManager);
 
     if (foundTeam != null) {
       List<Player> teamMembers = foundTeam.getMembers();
@@ -250,7 +208,7 @@ public class MatchManager {
         }
 
         Player player1 = matchPlayer.getPlayer();
-        if (teamMembers != null && teamMembers.contains(player1)) {
+        if (teamMembers.contains(player1)) {
           finalPlayerLineup.add(matchPlayer);
         } else {
           soloPlayers.add(matchPlayer);
@@ -281,7 +239,7 @@ public class MatchManager {
     targetMatch.setCountdown(15);
 
     sendMessage(player, MATCHMAN_FORCE_START,
-        Settings.getMatchTypeName(targetMatch.getArena().getType()));
+        Settings.getMatchTypeName(targetMatch.getArena().type()));
     scoreboardManager.updateScoreboard(targetMatch);
   }
 
@@ -392,7 +350,7 @@ public class MatchManager {
           continue;
         }
 
-        if (match.getArena().getId() == matchId) {
+        if (match.getArena().id() == matchId) {
           matchOpt = Optional.of(match);
           break;
         }
@@ -439,9 +397,9 @@ public class MatchManager {
       match.getPlayers().set(openSlotIndex, new MatchPlayer(player, teamToJoin));
 
       if (teamToJoin == TeamColor.RED) {
-        player.teleport(match.getArena().getRedSpawn());
+        player.teleport(match.getArena().redSpawn());
       } else {
-        player.teleport(match.getArena().getBlueSpawn());
+        player.teleport(match.getArena().blueSpawn());
       }
 
       giveArmor(player, teamToJoin);
@@ -469,7 +427,7 @@ public class MatchManager {
 
       match.setTakePlaceNeeded(false);
       match.setLastTakePlaceAnnounceTick(0);
-      sendMessage(player, TAKEPLACE_SUCCESS, String.valueOf(match.getArena().getId()));
+      sendMessage(player, TAKEPLACE_SUCCESS, String.valueOf(match.getArena().id()));
     } else {
       sendMessage(player, TAKEPLACE_FULL, String.valueOf(matchId));
     }
@@ -486,7 +444,7 @@ public class MatchManager {
     }
 
     String winningTeam = winner == TeamColor.RED ? RED.toString() : BLUE.toString();
-    boolean shouldCount = Settings.shouldCountStats(match.getArena().getType());
+    boolean shouldCount = Settings.shouldCountStats(match.getArena().type());
 
     for (MatchPlayer matchPlayer : match.getPlayers()) {
       if (!isPlayerOnline(matchPlayer)) {
@@ -608,7 +566,7 @@ public class MatchManager {
         system.updateMatch(match);
       } catch (Exception exception) {
         String arenaId = match.getArena() != null
-            ? String.valueOf(match.getArena().getId())
+            ? String.valueOf(match.getArena().id())
             : "unknown";
         logConsole("{prefix_error}Error updating match (arena=" + arenaId + ")",
             exception.getMessage());
@@ -664,7 +622,7 @@ public class MatchManager {
         continue;
       }
 
-      int type = match.getArena().getType();
+      int type = match.getArena().type();
       if (type == matchType) {
         MatchPhase phase = match.getPhase();
         if (phase != MatchPhase.LOBBY && phase != MatchPhase.ENDED) {
@@ -686,7 +644,7 @@ public class MatchManager {
         continue;
       }
 
-      if (match.getArena().getType() != matchType) {
+      if (match.getArena().type() != matchType) {
         continue;
       }
 
@@ -712,7 +670,7 @@ public class MatchManager {
         continue;
       }
 
-      if (match.getArena().getType() != matchType) {
+      if (match.getArena().type() != matchType) {
         continue;
       }
 
@@ -799,7 +757,7 @@ public class MatchManager {
           clearPlayer(player);
           scoreboardManager.removeScoreboard(player);
           sendMessage(player, MATCHMAN_FORCE_END,
-              Settings.getMatchTypeName(match.getArena().getType()));
+              Settings.getMatchTypeName(match.getArena().type()));
         }
       }
 

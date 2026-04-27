@@ -2,17 +2,18 @@ package io.github.divinerealms.aetherball.utils;
 
 import io.github.divinerealms.aetherball.configs.PlayerData;
 import io.github.divinerealms.aetherball.configs.Settings;
-import io.github.divinerealms.aetherball.core.Manager;
+import io.github.divinerealms.aetherball.managers.Manager;
 import io.github.divinerealms.aetherball.managers.PlayerDataManager;
 import io.github.divinerealms.aetherball.matchmaking.Match;
 import io.github.divinerealms.aetherball.matchmaking.MatchManager;
-import io.github.divinerealms.aetherball.matchmaking.highscore.HighScoreManager;
+import io.github.divinerealms.aetherball.matchmaking.HighScoreManager;
 import io.github.divinerealms.aetherball.matchmaking.player.StatsHelper;
-import java.util.Queue;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.Queue;
 
 public class Placeholders extends PlaceholderExpansion {
 
@@ -205,34 +206,21 @@ public class Placeholders extends PlaceholderExpansion {
 
       StatsHelper stats = new StatsHelper(data);
 
-      switch (statKey) {
-        case "matches":
-          return String.valueOf(stats.getMatches());
-        case "wins":
-          return String.valueOf(stats.getWins());
-        case "losses":
-          return String.valueOf(stats.getLosses());
-        case "ties":
-          return String.valueOf(stats.getTies());
-        case "winspermatch":
-          return String.format("%.2f", stats.getWinsPerMatch());
-        case "goals":
-          return String.valueOf(stats.getGoals());
-        case "owngoals":
-          return String.valueOf(stats.getOwnGoals());
-        case "assists":
-          return String.valueOf(stats.getAssists());
-        case "goalspermatch":
-          return String.format("%.2f", stats.getGoalsPerMatch());
-        case "bestwinstreak":
-          return String.valueOf(stats.getBestWinStreak());
-        case "skill":
-          return String.format("%.2f", stats.getSkillLevel());
-        case "rank":
-          return stats.getRankName();
-        default:
-          return "---";
-      }
+      return switch (statKey) {
+        case "matches" -> String.valueOf(stats.getMatches());
+        case "wins" -> String.valueOf(stats.getWins());
+        case "losses" -> String.valueOf(stats.getLosses());
+        case "ties" -> String.valueOf(stats.getTies());
+        case "winspermatch" -> String.format("%.2f", stats.getWinsPerMatch());
+        case "goals" -> String.valueOf(stats.getGoals());
+        case "owngoals" -> String.valueOf(stats.getOwnGoals());
+        case "assists" -> String.valueOf(stats.getAssists());
+        case "goalspermatch" -> String.format("%.2f", stats.getGoalsPerMatch());
+        case "bestwinstreak" -> String.valueOf(stats.getBestWinStreak());
+        case "skill" -> String.format("%.2f", stats.getSkillLevel());
+        case "rank" -> stats.getRankName();
+        default -> "---";
+      };
     }
 
     return null;

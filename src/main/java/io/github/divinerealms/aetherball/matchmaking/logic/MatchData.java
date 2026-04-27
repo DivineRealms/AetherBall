@@ -1,17 +1,15 @@
 package io.github.divinerealms.aetherball.matchmaking.logic;
 
 import io.github.divinerealms.aetherball.matchmaking.Match;
-import java.util.List;
-import java.util.Map;
-import java.util.Queue;
-import java.util.Set;
+import lombok.Getter;
+import lombok.Setter;
+import org.bukkit.entity.Player;
+
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.locks.ReentrantLock;
-import lombok.Getter;
-import lombok.Setter;
-import org.bukkit.entity.Player;
 
 @Getter
 public class MatchData {
@@ -21,6 +19,7 @@ public class MatchData {
   private final Map<Integer, Queue<Player>> playerQueues = new ConcurrentHashMap<>();
   private final Set<Integer> lockedQueues = ConcurrentHashMap.newKeySet();
   private final Map<Integer, ReentrantLock> queueLocks = new ConcurrentHashMap<>();
+  private final Map<UUID, UUID> duelPairs = new ConcurrentHashMap<>();
 
   @Setter
   private boolean matchesEnabled = true;
@@ -45,5 +44,47 @@ public class MatchData {
       playerQueues.put(matchType, new ConcurrentLinkedQueue<>());
       queueLocks.put(matchType, new ReentrantLock());
     }
+  }
+
+  /**
+   * Creates a duel pair reservation for two players. Both players will be matched together in their
+   * own lobby.
+   */
+  public void createDuelPair(UUID player1, UUID player2) {
+    duelPairs.put(player1, player2);
+    duelPairs.put(player2, player1);
+  }
+
+  /**
+   * Gets the duel partner for a player, if any.
+   */
+  public UUID getDuelPair(UUID player) {
+    return duelPairs.get(player);
+  }
+
+  /**
+   * Removes a duel pair reservation.
+   */
+  public void removeDuelPairs(UUID player1, UUID player2) {
+    duelPairs.remove(player1);
+    duelPairs.remove(player2);
+  }
+
+  /**
+   * Checks if a player is part of a duel pair.
+   */
+  @SuppressWarnings("unused")
+  public boolean isInDuelPair(UUID player) {
+    return duelPairs.containsKey(player);
+  }
+
+  public void cleanup() {
+    matches.clear();
+    openMatches.clear();
+    playerQueues.clear();
+    lockedQueues.clear();
+    queueLocks.clear();
+    duelPairs.clear();
+    matchesEnabled = true;
   }
 }

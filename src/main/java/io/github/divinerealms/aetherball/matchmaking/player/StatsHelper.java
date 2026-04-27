@@ -31,48 +31,28 @@ public class StatsHelper {
   }
 
   private static String calculateRankName(int rank) {
-    switch (rank) {
-      case 1:
-        return "Noob";
-      case 2:
-        return "Loser";
-      case 3:
-        return "Baby";
-      case 4:
-        return "Pupil";
-      case 5:
-        return "Bad";
-      case 6:
-        return ":(";
-      case 7:
-        return "Meh";
-      case 8:
-        return "Player";
-      case 9:
-        return "Okay";
-      case 10:
-        return "Average";
-      case 11:
-        return "Good";
-      case 12:
-        return "Great";
-      case 13:
-        return "King";
-      case 14:
-        return "Super";
-      case 15:
-        return "Pro";
-      case 16:
-        return "Maradona";
-      case 17:
-        return "Superman";
-      case 18:
-        return "God";
-      case 19:
-        return "h4x0r";
-      default:
-        return "None";
-    }
+    return switch (rank) {
+      case 1 -> "Noob";
+      case 2 -> "Loser";
+      case 3 -> "Baby";
+      case 4 -> "Pupil";
+      case 5 -> "Bad";
+      case 6 -> ":(";
+      case 7 -> "Meh";
+      case 8 -> "Player";
+      case 9 -> "Okay";
+      case 10 -> "Average";
+      case 11 -> "Good";
+      case 12 -> "Great";
+      case 13 -> "King";
+      case 14 -> "Super";
+      case 15 -> "Pro";
+      case 16 -> "Maradona";
+      case 17 -> "Superman";
+      case 18 -> "God";
+      case 19 -> "h4x0r";
+      default -> "None";
+    };
   }
 
   private static double calculateSkillLevel(int matches, int wins, int ties, int goals) {
@@ -85,8 +65,8 @@ public class StatsHelper {
     double addition = (matches > 0 && wins + ties > 0)
         ? 8 * (1 / ((100 * matches) / (wins + 0.5 * ties) / 100)) - 4
         : (matches > 0
-            ? -4
-            : 0);
+        ? -4
+        : 0);
     return Math.min(5 + goalBonus + addition * multiplier, 10);
   }
 

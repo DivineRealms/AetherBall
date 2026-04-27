@@ -4,11 +4,13 @@ import static io.github.divinerealms.aetherball.configs.Lang.PRACTICE_AREAS_EMPT
 import static io.github.divinerealms.aetherball.utils.LoggerUtil.logConsole;
 
 import io.github.divinerealms.aetherball.configs.Settings;
-import io.github.divinerealms.aetherball.core.Manager;
+import io.github.divinerealms.aetherball.managers.Manager;
 import io.github.divinerealms.aetherball.managers.ConfigManager;
 import io.github.divinerealms.aetherball.physics.PhysicsData;
+
 import java.util.ArrayList;
 import java.util.List;
+
 import lombok.Getter;
 import org.bukkit.Location;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -110,40 +112,37 @@ public class CubeCleaner {
     return !practice.contains("practice-areas");
   }
 
-  private static class PracticeArea {
+  private record PracticeArea(Location center, double radiusSquared) {
 
-    private final Location center;
-    private final double radiusSquared;
+      private PracticeArea(Location center, double radiusSquared) {
+        this.center = center;
+        this.radiusSquared = radiusSquared * radiusSquared;
+      }
 
-    PracticeArea(Location center, double radius) {
-      this.center = center;
-      this.radiusSquared = radius * radius;
+      boolean contains(Location location) {
+        if (location.getWorld() == null || center.getWorld() == null) {
+          return false;
+        }
+
+        if (!location.getWorld().equals(center.getWorld())) {
+          return false;
+        }
+
+        double radius = Math.sqrt(radiusSquared);
+        if (Math.abs(location.getX() - center.getX()) > radius) {
+          return false;
+        }
+
+        if (Math.abs(location.getY() - center.getY()) > radius) {
+          return false;
+        }
+
+        if (Math.abs(location.getZ() - center.getZ()) > radius) {
+          return false;
+        }
+
+        double distanceSquared = location.distanceSquared(center);
+        return distanceSquared <= radiusSquared;
+      }
     }
-
-    boolean contains(Location location) {
-      if (location.getWorld() == null || center.getWorld() == null) {
-        return false;
-      }
-
-      if (!location.getWorld().equals(center.getWorld())) {
-        return false;
-      }
-
-      double radius = Math.sqrt(radiusSquared);
-      if (Math.abs(location.getX() - center.getX()) > radius) {
-        return false;
-      }
-
-      if (Math.abs(location.getY() - center.getY()) > radius) {
-        return false;
-      }
-
-      if (Math.abs(location.getZ() - center.getZ()) > radius) {
-        return false;
-      }
-
-      double distanceSquared = location.distanceSquared(center);
-      return distanceSquared <= radiusSquared;
-    }
-  }
 }

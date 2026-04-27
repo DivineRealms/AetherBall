@@ -13,13 +13,9 @@ public enum CubeTouchType {
    * @return Cooldown in milliseconds
    */
   public long getCooldown() {
-    switch (this) {
-      case REGULAR_KICK:
-        return Settings.KICK_COOLDOWN_REGULAR.asLong();
-      case CHARGED_KICK:
-        return Settings.KICK_COOLDOWN_CHARGED.asLong();
-      default:
-        throw new IllegalStateException("Unknown touch type: " + this);
-    }
+    return switch (this) {
+      case REGULAR_KICK -> Settings.KICK_COOLDOWN_REGULAR.asLong();
+      case CHARGED_KICK -> Settings.KICK_COOLDOWN_CHARGED.asLong();
+    };
   }
 }

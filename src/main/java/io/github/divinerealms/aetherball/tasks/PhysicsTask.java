@@ -1,7 +1,7 @@
 package io.github.divinerealms.aetherball.tasks;
 
 import static io.github.divinerealms.aetherball.configs.Lang.HITDEBUG_VELOCITY_CAP;
-import static io.github.divinerealms.aetherball.matchmaking.util.MatchUtils.isPlayerOnline;
+import static io.github.divinerealms.aetherball.utils.MatchUtils.isPlayerOnline;
 import static io.github.divinerealms.aetherball.physics.PhysicsConstants.AIR_DRAG_FACTOR;
 import static io.github.divinerealms.aetherball.physics.PhysicsConstants.BOUNCE_THRESHOLD;
 import static io.github.divinerealms.aetherball.physics.PhysicsConstants.CUBE_SPEED_TOUCH_DIVISOR;
@@ -27,14 +27,16 @@ import static io.github.divinerealms.aetherball.utils.LoggerUtil.sendMessage;
 import static io.github.divinerealms.aetherball.utils.Permissions.PERM_HIT_DEBUG;
 
 import io.github.divinerealms.aetherball.configs.Settings;
-import io.github.divinerealms.aetherball.core.Manager;
+import io.github.divinerealms.aetherball.managers.Manager;
 import io.github.divinerealms.aetherball.matchmaking.MatchManager;
 import io.github.divinerealms.aetherball.physics.PhysicsData;
 import io.github.divinerealms.aetherball.physics.utilities.PhysicsFormulae;
 import io.github.divinerealms.aetherball.physics.utilities.PhysicsSystem;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+
 import org.bukkit.Location;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
@@ -309,17 +311,8 @@ public class PhysicsTask extends BaseTask {
    * <p><b>Lifecycle:</b> Created during touch detection, reused in anti-clipping,
    * then discarded at the end of each cube's processing.</p>
    */
-  private static class PlayerInteraction {
+  private record PlayerInteraction(Player player, PlayerPhysicsCache cache, double distance) {
 
-    final Player player;
-    final PlayerPhysicsCache cache;
-    final double distance;
-
-    PlayerInteraction(Player player, PlayerPhysicsCache cache, double distance) {
-      this.player = player;
-      this.cache = cache;
-      this.distance = distance;
-    }
   }
 
   /**

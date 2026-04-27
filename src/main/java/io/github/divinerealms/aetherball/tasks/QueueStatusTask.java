@@ -3,11 +3,11 @@ package io.github.divinerealms.aetherball.tasks;
 import static io.github.divinerealms.aetherball.configs.Lang.MATCHES_LIST_LOBBY;
 import static io.github.divinerealms.aetherball.configs.Lang.MATCHES_LIST_WAITING;
 import static io.github.divinerealms.aetherball.configs.Lang.QUEUE_ACTIONBAR;
-import static io.github.divinerealms.aetherball.matchmaking.util.MatchUtils.isPlayerOnline;
+import static io.github.divinerealms.aetherball.utils.MatchUtils.isPlayerOnline;
 import static io.github.divinerealms.aetherball.utils.LoggerUtil.sendActionBar;
 
 import io.github.divinerealms.aetherball.configs.Settings;
-import io.github.divinerealms.aetherball.core.Manager;
+import io.github.divinerealms.aetherball.managers.Manager;
 import io.github.divinerealms.aetherball.matchmaking.Match;
 import io.github.divinerealms.aetherball.matchmaking.MatchPhase;
 import io.github.divinerealms.aetherball.matchmaking.logic.MatchData;
@@ -34,7 +34,7 @@ public class QueueStatusTask extends BaseTask {
         continue;
       }
 
-      int matchType = match.getArena().getType();
+      int matchType = match.getArena().type();
       int requiredPlayers = matchType * 2;
       String matchTypeString = Settings.getMatchTypeName(matchType);
 
@@ -57,7 +57,7 @@ public class QueueStatusTask extends BaseTask {
         Player player = matchPlayer.getPlayer();
         sendActionBar(player, QUEUE_ACTIONBAR,
             MATCHES_LIST_LOBBY.replace(
-                matchTypeString, String.valueOf(match.getArena().getId())
+                matchTypeString, String.valueOf(match.getArena().id())
             ),
             MATCHES_LIST_WAITING.toString(),
             colorCode + currentPlayers,

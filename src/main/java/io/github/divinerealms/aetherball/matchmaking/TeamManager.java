@@ -1,28 +1,19 @@
-package io.github.divinerealms.aetherball.matchmaking.team;
-
-import static io.github.divinerealms.aetherball.configs.Lang.TEAM_DISBANDED;
-import static io.github.divinerealms.aetherball.configs.Lang.TEAM_INVITE_EXPIRED;
-import static io.github.divinerealms.aetherball.matchmaking.util.MatchUtils.isPlayerOnline;
-import static io.github.divinerealms.aetherball.utils.LoggerUtil.sendMessage;
+package io.github.divinerealms.aetherball.matchmaking;
 
 import io.github.divinerealms.aetherball.configs.Settings;
-import io.github.divinerealms.aetherball.core.Manager;
-import io.github.divinerealms.aetherball.matchmaking.Match;
-import io.github.divinerealms.aetherball.matchmaking.MatchManager;
-import io.github.divinerealms.aetherball.matchmaking.MatchPhase;
+import io.github.divinerealms.aetherball.managers.Manager;
 import io.github.divinerealms.aetherball.matchmaking.logic.MatchData;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Queue;
-import java.util.UUID;
 import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
+
+import java.util.*;
+
+import static io.github.divinerealms.aetherball.configs.Lang.TEAM_DISBANDED;
+import static io.github.divinerealms.aetherball.configs.Lang.TEAM_INVITE_EXPIRED;
+import static io.github.divinerealms.aetherball.utils.MatchUtils.isPlayerOnline;
+import static io.github.divinerealms.aetherball.utils.LoggerUtil.sendMessage;
 
 @Getter
 public class TeamManager {
@@ -123,11 +114,9 @@ public class TeamManager {
     }
 
     List<Player> members = team.getMembers();
-    if (members != null) {
-      for (Player player : members) {
-        if (isPlayerOnline(player) && !player.equals(leaver)) {
-          sendMessage(player, TEAM_DISBANDED, leaver.getName());
-        }
+    for (Player player : members) {
+      if (isPlayerOnline(player) && !player.equals(leaver)) {
+        sendMessage(player, TEAM_DISBANDED, leaver.getName());
       }
     }
 
@@ -147,5 +136,11 @@ public class TeamManager {
     }
 
     disbandTeam(team);
+  }
+
+  public record Team(Player leader, Player member, int matchType) {
+    public List<Player> getMembers() {
+      return Arrays.asList(leader, member);
+    }
   }
 }

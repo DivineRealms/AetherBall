@@ -19,7 +19,7 @@ import static io.github.divinerealms.aetherball.configs.Lang.TOGGLES_KICK;
 import static io.github.divinerealms.aetherball.configs.Lang.TOGGLES_PARTICLES;
 import static io.github.divinerealms.aetherball.configs.Lang.TOGGLES_PARTICLES_MODE;
 import static io.github.divinerealms.aetherball.configs.Lang.USAGE;
-import static io.github.divinerealms.aetherball.matchmaking.util.MatchUtils.joinStrings;
+import static io.github.divinerealms.aetherball.utils.MatchUtils.joinStrings;
 import static io.github.divinerealms.aetherball.utils.LoggerUtil.sendMessage;
 import static io.github.divinerealms.aetherball.utils.Permissions.PERM_SET_GOAL_CELEBRATION;
 import static io.github.divinerealms.aetherball.utils.Permissions.PERM_SET_PARTICLE;
@@ -34,12 +34,14 @@ import co.aikar.commands.annotation.Optional;
 import co.aikar.commands.annotation.Subcommand;
 import co.aikar.commands.annotation.Syntax;
 import io.github.divinerealms.aetherball.configs.PlayerData;
-import io.github.divinerealms.aetherball.core.Manager;
+import io.github.divinerealms.aetherball.managers.Manager;
 import io.github.divinerealms.aetherball.managers.PlayerDataManager;
 import io.github.divinerealms.aetherball.physics.PhysicsData;
 import io.github.divinerealms.aetherball.utils.PlayerSettings;
+
 import java.util.ArrayList;
 import java.util.List;
+
 import net.minecraft.server.v1_8_R3.EnumParticle;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
@@ -279,7 +281,7 @@ public class SettingsCommands extends BaseCommand {
   }
 
   private void handleRedstoneParticle(Player player, PlayerData playerData,
-      PlayerSettings settings, EnumParticle particle, String color) {
+                                      PlayerSettings settings, EnumParticle particle, String color) {
     String colorName = color != null ? color.toUpperCase() : "WHITE";
     try {
       settings.setCustomRedstoneColor(colorName);

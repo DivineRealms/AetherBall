@@ -1,16 +1,4 @@
-package io.github.divinerealms.aetherball.core;
-
-import static io.github.divinerealms.aetherball.configs.Lang.HELP_USAGE;
-import static io.github.divinerealms.aetherball.configs.Lang.INGAME_ONLY;
-import static io.github.divinerealms.aetherball.configs.Lang.NO_PERM;
-import static io.github.divinerealms.aetherball.configs.Lang.NO_PERM_PARAMETERS;
-import static io.github.divinerealms.aetherball.configs.Lang.PLAYER_NOT_FOUND;
-import static io.github.divinerealms.aetherball.configs.Lang.UNKNOWN_COMMAND;
-import static io.github.divinerealms.aetherball.matchmaking.util.MatchUtils.isPlayerOnline;
-import static io.github.divinerealms.aetherball.utils.LoggerUtil.debugConsole;
-import static io.github.divinerealms.aetherball.utils.LoggerUtil.logConsole;
-import static io.github.divinerealms.aetherball.utils.LoggerUtil.sendMessage;
-import static io.github.divinerealms.aetherball.utils.Permissions.PERM_ADMIN;
+package io.github.divinerealms.aetherball.managers;
 
 import co.aikar.commands.BukkitCommandCompletionContext;
 import co.aikar.commands.CommandCompletions;
@@ -21,33 +9,20 @@ import io.github.divinerealms.aetherball.commands.CubeCommands;
 import io.github.divinerealms.aetherball.commands.DynamicCommandRegistry;
 import io.github.divinerealms.aetherball.commands.MainCommand;
 import io.github.divinerealms.aetherball.commands.MatchMan;
-import io.github.divinerealms.aetherball.commands.admin.ArenaCommands;
-import io.github.divinerealms.aetherball.commands.admin.BanCommands;
-import io.github.divinerealms.aetherball.commands.admin.BaseAdmin;
-import io.github.divinerealms.aetherball.commands.admin.DebugCommands;
-import io.github.divinerealms.aetherball.commands.admin.PlayerCommands;
-import io.github.divinerealms.aetherball.commands.admin.SystemCommands;
-import io.github.divinerealms.aetherball.commands.player.BuildCommand;
-import io.github.divinerealms.aetherball.commands.player.GameCommands;
-import io.github.divinerealms.aetherball.commands.player.MatchesCommand;
-import io.github.divinerealms.aetherball.commands.player.SettingsCommands;
-import io.github.divinerealms.aetherball.commands.player.TeamCommands;
+import io.github.divinerealms.aetherball.commands.admin.*;
+import io.github.divinerealms.aetherball.commands.player.*;
 import io.github.divinerealms.aetherball.configs.Lang;
 import io.github.divinerealms.aetherball.configs.PlayerData;
 import io.github.divinerealms.aetherball.configs.Settings;
-import io.github.divinerealms.aetherball.managers.ConfigManager;
-import io.github.divinerealms.aetherball.managers.ListenerManager;
-import io.github.divinerealms.aetherball.managers.PlayerDataManager;
-import io.github.divinerealms.aetherball.managers.TaskManager;
-import io.github.divinerealms.aetherball.managers.Utilities;
+import io.github.divinerealms.aetherball.matchmaking.DuelManager;
 import io.github.divinerealms.aetherball.matchmaking.MatchManager;
-import io.github.divinerealms.aetherball.matchmaking.arena.ArenaManager;
-import io.github.divinerealms.aetherball.matchmaking.ban.BanManager;
-import io.github.divinerealms.aetherball.matchmaking.highscore.HighScoreManager;
+import io.github.divinerealms.aetherball.matchmaking.ArenaManager;
+import io.github.divinerealms.aetherball.matchmaking.BanManager;
+import io.github.divinerealms.aetherball.matchmaking.HighScoreManager;
 import io.github.divinerealms.aetherball.matchmaking.logic.MatchData;
 import io.github.divinerealms.aetherball.matchmaking.logic.MatchSystem;
-import io.github.divinerealms.aetherball.matchmaking.scoreboard.ScoreManager;
-import io.github.divinerealms.aetherball.matchmaking.team.TeamManager;
+import io.github.divinerealms.aetherball.matchmaking.ScoreManager;
+import io.github.divinerealms.aetherball.matchmaking.TeamManager;
 import io.github.divinerealms.aetherball.physics.PhysicsData;
 import io.github.divinerealms.aetherball.physics.utilities.PhysicsFormulae;
 import io.github.divinerealms.aetherball.physics.utilities.PhysicsSystem;
@@ -55,17 +30,6 @@ import io.github.divinerealms.aetherball.utils.CubeCleaner;
 import io.github.divinerealms.aetherball.utils.DisableCommands;
 import io.github.divinerealms.aetherball.utils.Placeholders;
 import io.github.divinerealms.aetherball.utils.PlayerSettings;
-import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-import java.util.StringJoiner;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 import lombok.Getter;
 import lombok.Setter;
 import me.neznamy.tab.api.TabAPI;
@@ -81,6 +45,16 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.scheduler.BukkitScheduler;
+
+import java.lang.reflect.Field;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
+
+import static io.github.divinerealms.aetherball.configs.Lang.*;
+import static io.github.divinerealms.aetherball.utils.MatchUtils.isPlayerOnline;
+import static io.github.divinerealms.aetherball.utils.LoggerUtil.*;
+import static io.github.divinerealms.aetherball.utils.Permissions.PERM_ADMIN;
 
 @Getter
 public class Manager {
@@ -99,6 +73,7 @@ public class Manager {
   private final ScoreManager scoreboardManager;
   private final MatchData matchData;
   private final TeamManager teamManager;
+  private final DuelManager duelManager;
   private final MatchSystem matchSystem;
   private final BanManager banManager;
   private final HighScoreManager highscoreManager;
@@ -145,6 +120,7 @@ public class Manager {
     this.scoreboardManager = new ScoreManager(this);
     this.matchData = new MatchData();
     this.teamManager = new TeamManager(this);
+    this.duelManager = new DuelManager(this);
     this.matchSystem = new MatchSystem(this);
     this.banManager = new BanManager(this);
     this.highscoreManager = new HighScoreManager(this);
@@ -499,6 +475,9 @@ public class Manager {
       }
       if (physicsData != null) {
         physicsData.cleanup();
+      }
+      if (matchData != null) {
+        matchData.cleanup();
       }
       playerSettings.clear();
       cachedPrefixedNames.clear();

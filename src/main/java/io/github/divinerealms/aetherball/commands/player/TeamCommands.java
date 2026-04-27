@@ -1,30 +1,18 @@
 package io.github.divinerealms.aetherball.commands.player;
 
-import static io.github.divinerealms.aetherball.configs.Lang.FC_DISABLED;
-import static io.github.divinerealms.aetherball.configs.Lang.MATCH_TYPE_UNAVAILABLE;
-import static io.github.divinerealms.aetherball.configs.Lang.USAGE;
-import static io.github.divinerealms.aetherball.matchmaking.util.MatchUtils.isPlayerOnline;
-import static io.github.divinerealms.aetherball.utils.GameCommandsHelper.handleAccept;
-import static io.github.divinerealms.aetherball.utils.GameCommandsHelper.handleDecline;
-import static io.github.divinerealms.aetherball.utils.GameCommandsHelper.handleInvite;
-import static io.github.divinerealms.aetherball.utils.GameCommandsHelper.parseMatchType;
-import static io.github.divinerealms.aetherball.utils.LoggerUtil.sendMessage;
-import static io.github.divinerealms.aetherball.utils.Permissions.PERM_PLAY;
-
 import co.aikar.commands.BaseCommand;
-import co.aikar.commands.annotation.CommandAlias;
-import co.aikar.commands.annotation.CommandCompletion;
-import co.aikar.commands.annotation.CommandPermission;
-import co.aikar.commands.annotation.Description;
-import co.aikar.commands.annotation.Flags;
-import co.aikar.commands.annotation.Optional;
-import co.aikar.commands.annotation.Subcommand;
-import co.aikar.commands.annotation.Syntax;
+import co.aikar.commands.annotation.*;
 import io.github.divinerealms.aetherball.configs.Settings;
-import io.github.divinerealms.aetherball.core.Manager;
+import io.github.divinerealms.aetherball.managers.Manager;
 import io.github.divinerealms.aetherball.matchmaking.MatchManager;
 import io.github.divinerealms.aetherball.matchmaking.logic.MatchData;
 import org.bukkit.entity.Player;
+
+import static io.github.divinerealms.aetherball.configs.Lang.*;
+import static io.github.divinerealms.aetherball.utils.GameCommandsHelper.*;
+import static io.github.divinerealms.aetherball.utils.LoggerUtil.sendMessage;
+import static io.github.divinerealms.aetherball.utils.MatchUtils.isPlayerOnline;
+import static io.github.divinerealms.aetherball.utils.Permissions.PERM_PLAY;
 
 @CommandAlias("aetherball|ab|fc")
 public class TeamCommands extends BaseCommand {
@@ -65,6 +53,11 @@ public class TeamCommands extends BaseCommand {
     if (matchType != null && Settings.isMatchTypeEnabled(matchType)) {
       if (!isPlayerOnline(target)) {
         sendMessage(player, USAGE, getExecSubcommand());
+        return;
+      }
+
+      if (player == target) {
+        sendMessage(player, TEAM_YOURSELF);
         return;
       }
 

@@ -1,10 +1,12 @@
 package io.github.divinerealms.aetherball.utils;
 
-import io.github.divinerealms.aetherball.core.Manager;
+import io.github.divinerealms.aetherball.managers.Manager;
 import io.github.divinerealms.aetherball.managers.ConfigManager;
+
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+
 import lombok.Getter;
 import org.bukkit.configuration.file.FileConfiguration;
 

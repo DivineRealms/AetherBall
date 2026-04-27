@@ -22,10 +22,12 @@ import co.aikar.commands.annotation.Subcommand;
 import co.aikar.commands.annotation.Syntax;
 import io.github.divinerealms.aetherball.AetherBall;
 import io.github.divinerealms.aetherball.configs.PlayerData;
-import io.github.divinerealms.aetherball.core.Manager;
+import io.github.divinerealms.aetherball.managers.Manager;
 import io.github.divinerealms.aetherball.managers.PlayerDataManager;
 import io.github.divinerealms.aetherball.matchmaking.MatchManager;
+
 import java.util.Arrays;
+
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -50,7 +52,7 @@ public class PlayerCommands extends BaseCommand {
   @CommandCompletion("@players wins|matches|ties|goals|assists|owngoals|winstreak|bestwinstreak|all")
   @Description("Set player statistics")
   public void onStatSet(CommandSender sender, @Flags("other") Player target, String stat,
-      String amountStr) {
+                        String amountStr) {
     PlayerData playerData = dataManager.get(target);
     if (playerData == null) {
       sendMessage(sender, PLAYER_NOT_FOUND);

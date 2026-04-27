@@ -1,9 +1,9 @@
 package io.github.divinerealms.aetherball.tasks;
 
-import static io.github.divinerealms.aetherball.matchmaking.util.MatchUtils.isPlayerOnline;
+import static io.github.divinerealms.aetherball.utils.MatchUtils.isPlayerOnline;
 import static io.github.divinerealms.aetherball.utils.LoggerUtil.debugConsole;
 
-import io.github.divinerealms.aetherball.core.Manager;
+import io.github.divinerealms.aetherball.managers.Manager;
 import org.bukkit.entity.Player;
 
 public class CacheCleanupTask extends BaseTask {

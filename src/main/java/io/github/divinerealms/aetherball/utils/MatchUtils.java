@@ -1,74 +1,14 @@
-package io.github.divinerealms.aetherball.matchmaking.util;
-
-import static io.github.divinerealms.aetherball.configs.Lang.BLUE;
-import static io.github.divinerealms.aetherball.configs.Lang.GM_ASSISTS_TEXT;
-import static io.github.divinerealms.aetherball.configs.Lang.GM_DEFAULT_ACTIONBAR;
-import static io.github.divinerealms.aetherball.configs.Lang.GM_DEFAULT_SUBTITLE_GOAL;
-import static io.github.divinerealms.aetherball.configs.Lang.GM_DEFAULT_SUBTITLE_OWN;
-import static io.github.divinerealms.aetherball.configs.Lang.GM_DEFAULT_TITLE_GOAL;
-import static io.github.divinerealms.aetherball.configs.Lang.GM_DEFAULT_TITLE_HATTY;
-import static io.github.divinerealms.aetherball.configs.Lang.GM_DEFAULT_TITLE_OWN;
-import static io.github.divinerealms.aetherball.configs.Lang.GM_DEFAULT_TITLE_SCORER;
-import static io.github.divinerealms.aetherball.configs.Lang.GM_EPIC_SUBTITLE_1;
-import static io.github.divinerealms.aetherball.configs.Lang.GM_EPIC_SUBTITLE_1_OTHER;
-import static io.github.divinerealms.aetherball.configs.Lang.GM_EPIC_SUBTITLE_1_SCORER;
-import static io.github.divinerealms.aetherball.configs.Lang.GM_EPIC_SUBTITLE_2;
-import static io.github.divinerealms.aetherball.configs.Lang.GM_EPIC_SUBTITLE_3;
-import static io.github.divinerealms.aetherball.configs.Lang.GM_EPIC_TITLE_1;
-import static io.github.divinerealms.aetherball.configs.Lang.GM_EPIC_TITLE_1_GOAL;
-import static io.github.divinerealms.aetherball.configs.Lang.GM_EPIC_TITLE_1_HATTY;
-import static io.github.divinerealms.aetherball.configs.Lang.GM_EPIC_TITLE_2;
-import static io.github.divinerealms.aetherball.configs.Lang.GM_EPIC_TITLE_2_GOAL;
-import static io.github.divinerealms.aetherball.configs.Lang.GM_EPIC_TITLE_3;
-import static io.github.divinerealms.aetherball.configs.Lang.GM_MINIMAL_GOAL;
-import static io.github.divinerealms.aetherball.configs.Lang.GM_MINIMAL_OWN;
-import static io.github.divinerealms.aetherball.configs.Lang.GM_SIMPLE_SUBTITLE;
-import static io.github.divinerealms.aetherball.configs.Lang.GM_SIMPLE_TITLE;
-import static io.github.divinerealms.aetherball.configs.Lang.GM_SIMPLE_TITLE_GOAL;
-import static io.github.divinerealms.aetherball.configs.Lang.MATCHES_LIST_BLUEPLAYERS;
-import static io.github.divinerealms.aetherball.configs.Lang.MATCHES_LIST_LOBBY;
-import static io.github.divinerealms.aetherball.configs.Lang.MATCHES_LIST_MATCH;
-import static io.github.divinerealms.aetherball.configs.Lang.MATCHES_LIST_REDPLAYERS;
-import static io.github.divinerealms.aetherball.configs.Lang.MATCHES_LIST_RESULT;
-import static io.github.divinerealms.aetherball.configs.Lang.MATCHES_LIST_STARTING;
-import static io.github.divinerealms.aetherball.configs.Lang.MATCHES_LIST_STATUS;
-import static io.github.divinerealms.aetherball.configs.Lang.MATCHES_LIST_TIMELEFT;
-import static io.github.divinerealms.aetherball.configs.Lang.MATCHES_LIST_WAITING;
-import static io.github.divinerealms.aetherball.configs.Lang.MATCHES_LIST_WAITINGPLAYERS;
-import static io.github.divinerealms.aetherball.configs.Lang.MATCH_ASSIST_CREDITS;
-import static io.github.divinerealms.aetherball.configs.Lang.MATCH_GOAL;
-import static io.github.divinerealms.aetherball.configs.Lang.MATCH_GOALLL;
-import static io.github.divinerealms.aetherball.configs.Lang.MATCH_HATTRICK;
-import static io.github.divinerealms.aetherball.configs.Lang.MATCH_SCORE_CREDITS;
-import static io.github.divinerealms.aetherball.configs.Lang.MATCH_SCORE_HATTRICK;
-import static io.github.divinerealms.aetherball.configs.Lang.MATCH_SCORE_OWN_GOAL_ANNOUNCE;
-import static io.github.divinerealms.aetherball.configs.Lang.MATCH_SCORE_STATS;
-import static io.github.divinerealms.aetherball.configs.Lang.NOBODY;
-import static io.github.divinerealms.aetherball.configs.Lang.RED;
-import static io.github.divinerealms.aetherball.utils.LoggerUtil.sendActionBar;
-import static io.github.divinerealms.aetherball.utils.LoggerUtil.sendMessage;
-import static io.github.divinerealms.aetherball.utils.LoggerUtil.title;
+package io.github.divinerealms.aetherball.utils;
 
 import io.github.divinerealms.aetherball.configs.Settings;
-import io.github.divinerealms.aetherball.core.Manager;
+import io.github.divinerealms.aetherball.managers.Manager;
 import io.github.divinerealms.aetherball.managers.Utilities;
 import io.github.divinerealms.aetherball.matchmaking.Match;
 import io.github.divinerealms.aetherball.matchmaking.MatchPhase;
-import io.github.divinerealms.aetherball.matchmaking.arena.Arena;
+import io.github.divinerealms.aetherball.matchmaking.ArenaManager;
 import io.github.divinerealms.aetherball.matchmaking.player.MatchPlayer;
 import io.github.divinerealms.aetherball.matchmaking.player.TeamColor;
-import io.github.divinerealms.aetherball.utils.PlayerSettings;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.StringJoiner;
-import java.util.concurrent.TimeUnit;
-import lombok.Getter;
-import org.bukkit.Bukkit;
-import org.bukkit.Color;
-import org.bukkit.Effect;
-import org.bukkit.GameMode;
-import org.bukkit.Location;
-import org.bukkit.Material;
+import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
@@ -77,13 +17,20 @@ import org.bukkit.inventory.meta.LeatherArmorMeta;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.util.Vector;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.StringJoiner;
+import java.util.concurrent.TimeUnit;
+
+import static io.github.divinerealms.aetherball.configs.Lang.*;
+import static io.github.divinerealms.aetherball.utils.LoggerUtil.*;
+
 public class MatchUtils {
 
   public static ItemStack createColoredArmor(Material material, org.bukkit.Color color) {
     ItemStack itemStack = new ItemStack(material);
     ItemMeta itemMeta = itemStack.getItemMeta();
-    if (itemMeta instanceof LeatherArmorMeta) {
-      LeatherArmorMeta leatherMeta = (LeatherArmorMeta) itemMeta;
+    if (itemMeta instanceof LeatherArmorMeta leatherMeta) {
       leatherMeta.setColor(color);
       itemStack.setItemMeta(leatherMeta);
     }
@@ -145,7 +92,7 @@ public class MatchUtils {
       }
 
       firstBlock = false;
-      String type = Settings.getMatchTypeName(match.getArena().getType());
+      String type = Settings.getMatchTypeName(match.getArena().type());
 
       List<String> redPlayers = new ArrayList<>();
       List<String> bluePlayers = new ArrayList<>();
@@ -176,7 +123,7 @@ public class MatchUtils {
       } else if (match.getPhase() == MatchPhase.STARTING) {
         timeDisplay = MATCHES_LIST_STARTING.replace(String.valueOf(match.getCountdown()));
       } else {
-        long matchDuration = Settings.getMatchDuration(match.getArena().getType());
+        long matchDuration = Settings.getMatchDuration(match.getArena().type());
         long elapsedMillis =
             System.currentTimeMillis() - match.getStartTime();
         long remainingSeconds = matchDuration - TimeUnit.MILLISECONDS.toSeconds(elapsedMillis);
@@ -185,14 +132,14 @@ public class MatchUtils {
       }
 
       if (match.getPhase() == MatchPhase.LOBBY) {
-        output.add(MATCHES_LIST_LOBBY.replace(type, String.valueOf(match.getArena().getId())));
+        output.add(MATCHES_LIST_LOBBY.replace(type, String.valueOf(match.getArena().id())));
         output.add(MATCHES_LIST_WAITINGPLAYERS.replace(waitingPlayers.isEmpty()
             ? "/"
             : joinStrings(waitingPlayers)));
         output.add(MATCHES_LIST_STATUS.replace(timeDisplay));
       } else {
         if (match.getPhase() == MatchPhase.STARTING) {
-          output.add(MATCHES_LIST_LOBBY.replace(type, String.valueOf(match.getArena().getId())));
+          output.add(MATCHES_LIST_LOBBY.replace(type, String.valueOf(match.getArena().id())));
           output.add(MATCHES_LIST_REDPLAYERS.replace(redPlayers.isEmpty()
               ? "/"
               : joinStrings(redPlayers)));
@@ -201,7 +148,7 @@ public class MatchUtils {
               : joinStrings(bluePlayers)));
           output.add(MATCHES_LIST_STATUS.replace(timeDisplay));
         } else {
-          output.add(MATCHES_LIST_MATCH.replace(type, String.valueOf(match.getArena().getId())));
+          output.add(MATCHES_LIST_MATCH.replace(type, String.valueOf(match.getArena().id())));
           output.add(MATCHES_LIST_RESULT.replace(
               String.valueOf(match.getScoreRed()),
               String.valueOf(match.getScoreBlue()),
@@ -235,10 +182,10 @@ public class MatchUtils {
   }
 
   public static void displayGoalMessage(Player player, String style, boolean ownGoal,
-      boolean isHatTrick, boolean isViewerScorer,
-      String scorerName, String assistText,
-      String teamColorText, double distance,
-      Match match, Plugin plugin) {
+                                        boolean isHatTrick, boolean isViewerScorer,
+                                        String scorerName, String assistText,
+                                        String teamColorText, double distance,
+                                        Match match, Plugin plugin) {
     String distanceString = String.format("%.0f", distance);
     String redTeam = RED.toString(), blueTeam = BLUE.toString();
 
@@ -269,20 +216,20 @@ public class MatchUtils {
   }
 
   private static void displayEpicGoal(Player player, boolean ownGoal, boolean isHatTrick,
-      boolean isViewerScorer, String scorerName, String assistText,
-      String teamColorText, String distance, String redTeam,
-      String blueTeam, Match match, Plugin plugin) {
+                                      boolean isViewerScorer, String scorerName, String assistText,
+                                      String teamColorText, String distance, String redTeam,
+                                      String blueTeam, Match match, Plugin plugin) {
     String initialTitle = ownGoal
         ? GM_EPIC_TITLE_1.toString()
         : isHatTrick
-            ? GM_EPIC_TITLE_1_HATTY.toString()
-            : GM_EPIC_TITLE_1_GOAL.toString();
+        ? GM_EPIC_TITLE_1_HATTY.toString()
+        : GM_EPIC_TITLE_1_GOAL.toString();
 
     String initialSubtitle = ownGoal
         ? GM_EPIC_SUBTITLE_1.toString()
         : isViewerScorer
-            ? GM_EPIC_SUBTITLE_1_SCORER.toString()
-            : GM_EPIC_SUBTITLE_1_OTHER.replace(scorerName);
+        ? GM_EPIC_SUBTITLE_1_SCORER.toString()
+        : GM_EPIC_SUBTITLE_1_OTHER.replace(scorerName);
 
     title(player, initialTitle, initialSubtitle, 5, 35, 10);
 
@@ -317,7 +264,7 @@ public class MatchUtils {
   }
 
   private static void displaySimpleGoal(Player player, boolean ownGoal,
-      String scorerName, String distance) {
+                                        String scorerName, String distance) {
     String title = ownGoal
         ? GM_SIMPLE_TITLE.toString()
         : GM_SIMPLE_TITLE_GOAL.toString();
@@ -328,8 +275,8 @@ public class MatchUtils {
   }
 
   private static void displayMinimalGoal(Player player, boolean ownGoal,
-      String scorerName, String redTeam,
-      String blueTeam, Match match) {
+                                         String scorerName, String redTeam,
+                                         String blueTeam, Match match) {
     sendActionBar(player, ownGoal
             ? GM_MINIMAL_OWN
             : GM_MINIMAL_GOAL,
@@ -341,24 +288,24 @@ public class MatchUtils {
   }
 
   private static void displayDefaultGoal(Player player, boolean ownGoal,
-      boolean isHatTrick, boolean isViewerScorer,
-      String scorerName, String assistText,
-      String teamColorText, String distance,
-      String redTeam, String blueTeam,
-      Match match) {
+                                         boolean isHatTrick, boolean isViewerScorer,
+                                         String scorerName, String assistText,
+                                         String teamColorText, String distance,
+                                         String redTeam, String blueTeam,
+                                         Match match) {
     String title = ownGoal
         ? GM_DEFAULT_TITLE_OWN.toString()
         : isHatTrick
-            ? GM_DEFAULT_TITLE_HATTY.toString()
-            : isViewerScorer
-                ? GM_DEFAULT_TITLE_SCORER.toString()
-                : GM_DEFAULT_TITLE_GOAL.toString();
+        ? GM_DEFAULT_TITLE_HATTY.toString()
+        : isViewerScorer
+        ? GM_DEFAULT_TITLE_SCORER.toString()
+        : GM_DEFAULT_TITLE_GOAL.toString();
 
     String subtitle = ownGoal
         ? GM_DEFAULT_SUBTITLE_OWN.replace(scorerName, teamColorText)
         : GM_DEFAULT_SUBTITLE_GOAL.replace(scorerName, distance, assistText.isEmpty()
-            ? ""
-            : assistText);
+        ? ""
+        : assistText);
 
     title(player, title, subtitle, 10, 50, 10);
 
@@ -377,17 +324,17 @@ public class MatchUtils {
   }
 
   private static boolean isHatTrickGoal(ScoringResult result) {
-    return !result.isOwnGoal()
-        && result.getScorer() != null
-        && result.getScorer().getPlayer() != null
-        && result.getScorer().getGoals() > 0
-        && result.getScorer().getGoals() % 3 == 0;
+    return !result.ownGoal()
+        && result.scorer() != null
+        && result.scorer().getPlayer() != null
+        && result.scorer().getGoals() > 0
+        && result.scorer().getGoals() % 3 == 0;
   }
 
   private static double calculateScoringDistance(ScoringResult result,
-      Location goalLoc) {
-    if (result.getScorer() != null && result.getScorer().getPlayer() != null) {
-      return result.getScorer().getPlayer().getLocation().distance(goalLoc);
+                                                 Location goalLoc) {
+    if (result.scorer() != null && result.scorer().getPlayer() != null) {
+      return result.scorer().getPlayer().getLocation().distance(goalLoc);
     }
     return 0;
   }
@@ -400,7 +347,7 @@ public class MatchUtils {
   }
 
   public static ScoringResult determineScoringPlayers(Match match,
-      TeamColor scoringTeam, boolean shouldCountStats) {
+                                                      TeamColor scoringTeam, boolean shouldCountStats) {
     MatchPlayer scorer = match.getLastTouch();
     MatchPlayer assister = null;
     boolean ownGoal = false;
@@ -440,9 +387,9 @@ public class MatchUtils {
   }
 
   public static void awardCreditsForGoal(ScoringResult result,
-      Manager manager) {
-    MatchPlayer scorer = result.getScorer();
-    MatchPlayer assister = result.getAssister();
+                                         Manager manager) {
+    MatchPlayer scorer = result.scorer();
+    MatchPlayer assister = result.assister();
 
     if (isPlayerOnline(scorer)) {
       Player scoringPlayer = scorer.getPlayer();
@@ -490,12 +437,12 @@ public class MatchUtils {
   }
 
   public static void broadcastGoalMessage(Match match, ScoringResult result,
-      Location goalLoc, Manager manager) {
+                                          Location goalLoc, Manager manager) {
     String prefixedScorer = NOBODY.toString();
     String prefixedAssister = null;
 
-    if (result.getScorer() != null && result.getScorer().getPlayer() != null) {
-      Player scorer = result.getScorer().getPlayer();
+    if (result.scorer() != null && result.scorer().getPlayer() != null) {
+      Player scorer = result.scorer().getPlayer();
       prefixedScorer = manager.getPrefixedName(scorer.getUniqueId());
       if (prefixedScorer == null) {
         prefixedScorer = scorer.getName();
@@ -503,8 +450,8 @@ public class MatchUtils {
       }
     }
 
-    if (result.getAssister() != null && result.getAssister().getPlayer() != null) {
-      Player assister = result.getAssister().getPlayer();
+    if (result.assister() != null && result.assister().getPlayer() != null) {
+      Player assister = result.assister().getPlayer();
       prefixedAssister = manager.getPrefixedName(assister.getUniqueId());
       if (prefixedAssister == null) {
         prefixedAssister = assister.getName();
@@ -516,10 +463,10 @@ public class MatchUtils {
   }
 
   private static void sendGoalMessages(Match match, ScoringResult result,
-      String prefixedScorer, String prefixedAssister,
-      Location goalLoc, Manager manager) {
+                                       String prefixedScorer, String prefixedAssister,
+                                       Location goalLoc, Manager manager) {
     boolean isHatTrick = isHatTrickGoal(result);
-    String teamColorText = result.getScoringTeam() == TeamColor.RED
+    String teamColorText = result.scoringTeam() == TeamColor.RED
         ? RED.toString()
         : BLUE.toString();
 
@@ -528,21 +475,21 @@ public class MatchUtils {
         ? GM_ASSISTS_TEXT.replace(prefixedAssister)
         : "";
 
-    String goalMessage = result.isOwnGoal()
+    String goalMessage = result.ownGoal()
         ? MATCH_SCORE_OWN_GOAL_ANNOUNCE.replace(prefixedScorer, teamColorText)
         : MATCH_GOAL.replace(
-            isHatTrick
-                ? MATCH_HATTRICK.toString()
-                : MATCH_GOALLL.toString(),
-            prefixedScorer,
-            teamColorText,
-            String.format("%.0f", distance),
-            assistText
-        );
+        isHatTrick
+            ? MATCH_HATTRICK.toString()
+            : MATCH_GOALLL.toString(),
+        prefixedScorer,
+        teamColorText,
+        String.format("%.0f", distance),
+        assistText
+    );
 
     String goalMessageStyle = "default";
-    if (result.getScorer() != null && result.getScorer().getPlayer() != null) {
-      PlayerSettings scorerSettings = manager.getPlayerSettings(result.getScorer().getPlayer());
+    if (result.scorer() != null && result.scorer().getPlayer() != null) {
+      PlayerSettings scorerSettings = manager.getPlayerSettings(result.scorer().getPlayer());
       goalMessageStyle = getGoalMessageStyle(scorerSettings);
     }
 
@@ -552,9 +499,9 @@ public class MatchUtils {
       }
 
       Player player = matchPlayer.getPlayer();
-      boolean isViewerScorer = matchPlayer.equals(result.getScorer());
+      boolean isViewerScorer = matchPlayer.equals(result.scorer());
 
-      displayGoalMessage(player, goalMessageStyle, result.isOwnGoal(), isHatTrick,
+      displayGoalMessage(player, goalMessageStyle, result.ownGoal(), isHatTrick,
           isViewerScorer, prefixedScorer, assistText, teamColorText,
           distance, match, manager.getPlugin()
       );
@@ -567,21 +514,11 @@ public class MatchUtils {
     }
   }
 
-  public static void preparePlayer(Player player, TeamColor color, Arena arena,
-      PlayerSettings playerSettings) {
-    ItemStack chestplate = createColoredArmor(Material.LEATHER_CHESTPLATE, color == TeamColor.RED
-        ? Color.RED
-        : Color.BLUE);
-    ItemStack leggings = createColoredArmor(Material.LEATHER_LEGGINGS, color == TeamColor.RED
-        ? Color.RED
-        : Color.BLUE);
-
-    PlayerInventory inventory = player.getInventory();
-    inventory.setChestplate(chestplate);
-    inventory.setLeggings(leggings);
-
+  public static void preparePlayer(Player player, TeamColor color, ArenaManager.Arena arena,
+                                   PlayerSettings playerSettings) {
+    giveArmor(player, color);
     preventPlayerAbuse(player, playerSettings);
-    player.teleport(color == TeamColor.RED ? arena.getRedSpawn() : arena.getBlueSpawn());
+    player.teleport(color == TeamColor.RED ? arena.redSpawn() : arena.blueSpawn());
   }
 
   public static boolean preventPlayerAbuse(Player player, PlayerSettings playerSettings) {
@@ -613,24 +550,7 @@ public class MatchUtils {
    * Represents the result of determining who scored and assisted. This is a traditional Java class
    * that holds immutable data about a scoring event.
    */
-  public static class ScoringResult {
-
-    @Getter
-    private final MatchPlayer scorer;
-    @Getter
-    private final MatchPlayer assister;
-    @Getter
-    private final boolean ownGoal;
-    @Getter
-    private final TeamColor scoringTeam;
-
-    public ScoringResult(MatchPlayer scorer, MatchPlayer assister, boolean ownGoal,
-        TeamColor scoringTeam) {
-      this.scorer = scorer;
-      this.assister = assister;
-      this.ownGoal = ownGoal;
-      this.scoringTeam = scoringTeam;
-    }
+  public record ScoringResult(MatchPlayer scorer, MatchPlayer assister, boolean ownGoal, TeamColor scoringTeam) {
 
     /**
      * Determines if credits should be awarded for this goal. Credits are only awarded for regular

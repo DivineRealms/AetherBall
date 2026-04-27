@@ -2,7 +2,7 @@ package io.github.divinerealms.aetherball.tasks;
 
 import static io.github.divinerealms.aetherball.physics.PhysicsConstants.MATCH_TASK_INTERVAL_TICKS;
 
-import io.github.divinerealms.aetherball.core.Manager;
+import io.github.divinerealms.aetherball.managers.Manager;
 import io.github.divinerealms.aetherball.matchmaking.MatchManager;
 
 /**

@@ -1,34 +1,21 @@
 package io.github.divinerealms.aetherball.listeners;
 
-import static io.github.divinerealms.aetherball.configs.Lang.COMMAND_DISABLER_CANT_USE;
-import static io.github.divinerealms.aetherball.configs.Lang.TEAM_DISBANDED;
-import static io.github.divinerealms.aetherball.matchmaking.util.MatchUtils.isPlayerOnline;
-import static io.github.divinerealms.aetherball.matchmaking.util.MatchUtils.shouldPreventAbuse;
-import static io.github.divinerealms.aetherball.utils.LoggerUtil.sendMessage;
-import static io.github.divinerealms.aetherball.utils.Permissions.PERM_BYPASS_DISABLED_COMMANDS;
-
 import io.github.divinerealms.aetherball.configs.PlayerData;
 import io.github.divinerealms.aetherball.configs.Settings;
-import io.github.divinerealms.aetherball.core.Manager;
+import io.github.divinerealms.aetherball.managers.Manager;
 import io.github.divinerealms.aetherball.managers.PlayerDataManager;
 import io.github.divinerealms.aetherball.matchmaking.Match;
 import io.github.divinerealms.aetherball.matchmaking.MatchManager;
 import io.github.divinerealms.aetherball.matchmaking.MatchPhase;
-import io.github.divinerealms.aetherball.matchmaking.ban.BanManager;
+import io.github.divinerealms.aetherball.matchmaking.BanManager;
 import io.github.divinerealms.aetherball.matchmaking.logic.MatchData;
 import io.github.divinerealms.aetherball.matchmaking.player.MatchPlayer;
 import io.github.divinerealms.aetherball.matchmaking.player.TeamColor;
-import io.github.divinerealms.aetherball.matchmaking.scoreboard.ScoreManager;
-import io.github.divinerealms.aetherball.matchmaking.team.Team;
-import io.github.divinerealms.aetherball.matchmaking.team.TeamManager;
+import io.github.divinerealms.aetherball.matchmaking.ScoreManager;
+import io.github.divinerealms.aetherball.matchmaking.TeamManager;
 import io.github.divinerealms.aetherball.physics.utilities.PhysicsSystem;
 import io.github.divinerealms.aetherball.utils.DisableCommands;
 import io.github.divinerealms.aetherball.utils.PlayerSettings;
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
-import java.util.Queue;
-import java.util.UUID;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -36,12 +23,17 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.player.PlayerCommandPreprocessEvent;
-import org.bukkit.event.player.PlayerDropItemEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerPickupItemEvent;
-import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.player.*;
 import org.bukkit.plugin.Plugin;
+
+import java.util.*;
+
+import static io.github.divinerealms.aetherball.configs.Lang.COMMAND_DISABLER_CANT_USE;
+import static io.github.divinerealms.aetherball.configs.Lang.TEAM_DISBANDED;
+import static io.github.divinerealms.aetherball.utils.MatchUtils.isPlayerOnline;
+import static io.github.divinerealms.aetherball.utils.MatchUtils.shouldPreventAbuse;
+import static io.github.divinerealms.aetherball.utils.LoggerUtil.sendMessage;
+import static io.github.divinerealms.aetherball.utils.Permissions.PERM_BYPASS_DISABLED_COMMANDS;
 
 /**
  * Handles core player lifecycle events and match-related restrictions.
@@ -191,6 +183,7 @@ public class PlayerEvents extends BaseListener {
       manager.getCachedPlayers().remove(player);
       manager.getPlayerSettings().remove(player.getUniqueId());
       manager.getCachedPrefixedNames().remove(player.getUniqueId());
+      manager.getDuelManager().cleanupPlayerRequests(player);
 
       // Remove from all matchmaking queues.
       Collection<Queue<Player>> playerQueues = matchData.getPlayerQueues().values();
@@ -217,8 +210,8 @@ public class PlayerEvents extends BaseListener {
 
       // Disband team if player is in one, notifying remaining members.
       if (teamManager.isInTeam(player)) {
-        Team team = teamManager.getTeam(player);
-        if (team != null && team.getMembers() != null) {
+        TeamManager.Team team = teamManager.getTeam(player);
+        if (team != null) {
           for (Player player1 : team.getMembers()) {
             if (isPlayerOnline(player1) && !player1.equals(player)) {
               sendMessage(player1, TEAM_DISBANDED, player.getName());
@@ -303,11 +296,10 @@ public class PlayerEvents extends BaseListener {
   @EventHandler
   public void onInventoryInteract(InventoryClickEvent event) {
     monitoredExecution(() -> {
-      if (!(event.getWhoClicked() instanceof Player)) {
+      if (!(event.getWhoClicked() instanceof Player player)) {
         return;
       }
 
-      Player player = (Player) event.getWhoClicked();
       Optional<Match> matchOpt = matchManager.getMatch(player);
       if (matchOpt.isPresent() && shouldPreventAbuse(matchOpt.get().getPhase())) {
         event.setCancelled(true);

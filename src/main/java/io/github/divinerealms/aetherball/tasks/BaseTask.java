@@ -6,9 +6,11 @@ import static io.github.divinerealms.aetherball.utils.LoggerUtil.sendMessage;
 import static io.github.divinerealms.aetherball.utils.Permissions.PERM_ADMIN;
 
 import io.github.divinerealms.aetherball.configs.Settings;
-import io.github.divinerealms.aetherball.core.Manager;
+import io.github.divinerealms.aetherball.managers.Manager;
+
 import java.util.ArrayDeque;
 import java.util.Queue;
+
 import lombok.Getter;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitTask;
@@ -42,7 +44,7 @@ public abstract class BaseTask implements Runnable {
   }
 
   protected BaseTask(Manager manager, String taskName, long interval, boolean async,
-      long customThreshold) {
+                     long customThreshold) {
     this.manager = manager;
     this.plugin = manager.getPlugin();
     this.taskName = taskName;

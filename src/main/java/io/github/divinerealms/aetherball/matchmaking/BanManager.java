@@ -1,16 +1,18 @@
-package io.github.divinerealms.aetherball.matchmaking.ban;
+package io.github.divinerealms.aetherball.matchmaking;
 
 import static io.github.divinerealms.aetherball.configs.Lang.BAN_REMAINING;
 import static io.github.divinerealms.aetherball.utils.LoggerUtil.sendMessage;
 
 import io.github.divinerealms.aetherball.configs.PlayerData;
-import io.github.divinerealms.aetherball.core.Manager;
+import io.github.divinerealms.aetherball.managers.Manager;
 import io.github.divinerealms.aetherball.managers.PlayerDataManager;
 import io.github.divinerealms.aetherball.managers.Utilities;
+
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+
 import lombok.Getter;
 import org.bukkit.entity.Player;
 

@@ -1,23 +1,13 @@
 package io.github.divinerealms.aetherball.listeners;
 
-import static io.github.divinerealms.aetherball.configs.Lang.CUBE_CLEAR;
-import static io.github.divinerealms.aetherball.configs.Lang.HITDEBUG_WHOLE;
-import static io.github.divinerealms.aetherball.utils.LoggerUtil.sendMessage;
-import static io.github.divinerealms.aetherball.utils.Permissions.PERM_CLEAR_CUBE;
-import static io.github.divinerealms.aetherball.utils.Permissions.PERM_HIT_DEBUG;
-
 import io.github.divinerealms.aetherball.configs.Settings;
-import io.github.divinerealms.aetherball.core.Manager;
+import io.github.divinerealms.aetherball.managers.Manager;
 import io.github.divinerealms.aetherball.matchmaking.MatchManager;
 import io.github.divinerealms.aetherball.physics.PhysicsData;
 import io.github.divinerealms.aetherball.physics.touch.CubeTouchInfo;
 import io.github.divinerealms.aetherball.physics.touch.CubeTouchType;
 import io.github.divinerealms.aetherball.physics.utilities.PhysicsSystem;
-import io.github.divinerealms.aetherball.physics.utilities.PlayerKickResult;
 import io.github.divinerealms.aetherball.utils.PlayerSettings;
-import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 import org.bukkit.GameMode;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
@@ -28,6 +18,16 @@ import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitScheduler;
 import org.bukkit.util.Vector;
+
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+
+import static io.github.divinerealms.aetherball.configs.Lang.CUBE_CLEAR;
+import static io.github.divinerealms.aetherball.configs.Lang.HITDEBUG_WHOLE;
+import static io.github.divinerealms.aetherball.utils.LoggerUtil.sendMessage;
+import static io.github.divinerealms.aetherball.utils.Permissions.PERM_CLEAR_CUBE;
+import static io.github.divinerealms.aetherball.utils.Permissions.PERM_HIT_DEBUG;
 
 /**
  * Handles player interactions with cube entities through left-click attacks.
@@ -68,12 +68,12 @@ public class CubeKickListener extends BaseListener {
   public void leftClick(EntityDamageByEntityEvent event) {
     monitoredExecution(() -> {
       // Only process Slime entities (cubes).
-      if (!(event.getEntity() instanceof Slime)) {
+      if (!(event.getEntity() instanceof Slime cube)) {
         return;
       }
 
       // Only process player attacks.
-      if (!(event.getDamager() instanceof Player)) {
+      if (!(event.getDamager() instanceof Player player)) {
         return;
       }
 
@@ -87,8 +87,6 @@ public class CubeKickListener extends BaseListener {
         return;
       }
 
-      Slime cube = (Slime) event.getEntity();
-      Player player = (Player) event.getDamager();
       UUID playerId = player.getUniqueId();
 
       // Creative players with permission can instantly remove cubes.
@@ -120,11 +118,11 @@ public class CubeKickListener extends BaseListener {
       }
 
       // Calculate kick power based on player state and settings.
-      PlayerKickResult kickResult = system.calculateKickPower(player);
+      PhysicsSystem.PlayerKickResult kickResult = system.calculateKickPower(player);
 
       // Apply kick velocity to cube: direction from player's view + vertical boost.
       Vector kick = player.getLocation().getDirection().normalize()
-          .multiply(kickResult.getFinalKickPower()).setY(Settings.KICK_VERTICAL_BOOST.asDouble());
+          .multiply(kickResult.finalKickPower()).setY(Settings.KICK_VERTICAL_BOOST.asDouble());
       cube.setVelocity(cube.getVelocity().add(kick));
 
       // Update cooldown timestamp for this kick type.

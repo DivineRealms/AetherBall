@@ -1,9 +1,13 @@
 package io.github.divinerealms.aetherball.utils;
 
+import static io.github.divinerealms.aetherball.utils.MatchUtils.isPlayerOnline;
+
 import io.github.divinerealms.aetherball.configs.Lang;
 import io.github.divinerealms.aetherball.configs.Settings;
+
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import lombok.Getter;
 import net.minecraft.server.v1_8_R3.IChatBaseComponent;
 import net.minecraft.server.v1_8_R3.IChatBaseComponent.ChatSerializer;
@@ -101,6 +105,10 @@ public class LoggerUtil {
    */
   public static void sendMessage(CommandSender sender, Object messageObject, String... args) {
     if (sender instanceof Player) {
+      if (!isPlayerOnline((Player) sender)) {
+        return;
+      }
+
       String message = resolveMessage(messageObject, false, args);
       sender.sendMessage(message);
     } else {
@@ -131,7 +139,7 @@ public class LoggerUtil {
    * @param args          optional arguments for placeholder replacement
    */
   public static void sendMessage(String permission, Location center, double radius,
-      Object messageObject, String... args) {
+                                 Object messageObject, String... args) {
     if (center == null || radius <= 0) {
       return;
     }
@@ -177,6 +185,10 @@ public class LoggerUtil {
    * @param args       optional arguments for placeholder replacement
    */
   public static void sendActionBar(Player player, Object messageObj, String... args) {
+    if (!isPlayerOnline(player)) {
+      return;
+    }
+
     String message = resolveMessage(messageObj, false, args);
     IChatBaseComponent iChatBaseComponent = ChatSerializer.a(
         "{\"text\":\"" + escapeJson(message) + "\"}");
@@ -213,7 +225,11 @@ public class LoggerUtil {
    * @param fadeOut     the time in ticks for fade out
    */
   public static void title(Player player, Object titleObj, Object subtitleObj, int fadeIn, int stay,
-      int fadeOut) {
+                           int fadeOut) {
+    if (!isPlayerOnline(player)) {
+      return;
+    }
+
     String title = resolveMessage(titleObj, false);
     String subtitle = resolveMessage(subtitleObj, false);
 

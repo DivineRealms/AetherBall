@@ -1,11 +1,6 @@
 package io.github.divinerealms.aetherball.managers;
 
-import static io.github.divinerealms.aetherball.utils.LoggerUtil.logConsole;
-
-import io.github.divinerealms.aetherball.core.Manager;
 import io.github.divinerealms.aetherball.utils.PlayerSettings;
-import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 import net.luckperms.api.LuckPerms;
 import net.luckperms.api.cacheddata.CachedMetaData;
 import net.minecraft.server.v1_8_R3.EnumParticle;
@@ -14,10 +9,15 @@ import org.bukkit.ChatColor;
 import org.bukkit.craftbukkit.v1_8_R3.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+
+import static io.github.divinerealms.aetherball.utils.LoggerUtil.logConsole;
+
 public class Utilities {
 
   private final Manager manager;
-  public LuckPerms luckPerms;
+  public final LuckPerms luckPerms;
 
   public Utilities(Manager manager) {
     this.manager = manager;
@@ -35,7 +35,7 @@ public class Utilities {
       if (Character.isDigit(c)) {
         number.append(c);
       } else {
-        if (number.length() == 0) {
+        if (number.isEmpty()) {
           throw new NumberFormatException("Invalid time format: number expected before unit");
         }
 
@@ -69,7 +69,7 @@ public class Utilities {
       }
     }
 
-    if (number.length() > 0) {
+    if (!number.isEmpty()) {
       totalSeconds += Integer.parseInt(number.toString());
     }
 
@@ -115,30 +115,27 @@ public class Utilities {
     }
 
     if (months > 0) {
-      if (sb.length() > 0) {
+      if (!sb.isEmpty()) {
         sb.append(" ");
       }
       sb.append(months).append("mo");
     }
 
     if (hours > 0) {
-      if (sb.length() > 0) {
+      if (!sb.isEmpty()) {
         sb.append(" ");
       }
       sb.append(hours).append("h");
     }
 
     if (minutes > 0) {
-      if (sb.length() > 0) {
+      if (!sb.isEmpty()) {
         sb.append(" ");
       }
       sb.append(minutes).append("min");
     }
 
-    if (seconds > 0 || sb.length() == 0) {
-      if (sb.length() > 0) {
-        sb.append(" ");
-      }
+    if (sb.isEmpty()) {
       sb.append(seconds).append("s");
     }
 
@@ -146,9 +143,9 @@ public class Utilities {
   }
 
   public static void sendParticle(Player player, EnumParticle particle,
-      double x, double y, double z,
-      float offsetX, float offsetY, float offsetZ,
-      float speed, int count) {
+                                  double x, double y, double z,
+                                  float offsetX, float offsetY, float offsetZ,
+                                  float speed, int count) {
     if (PlayerSettings.DISALLOWED_PARTICLES.contains(particle)) {
       return;
     }

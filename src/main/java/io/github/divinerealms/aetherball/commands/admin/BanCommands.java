@@ -18,10 +18,12 @@ import co.aikar.commands.annotation.Optional;
 import co.aikar.commands.annotation.Subcommand;
 import co.aikar.commands.annotation.Syntax;
 import io.github.divinerealms.aetherball.configs.Settings;
-import io.github.divinerealms.aetherball.core.Manager;
+import io.github.divinerealms.aetherball.managers.Manager;
 import io.github.divinerealms.aetherball.managers.Utilities;
-import io.github.divinerealms.aetherball.matchmaking.ban.BanManager;
+import io.github.divinerealms.aetherball.matchmaking.BanManager;
+
 import java.util.concurrent.TimeUnit;
+
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 

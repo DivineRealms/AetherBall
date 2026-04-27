@@ -3,10 +3,11 @@ package io.github.divinerealms.aetherball.tasks;
 import static io.github.divinerealms.aetherball.physics.PhysicsConstants.CLEANUP_LAST_TOUCHES_INTERVAL;
 
 import io.github.divinerealms.aetherball.configs.Settings;
-import io.github.divinerealms.aetherball.core.Manager;
+import io.github.divinerealms.aetherball.managers.Manager;
 import io.github.divinerealms.aetherball.physics.PhysicsData;
 import io.github.divinerealms.aetherball.physics.touch.CubeTouchInfo;
 import io.github.divinerealms.aetherball.physics.touch.CubeTouchType;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;

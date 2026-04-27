@@ -20,20 +20,22 @@ import static io.github.divinerealms.aetherball.configs.Lang.TEAM_NOT_ONLINE;
 import static io.github.divinerealms.aetherball.configs.Lang.TEAM_NO_REQUEST;
 import static io.github.divinerealms.aetherball.configs.Lang.TEAM_WANTS_TO_TEAM_OTHER;
 import static io.github.divinerealms.aetherball.configs.Lang.TEAM_WANTS_TO_TEAM_SELF;
-import static io.github.divinerealms.aetherball.matchmaking.util.MatchUtils.isPlayerOnline;
+import static io.github.divinerealms.aetherball.utils.MatchUtils.isPlayerOnline;
 import static io.github.divinerealms.aetherball.utils.LoggerUtil.sendMessage;
 
 import io.github.divinerealms.aetherball.configs.Settings;
-import io.github.divinerealms.aetherball.core.Manager;
+import io.github.divinerealms.aetherball.managers.Manager;
 import io.github.divinerealms.aetherball.managers.Utilities;
 import io.github.divinerealms.aetherball.matchmaking.Match;
 import io.github.divinerealms.aetherball.matchmaking.MatchManager;
 import io.github.divinerealms.aetherball.matchmaking.player.MatchPlayer;
 import io.github.divinerealms.aetherball.matchmaking.player.TeamColor;
-import io.github.divinerealms.aetherball.matchmaking.team.TeamManager;
+import io.github.divinerealms.aetherball.matchmaking.TeamManager;
+
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.TimeUnit;
+
 import org.bukkit.entity.Player;
 
 public class GameCommandsHelper {
@@ -128,8 +130,8 @@ public class GameCommandsHelper {
       }
 
       sendMessage(player, TAKEPLACE_AVAILABLE_ENTRY,
-          String.valueOf(openMatch.getArena().getId()),
-          Settings.getMatchTypeName(openMatch.getArena().getType()),
+          String.valueOf(openMatch.getArena().id()),
+          Settings.getMatchTypeName(openMatch.getArena().type()),
           String.valueOf(emptySlots));
     }
   }
@@ -198,7 +200,7 @@ public class GameCommandsHelper {
   }
 
   public static void handleInvite(Player player, int matchType, Player target,
-      Manager manager) {
+                                  Manager manager) {
     TeamManager teamManager = manager.getTeamManager();
 
     if (teamManager.isInTeam(player)) {

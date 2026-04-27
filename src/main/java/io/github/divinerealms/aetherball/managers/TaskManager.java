@@ -4,7 +4,6 @@ import static io.github.divinerealms.aetherball.utils.LoggerUtil.debugConsole;
 import static io.github.divinerealms.aetherball.utils.LoggerUtil.logConsole;
 
 import io.github.divinerealms.aetherball.configs.Settings;
-import io.github.divinerealms.aetherball.core.Manager;
 import io.github.divinerealms.aetherball.tasks.BaseTask;
 import io.github.divinerealms.aetherball.tasks.CacheCleanupTask;
 import io.github.divinerealms.aetherball.tasks.CubeCleanerTask;
@@ -16,8 +15,10 @@ import io.github.divinerealms.aetherball.tasks.PlayerUpdateTask;
 import io.github.divinerealms.aetherball.tasks.QueueStatusTask;
 import io.github.divinerealms.aetherball.tasks.TouchCleanupTask;
 import io.github.divinerealms.aetherball.utils.TaskStats;
+
 import java.util.ArrayList;
 import java.util.List;
+
 import lombok.Getter;
 
 /**
