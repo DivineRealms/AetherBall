@@ -13,8 +13,8 @@ import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Slime;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitScheduler;
 import org.bukkit.util.Vector;
@@ -64,7 +64,7 @@ public class CubeKickListener extends BaseListener {
    *
    * @param event the {@link EntityDamageByEntityEvent} triggered when one entity damages another
    */
-  @EventHandler
+  @EventHandler(priority = EventPriority.LOW)
   public void leftClick(EntityDamageByEntityEvent event) {
     monitoredExecution(() -> {
       // Only process Slime entities (cubes).
@@ -77,16 +77,12 @@ public class CubeKickListener extends BaseListener {
         return;
       }
 
-      // Only handle direct entity attacks, not projectiles or other damage causes.
-      if (event.getCause() != EntityDamageEvent.DamageCause.ENTITY_ATTACK) {
-        return;
-      }
-
       // Only process tracked physics cubes.
-      if (!data.getCubes().contains((Slime) event.getEntity())) {
+      if (!data.getCubes().contains(cube)) {
         return;
       }
 
+      event.setCancelled(true);
       UUID playerId = player.getUniqueId();
 
       // Creative players with permission can instantly remove cubes.
@@ -107,13 +103,13 @@ public class CubeKickListener extends BaseListener {
 
       // Check if player is still on cooldown for this kick type.
       Map<CubeTouchType, CubeTouchInfo> touches = data.getLastTouches().get(playerId);
-      if (touches != null && touches.containsKey(kickType)) {
+      if (touches != null) {
         CubeTouchInfo lastTouch = touches.get(kickType);
-        long elapsed = System.currentTimeMillis() - lastTouch.getTimestamp();
-
-        if (elapsed < kickType.getCooldown()) {
-          event.setCancelled(true);
-          return; // Still on cooldown, prevent kick.
+        if (lastTouch != null) {
+          long elapsed = System.currentTimeMillis() - lastTouch.getTimestamp();
+          if (elapsed < kickType.getCooldown()) {
+            return; // Still on cooldown, prevent kick.
+          }
         }
       }
 
@@ -121,9 +117,11 @@ public class CubeKickListener extends BaseListener {
       PhysicsSystem.PlayerKickResult kickResult = system.calculateKickPower(player);
 
       // Apply kick velocity to cube: direction from player's view + vertical boost.
-      Vector kick = player.getLocation().getDirection().normalize()
-          .multiply(kickResult.finalKickPower()).setY(Settings.KICK_VERTICAL_BOOST.asDouble());
+      Vector kickDirection = player.getLocation().getDirection().normalize();
+      Vector kick = kickDirection.clone().multiply(kickResult.finalKickPower());
+      kick.setY(Settings.KICK_VERTICAL_BOOST.asDouble());
       cube.setVelocity(cube.getVelocity().add(kick));
+      cube.setNoDamageTicks(0);
 
       // Update cooldown timestamp for this kick type.
       data.getLastTouches().computeIfAbsent(playerId, k -> new ConcurrentHashMap<>())
@@ -136,7 +134,7 @@ public class CubeKickListener extends BaseListener {
       // Play cube kick sound at cube location.
       cube.getWorld().playSound(cube.getLocation(), Sound.SLIME_WALK, 0.75F, 1.0F);
 
-      // Schedule async tasks for player feedback (sounds and debug info).
+      // Schedule sync tasks for player feedback (sounds and debug info).
       scheduler.runTask(plugin, () -> {
         // Play personalized kick sound if player has it enabled.
         PlayerSettings playerSettings = manager.getPlayerSettings(player);
@@ -155,9 +153,6 @@ public class CubeKickListener extends BaseListener {
           system.showHits(player, kickResult);
         }
       });
-
-      // Cancel the damage event to prevent standard Minecraft damage behavior.
-      event.setCancelled(true);
     });
   }
 }

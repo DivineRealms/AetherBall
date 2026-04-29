@@ -4,6 +4,7 @@ import io.github.divinerealms.aetherball.managers.Manager;
 import io.github.divinerealms.aetherball.physics.PhysicsData;
 import org.bukkit.entity.Slime;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.entity.EntityDamageEvent;
 
 /**
@@ -31,12 +32,12 @@ public class CubeDamageListener extends BaseListener {
    *
    * @param event the {@link EntityDamageEvent} fired when any entity takes damage
    */
-  @EventHandler
+  @EventHandler(priority = EventPriority.HIGHEST)
   public void disableDamage(EntityDamageEvent event) {
     monitoredExecution(() -> {
       // Cancel all damage applied to physics cubes.
-      if (event.getEntity() instanceof Slime && physicsData.getCubes()
-          .contains((Slime) event.getEntity())) {
+      if (event.getEntity() instanceof Slime cube
+          && physicsData.getCubes().contains(cube)) {
         event.setCancelled(true);
       }
     });

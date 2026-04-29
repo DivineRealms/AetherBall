@@ -1,21 +1,20 @@
 package io.github.divinerealms.aetherball.listeners;
 
-import static io.github.divinerealms.aetherball.physics.PhysicsConstants.CUBE_JUMP_RIGHT_CLICK;
-
 import io.github.divinerealms.aetherball.configs.Settings;
 import io.github.divinerealms.aetherball.managers.Manager;
 import io.github.divinerealms.aetherball.matchmaking.MatchManager;
 import io.github.divinerealms.aetherball.physics.PhysicsData;
 import io.github.divinerealms.aetherball.physics.utilities.PhysicsSystem;
-
-import java.util.UUID;
-
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Slime;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.util.Vector;
+
+import java.util.UUID;
+
+import static io.github.divinerealms.aetherball.physics.PhysicsConstants.CUBE_JUMP_RIGHT_CLICK;
 
 /**
  * Handles right-click interactions with cube entities.
@@ -55,7 +54,7 @@ public class CubeTapListener extends BaseListener {
       }
 
       // Only process tracked physics cubes.
-      if (!data.getCubes().contains((Slime) event.getRightClicked())) {
+      if (!data.getCubes().contains(cube)) {
         return;
       }
 
