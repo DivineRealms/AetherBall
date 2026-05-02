@@ -1,17 +1,13 @@
 package io.github.divinerealms.aetherball.utils;
 
 import io.github.divinerealms.aetherball.configs.Settings;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.server.v1_8_R3.EnumParticle;
 import org.bukkit.Color;
 import org.bukkit.Sound;
+
+import java.util.*;
 
 @Setter
 @Getter
@@ -77,16 +73,34 @@ public class PlayerSettings {
     );
   }
 
-  private boolean kickSoundEnabled = Settings.PLAYER_KICK_SOUND.asBoolean();
-  private boolean goalSoundEnabled = Settings.PLAYER_GOAL_SOUND.asBoolean();
-  private boolean particlesEnabled = Settings.PLAYER_PARTICLES.asBoolean();
-  private boolean buildEnabled = Settings.PLAYER_BUILD_MODE.asBoolean();
-  private boolean alwaysShowParticles = Settings.PLAYER_ALWAYS_SHOW_PARTICLES.asBoolean();
+  private boolean kickSoundEnabled;
+  private boolean goalSoundEnabled;
+  private boolean particlesEnabled;
+  private boolean buildEnabled;
+  private boolean alwaysShowParticles;
   private Sound kickSound = Sound.SUCCESSFUL_HIT;
   private Sound goalSound = Sound.FIREWORK_LARGE_BLAST;
   private EnumParticle particle = EnumParticle.VILLAGER_HAPPY;
   private Color redstoneColor = Color.WHITE;
-  private String goalMessage = Settings.PLAYER_GOAL_CELEBRATION.toString();
+  private String goalMessage;
+
+  private PlayerSettings() {
+  }
+
+  public static PlayerSettings withCurrentDefaults() {
+    PlayerSettings settings = new PlayerSettings();
+    settings.applyConfigDefaults();
+    return settings;
+  }
+
+  public void applyConfigDefaults() {
+    this.kickSoundEnabled = Settings.PLAYER_KICK_SOUND.asBoolean();
+    this.goalSoundEnabled = Settings.PLAYER_GOAL_SOUND.asBoolean();
+    this.particlesEnabled = Settings.PLAYER_PARTICLES.asBoolean();
+    this.buildEnabled = Settings.PLAYER_BUILD_MODE.asBoolean();
+    this.alwaysShowParticles = Settings.PLAYER_ALWAYS_SHOW_PARTICLES.asBoolean();
+    this.goalMessage = Settings.PLAYER_GOAL_CELEBRATION.toString();
+  }
 
   public static List<String> getAllowedParticles() {
     List<String> allowed = new ArrayList<>();

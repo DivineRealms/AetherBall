@@ -6,6 +6,7 @@ import io.github.divinerealms.aetherball.managers.Utilities;
 import io.github.divinerealms.aetherball.physics.PhysicsData;
 import io.github.divinerealms.aetherball.physics.touch.CubeTouchInfo;
 import io.github.divinerealms.aetherball.physics.touch.CubeTouchType;
+import io.github.divinerealms.aetherball.tasks.PhysicsTask;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.entity.Entity;
@@ -157,10 +158,17 @@ public class PhysicsSystem {
   }
 
   /**
-   * Checks if the given player is not allowed to interact based on their game mode.
+   * Checks if a player is allowed to interact with cubes based on game mode only.
    *
-   * @param player The player to check. Must not be null.
-   * @return True if the player is not in survival game mode, otherwise false.
+   * <p><b>Note:</b> This check deliberately excludes AFK detection. AFK filtering
+   * is an additional layer applied only in {@link PhysicsTask}, where passive
+   * proximity-based physics run every tick and need the stricter guard.
+   * Event-driven interactions (left-click kick, right-click tap, sneak charge)
+   * are intentionally allowed for AFK players since they require explicit
+   * player input — an AFK player cannot physically trigger them.</p>
+   *
+   * @param player the player to check
+   * @return true if the player should be blocked from interacting
    */
   public boolean notAllowedToInteract(Player player) {
     return player.getGameMode() != GameMode.SURVIVAL;

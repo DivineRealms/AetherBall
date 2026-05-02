@@ -1,20 +1,19 @@
 package io.github.divinerealms.aetherball.utils;
 
-import static io.github.divinerealms.aetherball.configs.Lang.PRACTICE_AREAS_EMPTY;
-import static io.github.divinerealms.aetherball.utils.LoggerUtil.logConsole;
-
 import io.github.divinerealms.aetherball.configs.Settings;
-import io.github.divinerealms.aetherball.managers.Manager;
 import io.github.divinerealms.aetherball.managers.ConfigManager;
+import io.github.divinerealms.aetherball.managers.Manager;
 import io.github.divinerealms.aetherball.physics.PhysicsData;
-
-import java.util.ArrayList;
-import java.util.List;
-
 import lombok.Getter;
 import org.bukkit.Location;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Slime;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import static io.github.divinerealms.aetherball.configs.Lang.PRACTICE_AREAS_EMPTY;
+import static io.github.divinerealms.aetherball.utils.LoggerUtil.logConsole;
 
 public class CubeCleaner {
 
@@ -24,9 +23,9 @@ public class CubeCleaner {
   private final List<PracticeArea> practiceAreas;
 
   @Getter
-  public boolean empty;
+  private boolean empty;
   @Getter
-  public int amount = 0;
+  private int amount = 0;
 
   public CubeCleaner(Manager manager) {
     this.data = manager.getPhysicsData();
@@ -114,35 +113,35 @@ public class CubeCleaner {
 
   private record PracticeArea(Location center, double radiusSquared) {
 
-      private PracticeArea(Location center, double radiusSquared) {
-        this.center = center;
-        this.radiusSquared = radiusSquared * radiusSquared;
-      }
-
-      boolean contains(Location location) {
-        if (location.getWorld() == null || center.getWorld() == null) {
-          return false;
-        }
-
-        if (!location.getWorld().equals(center.getWorld())) {
-          return false;
-        }
-
-        double radius = Math.sqrt(radiusSquared);
-        if (Math.abs(location.getX() - center.getX()) > radius) {
-          return false;
-        }
-
-        if (Math.abs(location.getY() - center.getY()) > radius) {
-          return false;
-        }
-
-        if (Math.abs(location.getZ() - center.getZ()) > radius) {
-          return false;
-        }
-
-        double distanceSquared = location.distanceSquared(center);
-        return distanceSquared <= radiusSquared;
-      }
+    private PracticeArea(Location center, double radiusSquared) {
+      this.center = center;
+      this.radiusSquared = radiusSquared * radiusSquared;
     }
+
+    boolean contains(Location location) {
+      if (location.getWorld() == null || center.getWorld() == null) {
+        return false;
+      }
+
+      if (!location.getWorld().equals(center.getWorld())) {
+        return false;
+      }
+
+      double radius = Math.sqrt(radiusSquared);
+      if (Math.abs(location.getX() - center.getX()) > radius) {
+        return false;
+      }
+
+      if (Math.abs(location.getY() - center.getY()) > radius) {
+        return false;
+      }
+
+      if (Math.abs(location.getZ() - center.getZ()) > radius) {
+        return false;
+      }
+
+      double distanceSquared = location.distanceSquared(center);
+      return distanceSquared <= radiusSquared;
+    }
+  }
 }

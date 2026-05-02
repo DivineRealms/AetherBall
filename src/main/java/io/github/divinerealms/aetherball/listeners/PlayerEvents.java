@@ -184,6 +184,7 @@ public class PlayerEvents extends BaseListener {
       manager.getPlayerSettings().remove(player.getUniqueId());
       manager.getCachedPrefixedNames().remove(player.getUniqueId());
       manager.getDuelManager().cleanupPlayerRequests(player);
+      manager.getPlayerCache().removePlayer(player.getUniqueId());
 
       // Remove from all matchmaking queues.
       Collection<Queue<Player>> playerQueues = matchData.getPlayerQueues().values();

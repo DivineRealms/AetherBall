@@ -1,31 +1,20 @@
 package io.github.divinerealms.aetherball.commands.admin;
 
-import static io.github.divinerealms.aetherball.configs.Lang.NOT_BANNED;
-import static io.github.divinerealms.aetherball.configs.Lang.PLAYER_BANNED;
-import static io.github.divinerealms.aetherball.configs.Lang.PLAYER_UNBANNED;
-import static io.github.divinerealms.aetherball.configs.Lang.USAGE;
-import static io.github.divinerealms.aetherball.utils.LoggerUtil.sendMessage;
-import static io.github.divinerealms.aetherball.utils.Permissions.PERM_BAN;
-import static io.github.divinerealms.aetherball.utils.Permissions.PERM_UNBAN;
-
 import co.aikar.commands.BaseCommand;
-import co.aikar.commands.annotation.CommandAlias;
-import co.aikar.commands.annotation.CommandCompletion;
-import co.aikar.commands.annotation.CommandPermission;
-import co.aikar.commands.annotation.Description;
-import co.aikar.commands.annotation.Flags;
-import co.aikar.commands.annotation.Optional;
-import co.aikar.commands.annotation.Subcommand;
-import co.aikar.commands.annotation.Syntax;
+import co.aikar.commands.annotation.*;
 import io.github.divinerealms.aetherball.configs.Settings;
 import io.github.divinerealms.aetherball.managers.Manager;
 import io.github.divinerealms.aetherball.managers.Utilities;
 import io.github.divinerealms.aetherball.matchmaking.BanManager;
+import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 
 import java.util.concurrent.TimeUnit;
 
-import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
+import static io.github.divinerealms.aetherball.configs.Lang.*;
+import static io.github.divinerealms.aetherball.utils.LoggerUtil.sendMessage;
+import static io.github.divinerealms.aetherball.utils.Permissions.PERM_BAN;
+import static io.github.divinerealms.aetherball.utils.Permissions.PERM_UNBAN;
 
 @CommandAlias("aetherballadmin|abadmin|aba|fca")
 public class BanCommands extends BaseCommand {
@@ -49,7 +38,7 @@ public class BanCommands extends BaseCommand {
         duration = Settings.getDefaultBanDuration();
         secondsLeft = TimeUnit.MILLISECONDS.toSeconds(duration);
       } else {
-        duration = Utilities.parseTime(timeStr);
+        duration = Utilities.parseTime(timeStr) * 1000L;
         secondsLeft = duration;
       }
 

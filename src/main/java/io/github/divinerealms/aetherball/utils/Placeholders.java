@@ -4,9 +4,9 @@ import io.github.divinerealms.aetherball.configs.PlayerData;
 import io.github.divinerealms.aetherball.configs.Settings;
 import io.github.divinerealms.aetherball.managers.Manager;
 import io.github.divinerealms.aetherball.managers.PlayerDataManager;
+import io.github.divinerealms.aetherball.matchmaking.HighScoreManager;
 import io.github.divinerealms.aetherball.matchmaking.Match;
 import io.github.divinerealms.aetherball.matchmaking.MatchManager;
-import io.github.divinerealms.aetherball.matchmaking.HighScoreManager;
 import io.github.divinerealms.aetherball.matchmaking.player.StatsHelper;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import org.bukkit.entity.Player;
@@ -100,129 +100,97 @@ public class Placeholders extends PlaceholderExpansion {
     }
 
     if (identifier.startsWith("active_lobbies_")) {
-      String type = identifier.replace("active_lobbies_", "");
-      return String.valueOf(
-          matchManager.countActiveLobbies(Integer.parseInt(type.substring(0, 1))));
+      return String.valueOf(matchManager.countActiveLobbies(parseTypeFromSuffix(identifier, "active_lobbies_")));
     }
 
     if (identifier.startsWith("players_")) {
-      String type = identifier.replace("players_", "");
-      return String.valueOf(
-          matchManager.countPlayersInMatches(Integer.parseInt(type.substring(0, 1))));
+      return String.valueOf(matchManager.countPlayersInMatches(parseTypeFromSuffix(identifier, "players_")));
     }
 
     if (identifier.startsWith("waiting_")) {
-      String type = identifier.replace("waiting_", "");
-      return String.valueOf(
-          matchManager.countWaitingPlayers(Integer.parseInt(type.substring(0, 1))));
+      return String.valueOf(matchManager.countWaitingPlayers(parseTypeFromSuffix(identifier, "waiting_")));
     }
 
     if (identifier.startsWith("listplayers_")) {
-      String type = identifier.replace("listplayers_", "");
-      return matchManager.listPlayersInMatches(Integer.parseInt(type.substring(0, 1)));
+      return matchManager.listPlayersInMatches(parseTypeFromSuffix(identifier, "listplayers_"));
     }
 
     if (identifier.startsWith("best_")) {
-      if (highscoreManager == null || highscoreManager.topSkillNames == null) {
-        return "---";
-      }
-
-      String[] parts = identifier.split("_");
-      if (parts.length != 4) {
-        return null;
-      }
-
-      String category = parts[1];
-      int rank;
-      try {
-        rank = Integer.parseInt(parts[2]) - 1;
-      } catch (NumberFormatException e) {
-        return null;
-      }
-
-      if (rank < 0 || rank > 4) {
-        return null;
-      }
-
-      switch (category) {
-        case "rating":
-          if ("name".equals(parts[3])) {
-            return highscoreManager.topSkillNames[rank];
-          }
-          if ("value".equals(parts[3])) {
-            return String.valueOf(highscoreManager.bestRatings[rank]);
-          }
-          break;
-        case "goals":
-          if ("name".equals(parts[3])) {
-            return highscoreManager.topGoalsNames[rank];
-          }
-          if ("value".equals(parts[3])) {
-            return String.valueOf(highscoreManager.mostGoals[rank]);
-          }
-          break;
-        case "assists":
-          if ("name".equals(parts[3])) {
-            return highscoreManager.topAssistsNames[rank];
-          }
-          if ("value".equals(parts[3])) {
-            return String.valueOf(highscoreManager.mostAssists[rank]);
-          }
-          break;
-        case "owngoals":
-          if ("name".equals(parts[3])) {
-            return highscoreManager.topOwnGoalsNames[rank];
-          }
-          if ("value".equals(parts[3])) {
-            return String.valueOf(highscoreManager.mostOwnGoals[rank]);
-          }
-          break;
-        case "wins":
-          if ("name".equals(parts[3])) {
-            return highscoreManager.topWinsNames[rank];
-          }
-          if ("value".equals(parts[3])) {
-            return String.valueOf(highscoreManager.mostWins[rank]);
-          }
-          break;
-        case "streak":
-          if ("name".equals(parts[3])) {
-            return highscoreManager.topStreakNames[rank];
-          }
-          if ("value".equals(parts[3])) {
-            return String.valueOf(highscoreManager.longestStreak[rank]);
-          }
-          break;
-      }
-      return "---";
+      return resolveBestPlaceholder(identifier);
     }
 
     if (identifier.startsWith("stats_") && player != null) {
-      String statKey = identifier.replace("stats_", "").toLowerCase();
-      PlayerData data = dataManager.get(player);
-      if (data == null || !data.has("matches")) {
-        return "---";
-      }
-
-      StatsHelper stats = new StatsHelper(data);
-
-      return switch (statKey) {
-        case "matches" -> String.valueOf(stats.getMatches());
-        case "wins" -> String.valueOf(stats.getWins());
-        case "losses" -> String.valueOf(stats.getLosses());
-        case "ties" -> String.valueOf(stats.getTies());
-        case "winspermatch" -> String.format("%.2f", stats.getWinsPerMatch());
-        case "goals" -> String.valueOf(stats.getGoals());
-        case "owngoals" -> String.valueOf(stats.getOwnGoals());
-        case "assists" -> String.valueOf(stats.getAssists());
-        case "goalspermatch" -> String.format("%.2f", stats.getGoalsPerMatch());
-        case "bestwinstreak" -> String.valueOf(stats.getBestWinStreak());
-        case "skill" -> String.format("%.2f", stats.getSkillLevel());
-        case "rank" -> stats.getRankName();
-        default -> "---";
-      };
+      return resolveStatPlaceholder(player, identifier);
     }
 
     return null;
+  }
+
+  private String resolveBestPlaceholder(String identifier) {
+    if (highscoreManager == null || !highscoreManager.isHasInitialData()) {
+      return "---";
+    }
+
+    String[] parts = identifier.split("_");
+    if (parts.length != 4) {
+      return null;
+    }
+
+    int rank;
+    try {
+      rank = Integer.parseInt(parts[2]) - 1; // config is 1-indexed
+    } catch (NumberFormatException e) {
+      return null;
+    }
+
+    HighScoreManager.HighScoreCategory category = switch (parts[1]) {
+      case "rating" -> HighScoreManager.HighScoreCategory.SKILL;
+      case "goals" -> HighScoreManager.HighScoreCategory.GOALS;
+      case "assists" -> HighScoreManager.HighScoreCategory.ASSISTS;
+      case "owngoals" -> HighScoreManager.HighScoreCategory.OWN_GOALS;
+      case "wins" -> HighScoreManager.HighScoreCategory.WINS;
+      case "streak" -> HighScoreManager.HighScoreCategory.STREAK;
+      default -> null;
+    };
+
+    if (category == null) return "---";
+
+    return switch (parts[3]) {
+      case "name" -> highscoreManager.getTopName(category, rank);
+      case "value" -> highscoreManager.getTopValue(category, rank);
+      default -> "---";
+    };
+  }
+
+  private String resolveStatPlaceholder(Player player, String identifier) {
+    String statKey = identifier.replace("stats_", "").toLowerCase();
+    PlayerData data = dataManager.get(player);
+
+    if (data == null || !data.has("matches")) {
+      return "---";
+    }
+
+    StatsHelper stats = new StatsHelper(data);
+
+    return switch (statKey) {
+      case "matches" -> String.valueOf(stats.getMatches());
+      case "wins" -> String.valueOf(stats.getWins());
+      case "losses" -> String.valueOf(stats.getLosses());
+      case "ties" -> String.valueOf(stats.getTies());
+      case "winspermatch" -> String.format("%.2f", stats.getWinsPerMatch());
+      case "goals" -> String.valueOf(stats.getGoals());
+      case "owngoals" -> String.valueOf(stats.getOwnGoals());
+      case "assists" -> String.valueOf(stats.getAssists());
+      case "goalspermatch" -> String.format("%.2f", stats.getGoalsPerMatch());
+      case "bestwinstreak" -> String.valueOf(stats.getBestWinStreak());
+      case "skill" -> String.format("%.2f", stats.getSkillLevel());
+      case "rank" -> stats.getRankName();
+      default -> "---";
+    };
+  }
+
+  private int parseTypeFromSuffix(String identifier, String prefix) {
+    String suffix = identifier.replace(prefix, "");
+    return Integer.parseInt(suffix.substring(0, 1));
   }
 }

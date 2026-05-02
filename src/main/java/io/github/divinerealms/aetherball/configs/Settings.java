@@ -85,7 +85,7 @@ public enum Settings {
   // ==================== FEATURE TOGGLES ====================
   FEATURES_SIGNS("Features.Signs_Enabled", true);
 
-  public static FileConfiguration CONFIG;
+  private static FileConfiguration CONFIG;
   private final String path;
   private final Object def;
 

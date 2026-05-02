@@ -18,14 +18,14 @@ public class StatsHelper {
   private final String rankName;
 
   public StatsHelper(PlayerData data) {
-    this.matches = (int) data.get("matches");
-    this.wins = (int) data.get("wins");
-    this.ties = (int) data.get("ties");
-    this.losses = (int) data.get("losses");
-    this.goals = (int) data.get("goals");
-    this.assists = (int) data.get("assists");
-    this.ownGoals = (int) data.get("owngoals");
-    this.bestWinStreak = (int) data.get("bestwinstreak");
+    this.matches = data.getInt("matches");
+    this.wins = data.getInt("wins");
+    this.ties = data.getInt("ties");
+    this.losses = data.getInt("losses");
+    this.goals = data.getInt("goals");
+    this.assists = data.getInt("assists");
+    this.ownGoals = data.getInt("owngoals");
+    this.bestWinStreak = data.getInt("bestwinstreak");
     this.skillLevel = calculateSkillLevel(matches, wins, ties, goals);
     this.rankName = calculateRankName((int) (skillLevel * 2.0 - 0.5));
   }

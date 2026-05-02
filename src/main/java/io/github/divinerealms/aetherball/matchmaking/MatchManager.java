@@ -484,15 +484,15 @@ public class MatchManager {
               data.add("winstreak");
               data.add("matches");
 
-              if ((int) data.get("winstreak") > (int) data.get("bestwinstreak")) {
-                data.set("bestwinstreak", data.get("winstreak"));
+              if (data.getInt("winstreak") > data.getInt("bestwinstreak")) {
+                data.set("bestwinstreak", data.getInt("winstreak"));
               }
 
-              if ((int) data.get("winstreak") > 0 && (int) data.get("winstreak") % 5 == 0) {
+              if (data.getInt("winstreak") > 0 && data.getInt("winstreak") % 5 == 0) {
                 manager.getEconomy()
                     .depositPlayer(player, Settings.ECONOMY_WIN_STREAK.asDouble());
                 sendMessage(player, MATCH_WINSTREAK_CREDITS,
-                    String.valueOf(data.get("winstreak")));
+                    String.valueOf(data.getInt("winstreak")));
               }
             }
 
@@ -515,9 +515,9 @@ public class MatchManager {
         }
 
         if (shouldCount) {
-          data.set("goals", (int) data.get("goals") + matchPlayer.getGoals());
-          data.set("assists", (int) data.get("assists") + matchPlayer.getAssists());
-          data.set("owngoals", (int) data.get("owngoals") + matchPlayer.getOwnGoals());
+          data.set("goals", data.getInt("goals") + matchPlayer.getGoals());
+          data.set("assists", data.getInt("assists") + matchPlayer.getAssists());
+          data.set("owngoals", data.getInt("owngoals") + matchPlayer.getOwnGoals());
         }
 
         dataManager.savePlayerData(player.getName());

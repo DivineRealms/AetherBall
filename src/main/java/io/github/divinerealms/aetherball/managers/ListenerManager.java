@@ -1,19 +1,12 @@
 package io.github.divinerealms.aetherball.managers;
 
-import static io.github.divinerealms.aetherball.utils.LoggerUtil.debugConsole;
-
 import io.github.divinerealms.aetherball.AetherBall;
-import io.github.divinerealms.aetherball.listeners.ChunkCheckers;
-import io.github.divinerealms.aetherball.listeners.CubeDamageListener;
-import io.github.divinerealms.aetherball.listeners.CubeKickListener;
-import io.github.divinerealms.aetherball.listeners.CubeTapListener;
-import io.github.divinerealms.aetherball.listeners.PlayerChargeListener;
-import io.github.divinerealms.aetherball.listeners.PlayerEvents;
-import io.github.divinerealms.aetherball.listeners.PlayerMovementListener;
-import io.github.divinerealms.aetherball.listeners.SignManipulation;
+import io.github.divinerealms.aetherball.listeners.*;
 import lombok.Getter;
 import org.bukkit.event.HandlerList;
 import org.bukkit.plugin.PluginManager;
+
+import static io.github.divinerealms.aetherball.utils.LoggerUtil.debugConsole;
 
 public class ListenerManager {
 
@@ -57,7 +50,7 @@ public class ListenerManager {
     pluginManager.registerEvents(playerChargeListener, plugin);
     pluginManager.registerEvents(playerMovementListener, plugin);
 
-    debugConsole("{prefix_success}Registered 5 listeners.");
+    debugConsole("{prefix_success}Registered 8 listeners.");
   }
 
   private void initializeAll() {

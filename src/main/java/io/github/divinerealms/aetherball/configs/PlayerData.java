@@ -29,10 +29,26 @@ public class PlayerData {
     return config.isSet(path);
   }
 
-  public Object get(String path) {
+  public int getInt(String path) {
     return config == null
         ? 0
-        : config.get(path, 0);
+        : config.getInt(path, 0);
+  }
+
+  public boolean getBoolean(String path) {
+    return config != null && config.getBoolean(path, false);
+  }
+
+  public String getString(String path) {
+    return config == null
+        ? null
+        : config.getString(path, null);
+  }
+
+  public long getLong(String path) {
+    return config == null
+        ? 0L
+        : config.getLong(path, 0L);
   }
 
   public void set(String path, Object value) {
@@ -46,13 +62,13 @@ public class PlayerData {
   }
 
   public void add(String key) {
-    int current = (int) get(key);
+    int current = getInt(key);
     set(key, current + 1);
   }
 
   @SuppressWarnings("unused")
   public void remove(String key) {
-    int current = (int) get(key);
+    int current = getInt(key);
     set(key, current > 0
         ? current - 1
         : 0);

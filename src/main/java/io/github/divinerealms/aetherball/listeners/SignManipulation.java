@@ -1,34 +1,14 @@
 package io.github.divinerealms.aetherball.listeners;
 
-import static io.github.divinerealms.aetherball.configs.Lang.ALREADY_ENOUGH_CUBES;
-import static io.github.divinerealms.aetherball.configs.Lang.BALANCE;
-import static io.github.divinerealms.aetherball.configs.Lang.CLEARED_CUBES;
-import static io.github.divinerealms.aetherball.configs.Lang.CUBE_NO_CUBES;
-import static io.github.divinerealms.aetherball.configs.Lang.CUBE_SPAWN;
-import static io.github.divinerealms.aetherball.configs.Lang.FC_DISABLED;
-import static io.github.divinerealms.aetherball.configs.Lang.JOIN_ALREADYINGAME;
-import static io.github.divinerealms.aetherball.configs.Lang.MATCHES_LIST_FOOTER;
-import static io.github.divinerealms.aetherball.configs.Lang.MATCHES_LIST_HEADER;
-import static io.github.divinerealms.aetherball.configs.Lang.MATCHES_LIST_NO_MATCHES;
-import static io.github.divinerealms.aetherball.configs.Lang.NO_PERM_PARAMETERS;
-import static io.github.divinerealms.aetherball.utils.MatchUtils.getFormattedMatches;
-import static io.github.divinerealms.aetherball.utils.LoggerUtil.sendMessage;
-import static io.github.divinerealms.aetherball.utils.Permissions.PERM_PLAY;
-
 import io.github.divinerealms.aetherball.configs.Settings;
 import io.github.divinerealms.aetherball.managers.Manager;
-import io.github.divinerealms.aetherball.matchmaking.MatchManager;
 import io.github.divinerealms.aetherball.matchmaking.BanManager;
 import io.github.divinerealms.aetherball.matchmaking.HighScoreManager;
+import io.github.divinerealms.aetherball.matchmaking.MatchManager;
 import io.github.divinerealms.aetherball.matchmaking.logic.MatchData;
 import io.github.divinerealms.aetherball.matchmaking.logic.MatchSystem;
 import io.github.divinerealms.aetherball.physics.PhysicsData;
 import io.github.divinerealms.aetherball.physics.utilities.PhysicsSystem;
-
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-
 import org.bukkit.ChatColor;
 import org.bukkit.DyeColor;
 import org.bukkit.Location;
@@ -46,6 +26,15 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.material.MaterialData;
 import org.bukkit.material.Wool;
 import org.bukkit.util.Vector;
+
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+
+import static io.github.divinerealms.aetherball.configs.Lang.*;
+import static io.github.divinerealms.aetherball.utils.LoggerUtil.sendMessage;
+import static io.github.divinerealms.aetherball.utils.MatchUtils.getFormattedMatches;
+import static io.github.divinerealms.aetherball.utils.Permissions.PERM_PLAY;
 
 /**
  * Handles creation and interaction with AetherBall signs and colored wool buttons.
@@ -274,10 +263,6 @@ public class SignManipulation extends BaseListener {
 
             if (!matchData.isMatchesEnabled()) {
               sendMessage(player, FC_DISABLED);
-              return;
-            }
-
-            if (banManager.isBanned(player)) {
               return;
             }
 

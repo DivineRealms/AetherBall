@@ -12,6 +12,6 @@ public record TaskStats(double physicsAvgMs, double touchCleanupAvgMs, double pl
   }
 
   public double getAveragePerTask() {
-    return getTotalAverageMs() / 8;
+    return getTotalAverageMs() / 6;
   }
 }
