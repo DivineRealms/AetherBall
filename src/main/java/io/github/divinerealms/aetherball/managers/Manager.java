@@ -118,10 +118,6 @@ public class Manager {
     return playerCache.getCachedPlayers();
   }
 
-  public Map<UUID, PlayerSettings> getPlayerSettings() {
-    return playerCache.getPlayerSettings();
-  }
-
   public PlayerSettings getPlayerSettings(Player player) {
     return playerCache.getSettings(player);
   }
@@ -136,10 +132,6 @@ public class Manager {
 
   public void preloadSettings(Player player, PlayerData playerData) {
     playerCache.preloadSettings(player, playerData);
-  }
-
-  public Map<UUID, String> getCachedPrefixedNames() {
-    return playerCache.getCachedPrefixedNames();
   }
 
   public void reload() {
@@ -221,6 +213,16 @@ public class Manager {
         }
       }
     }
+  }
+
+  public void unloadPlayer(Player player) {
+    dataManager.unload(player);
+    physicsSystem.removePlayer(player);
+    getCachedPlayers().remove(player);
+    playerCache.removePlayer(player.getUniqueId());
+    duelManager.cleanupPlayerRequests(player);
+    teamManager.handlePlayerDisconnect(player);
+    matchManager.handlePlayerDisconnect(player);
   }
 
   private void setupConfigs() {

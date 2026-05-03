@@ -39,7 +39,7 @@ public class BanCommands extends BaseCommand {
         secondsLeft = TimeUnit.MILLISECONDS.toSeconds(duration);
       } else {
         duration = Utilities.parseTime(timeStr) * 1000L;
-        secondsLeft = duration;
+        secondsLeft = Utilities.parseTime(timeStr);
       }
 
       if (duration <= 0) {

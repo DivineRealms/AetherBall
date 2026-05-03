@@ -16,6 +16,7 @@ import org.bukkit.entity.Player;
 import java.util.List;
 
 import static io.github.divinerealms.aetherball.configs.Lang.*;
+import static io.github.divinerealms.aetherball.utils.MatchUtils.applyRageQuitPenalty;
 import static io.github.divinerealms.aetherball.utils.MatchUtils.shouldPreventAbuse;
 import static io.github.divinerealms.aetherball.utils.GameCommandsHelper.*;
 import static io.github.divinerealms.aetherball.utils.LoggerUtil.sendMessage;
@@ -70,7 +71,7 @@ public class GameCommands extends BaseCommand {
       Match match = matchOpt.get();
 
       if (shouldPreventAbuse(match.getPhase())) {
-        handleInProgressLeave(player, match, manager);
+        applyRageQuitPenalty(player, match, manager, true);
       }
 
       matchManager.leaveMatch(player);

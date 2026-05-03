@@ -56,7 +56,7 @@ public class DependencyLoader {
 
   public void reloadTab() {
     if (loadTab()) {
-      debugConsole("Re-hooked into TAB successfully!");
+      debugConsole("{prefix_success}Re-hooked into TAB successfully!");
     }
   }
 }

@@ -1,18 +1,10 @@
 package io.github.divinerealms.aetherball.listeners;
 
 import io.github.divinerealms.aetherball.configs.PlayerData;
-import io.github.divinerealms.aetherball.configs.Settings;
 import io.github.divinerealms.aetherball.managers.Manager;
 import io.github.divinerealms.aetherball.managers.PlayerDataManager;
 import io.github.divinerealms.aetherball.matchmaking.Match;
 import io.github.divinerealms.aetherball.matchmaking.MatchManager;
-import io.github.divinerealms.aetherball.matchmaking.MatchPhase;
-import io.github.divinerealms.aetherball.matchmaking.BanManager;
-import io.github.divinerealms.aetherball.matchmaking.logic.MatchData;
-import io.github.divinerealms.aetherball.matchmaking.player.MatchPlayer;
-import io.github.divinerealms.aetherball.matchmaking.player.TeamColor;
-import io.github.divinerealms.aetherball.matchmaking.ScoreManager;
-import io.github.divinerealms.aetherball.matchmaking.TeamManager;
 import io.github.divinerealms.aetherball.physics.utilities.PhysicsSystem;
 import io.github.divinerealms.aetherball.utils.DisableCommands;
 import io.github.divinerealms.aetherball.utils.PlayerSettings;
@@ -26,13 +18,13 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.plugin.Plugin;
 
-import java.util.*;
+import java.util.Optional;
+import java.util.UUID;
 
 import static io.github.divinerealms.aetherball.configs.Lang.COMMAND_DISABLER_CANT_USE;
-import static io.github.divinerealms.aetherball.configs.Lang.TEAM_DISBANDED;
+import static io.github.divinerealms.aetherball.utils.LoggerUtil.sendMessage;
 import static io.github.divinerealms.aetherball.utils.MatchUtils.isPlayerOnline;
 import static io.github.divinerealms.aetherball.utils.MatchUtils.shouldPreventAbuse;
-import static io.github.divinerealms.aetherball.utils.LoggerUtil.sendMessage;
 import static io.github.divinerealms.aetherball.utils.Permissions.PERM_BYPASS_DISABLED_COMMANDS;
 
 /**
@@ -47,10 +39,6 @@ public class PlayerEvents extends BaseListener {
   private final Manager manager;
   private final Plugin plugin;
   private final MatchManager matchManager;
-  private final MatchData matchData;
-  private final BanManager banManager;
-  private final TeamManager teamManager;
-  private final ScoreManager scoreboardManager;
   private final PlayerDataManager dataManager;
   private final DisableCommands disableCommands;
   private final PhysicsSystem system;
@@ -59,10 +47,6 @@ public class PlayerEvents extends BaseListener {
     this.manager = manager;
     this.plugin = manager.getPlugin();
     this.matchManager = manager.getMatchManager();
-    this.matchData = manager.getMatchData();
-    this.banManager = manager.getBanManager();
-    this.teamManager = manager.getTeamManager();
-    this.scoreboardManager = manager.getScoreboardManager();
     this.dataManager = manager.getDataManager();
     this.disableCommands = manager.getDisableCommands();
     this.system = manager.getPhysicsSystem();
@@ -178,82 +162,7 @@ public class PlayerEvents extends BaseListener {
       }
 
       // Unload player data and clear all caches.
-      dataManager.unload(player);
-      system.removePlayer(player);
-      manager.getCachedPlayers().remove(player);
-      manager.getPlayerSettings().remove(player.getUniqueId());
-      manager.getCachedPrefixedNames().remove(player.getUniqueId());
-      manager.getDuelManager().cleanupPlayerRequests(player);
-      manager.getPlayerCache().removePlayer(player.getUniqueId());
-
-      // Remove from all matchmaking queues.
-      Collection<Queue<Player>> playerQueues = matchData.getPlayerQueues().values();
-      for (Queue<Player> queue : playerQueues) {
-        if (queue != null) {
-          queue.remove(player);
-        }
-      }
-
-      // Clean up lobby matches and update scoreboards.
-      List<Match> matches = matchData.getMatches();
-      if (matches != null) {
-        for (Match match : matches) {
-          if (match != null && match.getPhase() == MatchPhase.LOBBY) {
-            List<MatchPlayer> players = match.getPlayers();
-            if (players != null) {
-              players.removeIf(matchPlayer -> !isPlayerOnline(matchPlayer)
-                  || matchPlayer.getPlayer().equals(player));
-            }
-          }
-          scoreboardManager.updateScoreboard(match);
-        }
-      }
-
-      // Disband team if player is in one, notifying remaining members.
-      if (teamManager.isInTeam(player)) {
-        TeamManager.Team team = teamManager.getTeam(player);
-        if (team != null) {
-          for (Player player1 : team.getMembers()) {
-            if (isPlayerOnline(player1) && !player1.equals(player)) {
-              sendMessage(player1, TEAM_DISBANDED, player.getName());
-            }
-          }
-          teamManager.disbandTeam(team);
-        }
-      }
-
-      // Handle match departure and rage-quit penalties.
-      Optional<Match> matchOpt = matchManager.getMatch(player);
-      if (matchOpt.isPresent()) {
-        Match match = matchOpt.get();
-        MatchPlayer matchPlayer = null;
-        List<MatchPlayer> players = match.getPlayers();
-        if (players != null) {
-          for (MatchPlayer matchPlayer1 : players) {
-            if (isPlayerOnline(matchPlayer1)
-                && matchPlayer1.getPlayer().equals(player)) {
-              matchPlayer = matchPlayer1;
-              break;
-            }
-          }
-        }
-
-        // Apply rage-quit penalty if leaving while losing.
-        if (matchPlayer != null) {
-          int playerScore = matchPlayer.getTeamColor() == TeamColor.RED
-              ? match.getScoreRed()
-              : match.getScoreBlue();
-          int opponentScore = matchPlayer.getTeamColor() == TeamColor.RED
-              ? match.getScoreBlue()
-              : match.getScoreRed();
-
-          if (match.getPhase() == MatchPhase.IN_PROGRESS && playerScore < opponentScore) {
-            manager.getEconomy().withdrawPlayer(player, Settings.BAN_RAGEQUIT_PENALTY.asDouble());
-            banManager.banPlayer(player, Settings.getRageQuitBanDuration());
-          }
-        }
-        matchManager.leaveMatch(player);
-      }
+      manager.unloadPlayer(player);
     });
   }
 

@@ -143,4 +143,23 @@ public class TeamManager {
       return Arrays.asList(leader, member);
     }
   }
+
+  public void handlePlayerDisconnect(Player player) {
+    if (!isInTeam(player)) {
+      return;
+    }
+
+    Team team = getTeam(player);
+    if (team == null) {
+      return;
+    }
+
+    for (Player member : team.getMembers()) {
+      if (isPlayerOnline(member) && !member.equals(player)) {
+        sendMessage(member, TEAM_DISBANDED, player.getName());
+      }
+    }
+
+    disbandTeam(team);
+  }
 }

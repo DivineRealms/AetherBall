@@ -1,42 +1,19 @@
 package io.github.divinerealms.aetherball.utils;
 
-import static io.github.divinerealms.aetherball.configs.Lang.FC_DISABLED;
-import static io.github.divinerealms.aetherball.configs.Lang.JOIN_ALREADYINGAME;
-import static io.github.divinerealms.aetherball.configs.Lang.JOIN_NOARENA;
-import static io.github.divinerealms.aetherball.configs.Lang.LEAVE_LOSING;
-import static io.github.divinerealms.aetherball.configs.Lang.LEAVE_NOT_INGAME;
-import static io.github.divinerealms.aetherball.configs.Lang.LEFT;
-import static io.github.divinerealms.aetherball.configs.Lang.MATCH_TYPE_UNAVAILABLE;
-import static io.github.divinerealms.aetherball.configs.Lang.TAKEPLACE_AVAILABLE_ENTRY;
-import static io.github.divinerealms.aetherball.configs.Lang.TAKEPLACE_AVAILABLE_HEADER;
-import static io.github.divinerealms.aetherball.configs.Lang.TEAM_ACCEPT_OTHER;
-import static io.github.divinerealms.aetherball.configs.Lang.TEAM_ACCEPT_SELF;
-import static io.github.divinerealms.aetherball.configs.Lang.TEAM_ALREADY_IN_GAME;
-import static io.github.divinerealms.aetherball.configs.Lang.TEAM_ALREADY_IN_TEAM;
-import static io.github.divinerealms.aetherball.configs.Lang.TEAM_ALREADY_IN_TEAM_2;
-import static io.github.divinerealms.aetherball.configs.Lang.TEAM_DECLINE_OTHER;
-import static io.github.divinerealms.aetherball.configs.Lang.TEAM_DECLINE_SELF;
-import static io.github.divinerealms.aetherball.configs.Lang.TEAM_NOT_ONLINE;
-import static io.github.divinerealms.aetherball.configs.Lang.TEAM_NO_REQUEST;
-import static io.github.divinerealms.aetherball.configs.Lang.TEAM_WANTS_TO_TEAM_OTHER;
-import static io.github.divinerealms.aetherball.configs.Lang.TEAM_WANTS_TO_TEAM_SELF;
-import static io.github.divinerealms.aetherball.utils.MatchUtils.isPlayerOnline;
-import static io.github.divinerealms.aetherball.utils.LoggerUtil.sendMessage;
-
 import io.github.divinerealms.aetherball.configs.Settings;
 import io.github.divinerealms.aetherball.managers.Manager;
-import io.github.divinerealms.aetherball.managers.Utilities;
 import io.github.divinerealms.aetherball.matchmaking.Match;
 import io.github.divinerealms.aetherball.matchmaking.MatchManager;
-import io.github.divinerealms.aetherball.matchmaking.player.MatchPlayer;
-import io.github.divinerealms.aetherball.matchmaking.player.TeamColor;
 import io.github.divinerealms.aetherball.matchmaking.TeamManager;
+import io.github.divinerealms.aetherball.matchmaking.player.MatchPlayer;
+import org.bukkit.entity.Player;
 
 import java.util.List;
 import java.util.Queue;
-import java.util.concurrent.TimeUnit;
 
-import org.bukkit.entity.Player;
+import static io.github.divinerealms.aetherball.configs.Lang.*;
+import static io.github.divinerealms.aetherball.utils.LoggerUtil.sendMessage;
+import static io.github.divinerealms.aetherball.utils.MatchUtils.isPlayerOnline;
 
 public class GameCommandsHelper {
 
@@ -70,33 +47,6 @@ public class GameCommandsHelper {
     }
 
     matchManager.joinQueue(player, type);
-  }
-
-  public static void handleInProgressLeave(Player player, Match match, Manager manager) {
-    MatchPlayer matchPlayer = null;
-    for (MatchPlayer mp : match.getPlayers()) {
-      if (isPlayerOnline(mp) && mp.getPlayer().equals(player)) {
-        matchPlayer = mp;
-        break;
-      }
-    }
-
-    if (matchPlayer != null) {
-      int playerScore =
-          matchPlayer.getTeamColor() == TeamColor.RED ? match.getScoreRed() : match.getScoreBlue();
-      int opponentScore =
-          matchPlayer.getTeamColor() == TeamColor.RED ? match.getScoreBlue() : match.getScoreRed();
-
-      if (playerScore < opponentScore) {
-        double rageQuitPenalty = Settings.BAN_RAGEQUIT_PENALTY.asDouble();
-        long rageQuitBanDuration = Settings.getRageQuitBanDuration();
-        manager.getEconomy().withdrawPlayer(player, rageQuitPenalty);
-        manager.getBanManager().banPlayer(player, rageQuitBanDuration);
-        long secondsLeft = TimeUnit.MILLISECONDS.toSeconds(rageQuitBanDuration);
-        sendMessage(player, LEAVE_LOSING, String.format("%.0f", rageQuitPenalty),
-            Utilities.formatTime(secondsLeft));
-      }
-    }
   }
 
   public static void handleQueueLeave(Player player, Manager manager) {

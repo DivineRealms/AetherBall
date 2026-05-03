@@ -845,4 +845,39 @@ public class MatchManager {
       }
     }
   }
+
+  public void handlePlayerDisconnect(Player player) {
+    // Remove from all queues
+    for (Queue<Player> queue : data.getPlayerQueues().values()) {
+      if (queue != null) {
+        queue.remove(player);
+      }
+    }
+
+    // Clean up lobby match slots and refresh scoreboards
+    List<Match> matches = data.getMatches();
+    if (matches != null) {
+      for (Match match : new ArrayList<>(matches)) {
+        if (match == null) continue;
+
+        if (match.getPhase() == MatchPhase.LOBBY) {
+          List<MatchPlayer> players = match.getPlayers();
+          if (players != null) {
+            players.removeIf(mp -> !isPlayerOnline(mp)
+                || mp.getPlayer().equals(player));
+          }
+        }
+
+        scoreboardManager.updateScoreboard(match);
+      }
+    }
+
+    // Apply rage-quit penalty and leave match if in one
+    Optional<Match> matchOpt = getMatch(player);
+    if (matchOpt.isPresent()) {
+      Match match = matchOpt.get();
+      applyRageQuitPenalty(player, match, manager, false);
+      leaveMatch(player);
+    }
+  }
 }
