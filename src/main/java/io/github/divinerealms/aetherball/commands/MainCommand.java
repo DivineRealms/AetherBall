@@ -38,11 +38,12 @@ public class MainCommand extends BaseCommand {
   @CatchUnknown
   public void onDefault(CommandSender sender) {
     if (sender instanceof Player) {
-      sendMessage(sender, BANNER_PLAYER,
+      sendMessage(
+          sender,
+          BANNER_PLAYER,
           manager.getPlugin().getName(),
           manager.getPlugin().getDescription().getVersion(),
-          String.join(", ", manager.getPlugin().getDescription().getAuthors())
-      );
+          String.join(", ", manager.getPlugin().getDescription().getAuthors()));
     } else {
       manager.sendBanner();
     }

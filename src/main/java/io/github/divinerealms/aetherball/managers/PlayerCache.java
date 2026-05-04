@@ -8,6 +8,7 @@ import net.minecraft.server.v1_8_R3.EnumParticle;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitTask;
 
 import java.util.Map;
 import java.util.Set;
@@ -20,12 +21,10 @@ public class PlayerCache {
   private final Manager manager;
   private final JavaPlugin plugin;
 
-  @Getter
-  private final Set<Player> cachedPlayers = ConcurrentHashMap.newKeySet();
-  @Getter
-  private final Map<UUID, PlayerSettings> playerSettings = new ConcurrentHashMap<>();
-  @Getter
-  private final Map<UUID, String> cachedPrefixedNames = new ConcurrentHashMap<>();
+  @Getter private final Set<Player> cachedPlayers = ConcurrentHashMap.newKeySet();
+  @Getter private final Map<UUID, PlayerSettings> playerSettings = new ConcurrentHashMap<>();
+  @Getter private final Map<UUID, String> cachedPrefixedNames = new ConcurrentHashMap<>();
+  private final Map<UUID, BukkitTask> prefixExpiryTasks = new ConcurrentHashMap<>();
 
   public PlayerCache(Manager manager) {
     this.manager = manager;
@@ -47,15 +46,35 @@ public class PlayerCache {
 
   public void cachePrefixedName(Player player) {
     UUID uuid = player.getUniqueId();
-    manager.getUtilities().getPrefixedName(uuid, player.getName()).thenAccept(name -> cachedPrefixedNames.put(uuid, name));
-    plugin.getServer().getScheduler().runTaskLaterAsynchronously(plugin, () -> cachedPrefixedNames.remove(uuid), Settings.getPrefixExpiry());
+
+    BukkitTask existing = prefixExpiryTasks.remove(uuid);
+    if (existing != null) {
+      existing.cancel();
+    }
+
+    manager
+        .getUtilities()
+        .getPrefixedName(uuid, player.getName())
+        .thenAccept(name -> cachedPrefixedNames.put(uuid, name));
+
+    BukkitTask task =
+        plugin
+            .getServer()
+            .getScheduler()
+            .runTaskLaterAsynchronously(
+                plugin,
+                () -> {
+                  cachedPrefixedNames.remove(uuid);
+                  prefixExpiryTasks.remove(uuid);
+                },
+                Settings.getPrefixExpiry());
+    prefixExpiryTasks.put(uuid, task);
   }
 
   public void preloadSettings(Player player, PlayerData playerData) {
-    PlayerSettings settings = playerSettings.computeIfAbsent(
-        player.getUniqueId(),
-        uuid -> PlayerSettings.withCurrentDefaults()
-    );
+    PlayerSettings settings =
+        playerSettings.computeIfAbsent(
+            player.getUniqueId(), uuid -> PlayerSettings.withCurrentDefaults());
 
     loadParticleSettings(player, playerData, settings);
     loadSoundSettings(playerData, settings);
@@ -148,11 +167,17 @@ public class PlayerCache {
   public void removePlayer(UUID uuid) {
     playerSettings.remove(uuid);
     cachedPrefixedNames.remove(uuid);
+    BukkitTask task = prefixExpiryTasks.remove(uuid);
+    if (task != null) {
+      task.cancel();
+    }
   }
 
   public void clear() {
     cachedPlayers.clear();
     playerSettings.clear();
     cachedPrefixedNames.clear();
+    prefixExpiryTasks.values().forEach(BukkitTask::cancel);
+    prefixExpiryTasks.clear();
   }
 }

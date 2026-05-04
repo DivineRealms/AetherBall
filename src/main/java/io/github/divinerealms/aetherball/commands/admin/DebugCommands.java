@@ -58,8 +58,14 @@ public class DebugCommands extends BaseCommand {
     for (Match match : matchData.getMatches()) {
       boolean hasArena = match.getArena() != null;
       int arenaId = hasArena ? match.getArena().id() : -1;
-      sendMessage(sender, "{prefix_info}&7- Match: Arena=" + arenaId +
-          " (null=" + !hasArena + "), Phase=" + match.getPhase());
+      sendMessage(
+          sender,
+          "{prefix_info}&7- Match: Arena="
+              + arenaId
+              + " (null="
+              + !hasArena
+              + "), Phase="
+              + match.getPhase());
     }
   }
 

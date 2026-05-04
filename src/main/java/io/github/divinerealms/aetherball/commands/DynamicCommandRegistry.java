@@ -40,7 +40,8 @@ public class DynamicCommandRegistry {
       field.setAccessible(true);
       commandMap = (CommandMap) field.get(server);
     } catch (Exception exception) {
-      logConsole("{prefix_error}Failed to initialize command map for dynamic commands",
+      logConsole(
+          "{prefix_error}Failed to initialize command map for dynamic commands",
           exception.getMessage());
     }
   }
@@ -81,8 +82,8 @@ public class DynamicCommandRegistry {
       registeredCommands.put(commandName, command);
       return true;
     } catch (Exception exception) {
-      logConsole("{prefix_warn}Failed to register command: /" + commandName,
-          exception.getMessage());
+      logConsole(
+          "{prefix_warn}Failed to register command: /" + commandName, exception.getMessage());
       return false;
     }
   }
@@ -247,10 +248,11 @@ public class DynamicCommandRegistry {
         completions.addAll(Arrays.asList("accept", "decline", "cancel"));
 
         // Add online players.
-        completions.addAll(Bukkit.getOnlinePlayers().stream()
-            .map(Player::getName)
-            .filter(name -> !name.equals(player.getName()))
-            .toList());
+        completions.addAll(
+            Bukkit.getOnlinePlayers().stream()
+                .map(Player::getName)
+                .filter(name -> !name.equals(player.getName()))
+                .toList());
 
         // Filter by what the user has typed.
         String input = args[0].toLowerCase();

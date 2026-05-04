@@ -8,8 +8,8 @@ import static io.github.divinerealms.aetherball.configs.Lang.ON;
 import static io.github.divinerealms.aetherball.configs.Lang.SET_BUILD_MODE;
 import static io.github.divinerealms.aetherball.configs.Lang.SET_BUILD_MODE_OTHER;
 import static io.github.divinerealms.aetherball.configs.Lang.TEAM_ALREADY_IN_GAME;
-import static io.github.divinerealms.aetherball.utils.MatchUtils.shouldPreventAbuse;
 import static io.github.divinerealms.aetherball.utils.LoggerUtil.sendMessage;
+import static io.github.divinerealms.aetherball.utils.MatchUtils.shouldPreventAbuse;
 import static io.github.divinerealms.aetherball.utils.Permissions.PERM_BUILD;
 import static io.github.divinerealms.aetherball.utils.Permissions.PERM_BUILD_OTHER;
 
@@ -64,9 +64,8 @@ public class BuildCommand extends BaseCommand {
 
       PlayerSettings settings = manager.getPlayerSettings(player);
       settings.toggleBuild();
-      sendMessage(player, SET_BUILD_MODE, settings.isBuildEnabled()
-          ? ON.toString()
-          : OFF.toString());
+      sendMessage(
+          player, SET_BUILD_MODE, settings.isBuildEnabled() ? ON.toString() : OFF.toString());
       return;
     }
 
@@ -82,9 +81,7 @@ public class BuildCommand extends BaseCommand {
 
     PlayerSettings settings = manager.getPlayerSettings(target);
     settings.toggleBuild();
-    String status = settings.isBuildEnabled()
-        ? ON.toString()
-        : OFF.toString();
+    String status = settings.isBuildEnabled() ? ON.toString() : OFF.toString();
 
     sendMessage(target, SET_BUILD_MODE, status);
     sendMessage(sender, SET_BUILD_MODE_OTHER, target.getDisplayName(), status);

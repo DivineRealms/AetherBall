@@ -1,11 +1,11 @@
 package io.github.divinerealms.aetherball.tasks;
 
-import static io.github.divinerealms.aetherball.utils.LoggerUtil.debugConsole;
-import static io.github.divinerealms.aetherball.utils.LoggerUtil.logConsole;
-
 import io.github.divinerealms.aetherball.managers.Manager;
 import io.github.divinerealms.aetherball.matchmaking.HighScoreManager;
 import org.bukkit.Bukkit;
+
+import static io.github.divinerealms.aetherball.utils.LoggerUtil.debugConsole;
+import static io.github.divinerealms.aetherball.utils.LoggerUtil.logConsole;
 
 public class HighScoresTask extends BaseTask {
 
@@ -38,16 +38,29 @@ public class HighScoresTask extends BaseTask {
     }
 
     long startTime = System.currentTimeMillis();
-    highScoreManager.startUpdate();
-    long duration = System.currentTimeMillis() - startTime;
-
     int totalPlayers = highScoreManager.getTotalPlayerFiles();
-    debugConsole("{prefix_success}Started " + getTaskName() + " update (" + totalPlayers
-        + " total player files)");
+    debugConsole(
+        "{prefix_success}Started "
+            + getTaskName()
+            + " update ("
+            + totalPlayers
+            + " total player files)");
 
-    int processedCount = highScoreManager.getProcessedCount();
-    int skippedCount = highScoreManager.getSkippedCount();
-    debugConsole("{prefix_success}" + getTaskName() + " update completed in " + duration + "ms for "
-        + processedCount + " players (skipped " + skippedCount + ")");
+    highScoreManager.startUpdate(
+        () -> {
+          long duration = System.currentTimeMillis() - startTime;
+          int processedCount = highScoreManager.getProcessedCount();
+          int skippedCount = highScoreManager.getSkippedCount();
+          debugConsole(
+              "{prefix_success}"
+                  + getTaskName()
+                  + " update completed in "
+                  + duration
+                  + "ms for "
+                  + processedCount
+                  + " players (skipped "
+                  + skippedCount
+                  + ")");
+        });
   }
 }

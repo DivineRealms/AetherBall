@@ -1,8 +1,15 @@
 package io.github.divinerealms.aetherball.matchmaking;
 
+import static io.github.divinerealms.aetherball.utils.LoggerUtil.debugConsole;
+import static io.github.divinerealms.aetherball.utils.LoggerUtil.logConsole;
+
 import io.github.divinerealms.aetherball.configs.Settings;
 import io.github.divinerealms.aetherball.managers.ConfigManager;
 import io.github.divinerealms.aetherball.managers.Manager;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.Location;
@@ -10,14 +17,6 @@ import org.bukkit.Server;
 import org.bukkit.World;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import static io.github.divinerealms.aetherball.utils.LoggerUtil.debugConsole;
-import static io.github.divinerealms.aetherball.utils.LoggerUtil.logConsole;
 
 @Getter
 public class ArenaManager {
@@ -27,8 +26,7 @@ public class ArenaManager {
   private final List<Arena> arenas = new ArrayList<>();
   private final ConfigManager configManager;
 
-  @Setter
-  private Map<Player, ArenaSetup> setupWizards = new HashMap<>();
+  @Setter private Map<Player, ArenaSetup> setupWizards = new HashMap<>();
 
   public ArenaManager(Manager manager) {
     this.manager = manager;
@@ -58,7 +56,7 @@ public class ArenaManager {
       return;
     }
 
-    for (String type : new String[]{"1v1", "2v2", "3v3", "4v4", "5v5"}) {
+    for (String type : new String[] {"1v1", "2v2", "3v3", "4v4", "5v5"}) {
       int amount = config.getInt("arenas." + type + ".amount", 0);
       for (int i = 1; i <= amount; i++) {
         String bluePath = "arenas." + type + "." + i + ".blue.";
@@ -72,8 +70,12 @@ public class ArenaManager {
   }
 
   private Location getLocation(FileConfiguration config, World world, String path) {
-    Location location = new Location(world, config.getDouble(path + "x"),
-        config.getDouble(path + "y"), config.getDouble(path + "z"));
+    Location location =
+        new Location(
+            world,
+            config.getDouble(path + "x"),
+            config.getDouble(path + "y"),
+            config.getDouble(path + "z"));
     location.setPitch((float) config.getDouble(path + "pitch"));
     location.setYaw((float) config.getDouble(path + "yaw"));
     return location;
@@ -109,8 +111,14 @@ public class ArenaManager {
     Arena newArena = arenas.getLast();
 
     debugConsole(
-        "{prefix_success}Created " + typeString + " arena (ID: " + newArena.id() + ") at " +
-            formatLocation(blueSpawn) + " and " + formatLocation(redSpawn));
+        "{prefix_success}Created "
+            + typeString
+            + " arena (ID: "
+            + newArena.id()
+            + ") at "
+            + formatLocation(blueSpawn)
+            + " and "
+            + formatLocation(redSpawn));
   }
 
   private Location normalizeLocation(Location location) {
@@ -143,8 +151,12 @@ public class ArenaManager {
   }
 
   private void addArena(int type, Location blue, Location red) {
-    Location center = new Location(blue.getWorld(), (blue.getX() + red.getX()) / 2.0,
-        (blue.getY() + red.getY()) / 2.0 + 2.0, (blue.getZ() + red.getZ()) / 2.0);
+    Location center =
+        new Location(
+            blue.getWorld(),
+            (blue.getX() + red.getX()) / 2.0,
+            (blue.getY() + red.getY()) / 2.0 + 2.0,
+            (blue.getZ() + red.getZ()) / 2.0);
 
     boolean isXAxis = Math.abs(blue.getX() - red.getX()) > Math.abs(blue.getZ() - red.getZ());
     boolean redIsGreater = isXAxis ? red.getX() > blue.getX() : red.getZ() > blue.getZ();
@@ -209,15 +221,15 @@ public class ArenaManager {
     List<Arena> newArenas = new ArrayList<>();
     for (int i = 0; i < arenas.size(); i++) {
       Arena oldArena = arenas.get(i);
-      Arena newArena = new Arena(
-          i + 1,
-          oldArena.type(),
-          oldArena.blueSpawn(),
-          oldArena.redSpawn(),
-          oldArena.center(),
-          oldArena.isXAxis(),
-          oldArena.redIsGreater()
-      );
+      Arena newArena =
+          new Arena(
+              i + 1,
+              oldArena.type(),
+              oldArena.blueSpawn(),
+              oldArena.redSpawn(),
+              oldArena.center(),
+              oldArena.isXAxis(),
+              oldArena.redIsGreater());
       newArenas.add(newArena);
     }
     arenas.clear();
@@ -225,8 +237,9 @@ public class ArenaManager {
   }
 
   private String formatLocation(Location location) {
-    return String.format("%.1f, %.1f, %.1f (yaw: %.0f, pitch: %.0f)", location.getX(),
-        location.getY(), location.getZ(), location.getYaw(), location.getPitch());
+    return String.format(
+        "%.1f, %.1f, %.1f (yaw: %.0f, pitch: %.0f)",
+        location.getX(), location.getY(), location.getZ(), location.getYaw(), location.getPitch());
   }
 
   @Getter
@@ -241,7 +254,12 @@ public class ArenaManager {
     }
   }
 
-  public record Arena(int id, int type, Location blueSpawn, Location redSpawn,
-                      Location center, boolean isXAxis, boolean redIsGreater) {
-  }
+  public record Arena(
+      int id,
+      int type,
+      Location blueSpawn,
+      Location redSpawn,
+      Location center,
+      boolean isXAxis,
+      boolean redIsGreater) {}
 }

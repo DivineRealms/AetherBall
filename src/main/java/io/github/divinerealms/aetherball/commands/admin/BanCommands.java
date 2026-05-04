@@ -48,8 +48,8 @@ public class BanCommands extends BaseCommand {
       }
 
       banManager.banPlayer(target, duration);
-      sendMessage(sender, PLAYER_BANNED, target.getDisplayName(),
-          Utilities.formatTime(secondsLeft));
+      sendMessage(
+          sender, PLAYER_BANNED, target.getDisplayName(), Utilities.formatTime(secondsLeft));
     } catch (NumberFormatException e) {
       sendMessage(sender, USAGE, "fca ban <player> <time>");
     }
@@ -71,7 +71,11 @@ public class BanCommands extends BaseCommand {
   @CommandCompletion("@players")
   @Description("Check if a player is banned")
   public void onCheckBan(CommandSender sender, @Flags("other") Player target) {
-    if (!banManager.isBanned(target)) {
+    if (banManager.isBanned(target)) {
+      long secondsLeft = TimeUnit.MINUTES.toSeconds(banManager.getRemainingMillis(target));
+      sendMessage(
+          sender, BAN_REMAINING, target.getDisplayName(), Utilities.formatTime(secondsLeft));
+    } else {
       sendMessage(sender, NOT_BANNED, target.getDisplayName());
     }
   }

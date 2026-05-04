@@ -8,12 +8,11 @@ import io.github.divinerealms.aetherball.matchmaking.HighScoreManager;
 import io.github.divinerealms.aetherball.matchmaking.Match;
 import io.github.divinerealms.aetherball.matchmaking.MatchManager;
 import io.github.divinerealms.aetherball.matchmaking.player.StatsHelper;
+import java.util.Queue;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.Queue;
 
 public class Placeholders extends PlaceholderExpansion {
 
@@ -100,15 +99,18 @@ public class Placeholders extends PlaceholderExpansion {
     }
 
     if (identifier.startsWith("active_lobbies_")) {
-      return String.valueOf(matchManager.countActiveLobbies(parseTypeFromSuffix(identifier, "active_lobbies_")));
+      return String.valueOf(
+          matchManager.countActiveLobbies(parseTypeFromSuffix(identifier, "active_lobbies_")));
     }
 
     if (identifier.startsWith("players_")) {
-      return String.valueOf(matchManager.countPlayersInMatches(parseTypeFromSuffix(identifier, "players_")));
+      return String.valueOf(
+          matchManager.countPlayersInMatches(parseTypeFromSuffix(identifier, "players_")));
     }
 
     if (identifier.startsWith("waiting_")) {
-      return String.valueOf(matchManager.countWaitingPlayers(parseTypeFromSuffix(identifier, "waiting_")));
+      return String.valueOf(
+          matchManager.countWaitingPlayers(parseTypeFromSuffix(identifier, "waiting_")));
     }
 
     if (identifier.startsWith("listplayers_")) {
@@ -143,15 +145,16 @@ public class Placeholders extends PlaceholderExpansion {
       return null;
     }
 
-    HighScoreManager.HighScoreCategory category = switch (parts[1]) {
-      case "rating" -> HighScoreManager.HighScoreCategory.SKILL;
-      case "goals" -> HighScoreManager.HighScoreCategory.GOALS;
-      case "assists" -> HighScoreManager.HighScoreCategory.ASSISTS;
-      case "owngoals" -> HighScoreManager.HighScoreCategory.OWN_GOALS;
-      case "wins" -> HighScoreManager.HighScoreCategory.WINS;
-      case "streak" -> HighScoreManager.HighScoreCategory.STREAK;
-      default -> null;
-    };
+    HighScoreManager.HighScoreCategory category =
+        switch (parts[1]) {
+          case "rating" -> HighScoreManager.HighScoreCategory.SKILL;
+          case "goals" -> HighScoreManager.HighScoreCategory.GOALS;
+          case "assists" -> HighScoreManager.HighScoreCategory.ASSISTS;
+          case "owngoals" -> HighScoreManager.HighScoreCategory.OWN_GOALS;
+          case "wins" -> HighScoreManager.HighScoreCategory.WINS;
+          case "streak" -> HighScoreManager.HighScoreCategory.STREAK;
+          default -> null;
+        };
 
     if (category == null) return "---";
 

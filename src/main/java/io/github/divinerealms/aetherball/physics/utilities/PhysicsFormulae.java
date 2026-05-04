@@ -28,8 +28,9 @@ public class PhysicsFormulae {
     try {
       Location locAnew = locA.clone().add(0, -BALL_TOUCH_Y_OFFSET, 0);
       double dx = Math.abs(locAnew.getX() - locB.getX());
-      double dy = Math.abs(locAnew.getY() - locB.getY() - VERTICAL_INTERACTION_OFFSET) - (
-          CUBE_HITBOX_ADJUSTMENT - VERTICAL_INTERACTION_OFFSET);
+      double dy =
+          Math.abs(locAnew.getY() - locB.getY() - VERTICAL_INTERACTION_OFFSET)
+              - (CUBE_HITBOX_ADJUSTMENT - VERTICAL_INTERACTION_OFFSET);
       if (dy < 0) {
         dy = 0;
       }
@@ -40,7 +41,8 @@ public class PhysicsFormulae {
       if (Settings.DEBUG_MODE.asBoolean()) {
         long ms = (System.nanoTime() - start) / 1_000_000;
         if (ms > Settings.DEBUG_THRESHOLD.asLong()) {
-          sendMessage(PERM_HIT_DEBUG,
+          sendMessage(
+              PERM_HIT_DEBUG,
               "{prefix_debug}&dPhysicsFormulae#getDistanceSquared() &ftook &e" + ms + "ms");
         }
       }
@@ -51,12 +53,12 @@ public class PhysicsFormulae {
    * Calculates the squared perpendicular distance from a player's position to the path of the
    * cube's movement vector. Used for proximity and collision prediction.
    *
-   * <p>Squared form avoids costly {@link Math#sqrt(double)} calls when only relative
-   * distance comparisons are required.</p>
+   * <p>Squared form avoids costly {@link Math#sqrt(double)} calls when only relative distance
+   * comparisons are required.
    *
    * @param newVelocity The velocity vector of the cube.
-   * @param cubePos     The cube's current position.
-   * @param player      The player whose position is used for distance checking.
+   * @param cubePos The cube's current position.
+   * @param player The player whose position is used for distance checking.
    * @return The squared perpendicular distance between the player and the cube's velocity vector.
    */
   public double getPerpendicularDistanceSquared(Vector newVelocity, Vector cubePos, Player player) {
@@ -79,8 +81,10 @@ public class PhysicsFormulae {
       if (Settings.DEBUG_MODE.asBoolean()) {
         long ms = (System.nanoTime() - start) / 1_000_000;
         if (ms > Settings.DEBUG_THRESHOLD.asLong()) {
-          sendMessage(PERM_HIT_DEBUG,
-              "{prefix_debug}&dPhysicsFormulae#getPerpendicularDistanceSquared() &ftook &e" + ms
+          sendMessage(
+              PERM_HIT_DEBUG,
+              "{prefix_debug}&dPhysicsFormulae#getPerpendicularDistanceSquared() &ftook &e"
+                  + ms
                   + "ms");
         }
       }
@@ -88,12 +92,12 @@ public class PhysicsFormulae {
   }
 
   /**
-   * Non-squared version for when actual distance value is needed. Prefer
-   * {@link #getPerpendicularDistanceSquared} for comparisons to avoid sqrt overhead.
+   * Non-squared version for when actual distance value is needed. Prefer {@link
+   * #getPerpendicularDistanceSquared} for comparisons to avoid sqrt overhead.
    *
    * @param velocity The velocity vector of the cube
-   * @param cubePos  The cube's current position vector
-   * @param player   The player whose position is used for distance checking
+   * @param cubePos The cube's current position vector
+   * @param player The player whose position is used for distance checking
    * @return The perpendicular distance, or {@code Double.MAX_VALUE} if undefined
    */
   public double getPerpendicularDistance(Vector velocity, Vector cubePos, Player player) {
@@ -111,17 +115,15 @@ public class PhysicsFormulae {
    * Determines if the cube is moving toward the player using sign-based quadrant logic.
    *
    * @param playerLocation The player's current location
-   * @param cubePos        The cube's current position vector
-   * @param velocity       The cube's velocity vector
+   * @param cubePos The cube's current position vector
+   * @param velocity The cube's velocity vector
    * @return true if cube is moving toward player
    */
   public boolean isMovingTowardPlayer(Location playerLocation, Vector cubePos, Vector velocity) {
     // Direction from cube to player (horizontal only)
-    Vector playerDir = new Vector(
-        playerLocation.getX() - cubePos.getX(),
-        0.0,
-        playerLocation.getZ() - cubePos.getZ()
-    );
+    Vector playerDir =
+        new Vector(
+            playerLocation.getX() - cubePos.getX(), 0.0, playerLocation.getZ() - cubePos.getZ());
 
     // Normalize cube direction (horizontal only)
     Vector cubeDir = new Vector(velocity.getX(), 0.0, velocity.getZ()).normalize();
@@ -168,7 +170,8 @@ public class PhysicsFormulae {
       if (Settings.DEBUG_MODE.asBoolean()) {
         long ms = (System.nanoTime() - start) / 1_000_000;
         if (ms > Settings.DEBUG_THRESHOLD.asLong()) {
-          sendMessage(PERM_HIT_DEBUG,
+          sendMessage(
+              PERM_HIT_DEBUG,
               "{prefix_debug}&dPhysicsFormulae#capKickPower() &ftook &e" + ms + "ms");
         }
       }

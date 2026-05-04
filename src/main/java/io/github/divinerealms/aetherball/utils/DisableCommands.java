@@ -1,12 +1,10 @@
 package io.github.divinerealms.aetherball.utils;
 
-import io.github.divinerealms.aetherball.managers.Manager;
 import io.github.divinerealms.aetherball.managers.ConfigManager;
-
+import io.github.divinerealms.aetherball.managers.Manager;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
-
 import lombok.Getter;
 import org.bukkit.configuration.file.FileConfiguration;
 
@@ -15,8 +13,7 @@ public class DisableCommands {
   private final ConfigManager configManager;
   private final FileConfiguration config;
 
-  @Getter
-  private final Set<String> commands = new HashSet<>();
+  @Getter private final Set<String> commands = new HashSet<>();
   private final String configPath = "enabledCommands";
 
   public DisableCommands(Manager manager) {

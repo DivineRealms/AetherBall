@@ -12,12 +12,9 @@ import static io.github.divinerealms.aetherball.utils.LoggerUtil.logConsole;
 
 public class DependencyLoader {
   private final JavaPlugin plugin;
-  @Getter
-  private Economy economy;
-  @Getter
-  private LuckPerms luckPerms;
-  @Getter
-  private TabAPI tabAPI;
+  @Getter private Economy economy;
+  @Getter private LuckPerms luckPerms;
+  @Getter private TabAPI tabAPI;
 
   public DependencyLoader(JavaPlugin plugin) throws IllegalStateException {
     this.plugin = plugin;
@@ -28,7 +25,8 @@ public class DependencyLoader {
   }
 
   private void loadLuckPerms() {
-    RegisteredServiceProvider<LuckPerms> rsp = plugin.getServer().getServicesManager().getRegistration(LuckPerms.class);
+    RegisteredServiceProvider<LuckPerms> rsp =
+        plugin.getServer().getServicesManager().getRegistration(LuckPerms.class);
     this.luckPerms = rsp == null ? null : rsp.getProvider();
     if (luckPerms == null) {
       throw new IllegalStateException("LuckPerms not found!");
@@ -36,7 +34,8 @@ public class DependencyLoader {
   }
 
   private void loadVault() {
-    RegisteredServiceProvider<Economy> rsp = plugin.getServer().getServicesManager().getRegistration(Economy.class);
+    RegisteredServiceProvider<Economy> rsp =
+        plugin.getServer().getServicesManager().getRegistration(Economy.class);
     this.economy = rsp == null ? null : rsp.getProvider();
     if (economy == null) {
       throw new IllegalStateException("Vault not found!");

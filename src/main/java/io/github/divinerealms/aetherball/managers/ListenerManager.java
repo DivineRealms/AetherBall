@@ -14,22 +14,14 @@ public class ListenerManager {
   private final AetherBall plugin;
   private final PluginManager pluginManager;
 
-  @Getter
-  private ChunkCheckers chunkCheckers;
-  @Getter
-  private PlayerEvents playerEvents;
-  @Getter
-  private SignManipulation signManipulation;
-  @Getter
-  private CubeDamageListener cubeDamageListener;
-  @Getter
-  private CubeKickListener cubeKickListener;
-  @Getter
-  private CubeTapListener cubeTapListener;
-  @Getter
-  private PlayerChargeListener playerChargeListener;
-  @Getter
-  private PlayerMovementListener playerMovementListener;
+  @Getter private ChunkCheckers chunkCheckers;
+  @Getter private PlayerEvents playerEvents;
+  @Getter private SignManipulation signManipulation;
+  @Getter private CubeDamageListener cubeDamageListener;
+  @Getter private CubeKickListener cubeKickListener;
+  @Getter private CubeTapListener cubeTapListener;
+  @Getter private PlayerChargeListener playerChargeListener;
+  @Getter private PlayerMovementListener playerMovementListener;
 
   public ListenerManager(Manager manager) {
     this.manager = manager;

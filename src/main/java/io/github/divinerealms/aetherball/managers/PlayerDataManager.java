@@ -5,7 +5,6 @@ import static io.github.divinerealms.aetherball.utils.LoggerUtil.logConsole;
 
 import io.github.divinerealms.aetherball.configs.PlayerData;
 import io.github.divinerealms.aetherball.configs.Settings;
-
 import java.util.Collections;
 import java.util.Map;
 import java.util.Queue;
@@ -13,7 +12,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
-
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
@@ -45,16 +43,18 @@ public class PlayerDataManager {
   }
 
   public PlayerData get(Player player) {
-    uuidCache.computeIfAbsent(player.getName(), name -> {
-      String uuid = player.getUniqueId().toString();
-      uuidConfig.set(name, uuid);
-      uuidsChanged = true;
-      queueAdd(name);
-      return uuid;
-    });
+    uuidCache.computeIfAbsent(
+        player.getName(),
+        name -> {
+          String uuid = player.getUniqueId().toString();
+          uuidConfig.set(name, uuid);
+          uuidsChanged = true;
+          queueAdd(name);
+          return uuid;
+        });
 
-    return playerCache.computeIfAbsent(player.getName(),
-        name -> new PlayerData(name, configManager, this));
+    return playerCache.computeIfAbsent(
+        player.getName(), name -> new PlayerData(name, configManager, this));
   }
 
   public PlayerData get(String playerName) {
@@ -63,8 +63,8 @@ public class PlayerDataManager {
       return null;
     }
 
-    return playerCache.computeIfAbsent(playerName,
-        name -> new PlayerData(name, configManager, this));
+    return playerCache.computeIfAbsent(
+        playerName, name -> new PlayerData(name, configManager, this));
   }
 
   public UUID getUUID(String playerName) {
@@ -151,44 +151,53 @@ public class PlayerDataManager {
       return;
     }
 
-    plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
-      int processed = 0;
-      int totalSaved = 0;
+    plugin
+        .getServer()
+        .getScheduler()
+        .runTaskAsynchronously(
+            plugin,
+            () -> {
+              int processed = 0;
+              int totalSaved = 0;
 
-      while (processed < Settings.PLAYER_DATA_BATCH_SIZE.asInt()) {
-        String playerName = dataQueue.poll();
-        if (playerName == null) {
-          break;
-        }
+              while (processed < Settings.PLAYER_DATA_BATCH_SIZE.asInt()) {
+                String playerName = dataQueue.poll();
+                if (playerName == null) {
+                  break;
+                }
 
-        try {
-          savePlayerData(playerName);
-          totalSaved++;
-        } catch (Exception exception) {
-          logConsole("{prefix_error}Failed to save player data for " + playerName,
-              exception.getMessage());
-        }
-        processed++;
-      }
+                try {
+                  savePlayerData(playerName);
+                  totalSaved++;
+                } catch (Exception exception) {
+                  logConsole(
+                      "{prefix_error}Failed to save player data for " + playerName,
+                      exception.getMessage());
+                }
+                processed++;
+              }
 
-      debugConsole("{prefix_success}Auto saved " + totalSaved + " player data file(s) this batch.");
+              debugConsole(
+                  "{prefix_success}Auto saved " + totalSaved + " player data file(s) this batch.");
 
-      if (uuidsChanged) {
-        uuidsChanged = false;
-        try {
-          configManager.saveConfig("player_uuids.yml");
-          debugConsole("{prefix_success}Saved updated player UUIDs.");
-        } catch (Exception exception) {
-          logConsole("{prefix_error}Failed to save UUID config", exception.getMessage());
-        }
-      }
+              if (uuidsChanged) {
+                uuidsChanged = false;
+                try {
+                  configManager.saveConfig("player_uuids.yml");
+                  debugConsole("{prefix_success}Saved updated player UUIDs.");
+                } catch (Exception exception) {
+                  logConsole("{prefix_error}Failed to save UUID config", exception.getMessage());
+                }
+              }
 
-      if (!dataQueue.isEmpty()) {
-        debugConsole("{prefix_info}" + dataQueue.size()
-            + " player data file(s) remaining in queue, scheduling next batch...");
-        scheduleSave();
-      }
-    });
+              if (!dataQueue.isEmpty()) {
+                debugConsole(
+                    "{prefix_info}"
+                        + dataQueue.size()
+                        + " player data file(s) remaining in queue, scheduling next batch...");
+                scheduleSave();
+              }
+            });
   }
 
   public void saveAll() {
@@ -228,9 +237,15 @@ public class PlayerDataManager {
 
     saveScheduled = true;
 
-    plugin.getServer().getScheduler().runTaskLaterAsynchronously(plugin, () -> {
-      saveQueue();
-      saveScheduled = false;
-    }, Settings.getAutoSaveInterval());
+    plugin
+        .getServer()
+        .getScheduler()
+        .runTaskLaterAsynchronously(
+            plugin,
+            () -> {
+              saveQueue();
+              saveScheduled = false;
+            },
+            Settings.getAutoSaveInterval());
   }
 }

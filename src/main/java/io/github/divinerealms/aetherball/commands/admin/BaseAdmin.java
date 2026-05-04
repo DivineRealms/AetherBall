@@ -47,7 +47,9 @@ public class BaseAdmin extends BaseCommand {
   @Subcommand("configuration|c")
   @Description("Show current configuration")
   public void onConfiguration(CommandSender sender) {
-    sendMessage(sender, CONFIGURATION,
+    sendMessage(
+        sender,
+        CONFIGURATION,
         String.valueOf(Settings.KICK_BASE_POWER_REGULAR.asDouble()),
         String.valueOf(Settings.KICK_COOLDOWN_REGULAR.asLong()),
         String.valueOf(Settings.KICK_BASE_POWER_CHARGED.asDouble()),
@@ -55,7 +57,6 @@ public class BaseAdmin extends BaseCommand {
         String.valueOf(Settings.SOFT_CAP.asDouble()),
         String.valueOf(Settings.MAX_KICK_POWER.asInt()),
         String.valueOf(Settings.KICK_COOLDOWN_RISE.asLong()),
-        String.valueOf(Settings.KICK_VERTICAL_BOOST.asDouble())
-    );
+        String.valueOf(Settings.KICK_VERTICAL_BOOST.asDouble()));
   }
 }

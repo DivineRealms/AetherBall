@@ -1,19 +1,18 @@
 package io.github.divinerealms.aetherball.utils;
 
+import static io.github.divinerealms.aetherball.configs.Lang.PRACTICE_AREAS_EMPTY;
+import static io.github.divinerealms.aetherball.utils.LoggerUtil.logConsole;
+
 import io.github.divinerealms.aetherball.configs.Settings;
 import io.github.divinerealms.aetherball.managers.ConfigManager;
 import io.github.divinerealms.aetherball.managers.Manager;
 import io.github.divinerealms.aetherball.physics.PhysicsData;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.Getter;
 import org.bukkit.Location;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Slime;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import static io.github.divinerealms.aetherball.configs.Lang.PRACTICE_AREAS_EMPTY;
-import static io.github.divinerealms.aetherball.utils.LoggerUtil.logConsole;
 
 public class CubeCleaner {
 
@@ -22,10 +21,8 @@ public class CubeCleaner {
 
   private final List<PracticeArea> practiceAreas;
 
-  @Getter
-  private boolean empty;
-  @Getter
-  private int amount = 0;
+  @Getter private boolean empty;
+  @Getter private int amount = 0;
 
   public CubeCleaner(Manager manager) {
     this.data = manager.getPhysicsData();

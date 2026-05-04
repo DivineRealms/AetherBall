@@ -1,11 +1,10 @@
 package io.github.divinerealms.aetherball.matchmaking;
 
 import io.github.divinerealms.aetherball.matchmaking.player.MatchPlayer;
+import java.util.List;
 import lombok.Data;
 import me.neznamy.tab.api.scoreboard.Scoreboard;
 import org.bukkit.entity.Slime;
-
-import java.util.List;
 
 @Data
 public class Match {

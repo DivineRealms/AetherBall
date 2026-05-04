@@ -30,10 +30,6 @@ import static io.github.divinerealms.aetherball.utils.Permissions.PERM_ADMIN;
 
 @Getter
 public class Manager {
-
-  @Getter
-  private static Manager instance;
-
   private final AetherBall plugin;
   private final ConfigManager configManager;
   private final DependencyLoader dependencyLoader;
@@ -60,17 +56,12 @@ public class Manager {
   private final TaskManager taskManager;
   private final DynamicCommandRegistry dynamicCommandRegistry;
 
-  @Setter
-  private boolean enabling;
-  @Setter
-  private boolean disabling;
+  @Setter private boolean enabling;
+  @Setter private boolean disabling;
 
   public Manager(AetherBall plugin) throws IllegalStateException {
-    instance = this;
     this.plugin = plugin;
     this.configManager = new ConfigManager(plugin, "");
-    sendBanner();
-
     this.dataManager = new PlayerDataManager(this);
 
     setupConfigs();
@@ -154,37 +145,45 @@ public class Manager {
     listenerManager.registerAll();
 
     reloadOnlinePlayers();
+    sendBanner();
   }
 
   private void reloadOnlinePlayers() {
-    List<UUID> uuids = playerCache.getCachedPlayers().stream()
-        .filter(MatchUtils::isPlayerOnline)
-        .map(Player::getUniqueId)
-        .toList();
+    List<UUID> uuids =
+        playerCache.getCachedPlayers().stream()
+            .filter(MatchUtils::isPlayerOnline)
+            .map(Player::getUniqueId)
+            .toList();
 
-    scheduler.runTaskAsynchronously(plugin, () -> uuids.forEach(uuid -> {
-      Player player = plugin.getServer().getPlayer(uuid);
-      if (!isPlayerOnline(player)) {
-        return;
-      }
+    scheduler.runTaskAsynchronously(
+        plugin,
+        () ->
+            uuids.forEach(
+                uuid -> {
+                  Player player = plugin.getServer().getPlayer(uuid);
+                  if (!isPlayerOnline(player)) {
+                    return;
+                  }
 
-      PlayerData playerData = dataManager.get(player);
-      if (playerData != null) {
-        playerCache.preloadSettings(player, playerData);
-      }
-    }));
+                  PlayerData playerData = dataManager.get(player);
+                  if (playerData != null) {
+                    playerCache.preloadSettings(player, playerData);
+                  }
+                }));
   }
 
   public void reloadTabAPI() {
-    scheduler.runTask(plugin, () -> {
-      dependencyLoader.reloadTab();
-      if (scoreboardManager != null) {
-        scoreboardManager.refreshTabAPI();
-      }
-      if (matchManager != null) {
-        matchManager.recreateScoreboards();
-      }
-    });
+    scheduler.runTask(
+        plugin,
+        () -> {
+          dependencyLoader.reloadTab();
+          if (scoreboardManager != null) {
+            scoreboardManager.refreshTabAPI();
+          }
+          if (matchManager != null) {
+            matchManager.recreateScoreboards();
+          }
+        });
   }
 
   public void saveAll() {
@@ -201,15 +200,19 @@ public class Manager {
       physicsData.cleanup();
       matchData.cleanup();
       playerCache.clear();
-      instance = null;
     } catch (Exception exception) {
       logConsole("{prefix_error}Error in cleanup", exception.getMessage());
     } finally {
       if (Settings.DEBUG_MODE.asBoolean()) {
         long ms = (System.nanoTime() - start) / 1_000_000;
         if (ms > Settings.DEBUG_THRESHOLD.asLong()) {
-          sendMessage(PERM_ADMIN, "{prefix_debug}&dCleanup &ftook &e" + ms + "ms &f(threshold: "
-              + Settings.DEBUG_THRESHOLD.asLong() + "ms)");
+          sendMessage(
+              PERM_ADMIN,
+              "{prefix_debug}&dCleanup &ftook &e"
+                  + ms
+                  + "ms &f(threshold: "
+                  + Settings.DEBUG_THRESHOLD.asLong()
+                  + "ms)");
         }
       }
     }
@@ -247,12 +250,16 @@ public class Manager {
       joiner.add(author);
     }
 
-    String[] banner = new String[]{
-        "&2┏┓┏┓" + "&8 -+-------------------------------------------+-",
-        "&2┣ ┃ " + "&7  Created by &b" + joiner + "&7, version &f" + plugin.getDescription()
-            .getVersion(),
-        "&2┻ ┗┛" + "&8 -+-------------------------------------------+-"
-    };
+    String[] banner =
+        new String[] {
+          "&2┏┓┏┓" + "&8 -+-------------------------------------------+-",
+          "&2┣ ┃ "
+              + "&7  Created by &b"
+              + joiner
+              + "&7, version &f"
+              + plugin.getDescription().getVersion(),
+          "&2┻ ┗┛" + "&8 -+-------------------------------------------+-"
+        };
 
     for (String line : banner) {
       logConsole(line);

@@ -2,26 +2,24 @@ package io.github.divinerealms.aetherball.configs;
 
 import io.github.divinerealms.aetherball.managers.ConfigManager;
 import io.github.divinerealms.aetherball.managers.PlayerDataManager;
+import java.io.File;
 import lombok.Getter;
 import org.bukkit.configuration.file.FileConfiguration;
-
-import java.io.File;
 
 public class PlayerData {
 
   private final String playerName;
   private final ConfigManager configManager;
   private final PlayerDataManager dataManager;
-  @Getter
-  private final FileConfiguration config;
+  @Getter private final FileConfiguration config;
 
   public PlayerData(String playerName, ConfigManager configManager, PlayerDataManager dataManager) {
     this.configManager = configManager;
     this.playerName = playerName;
     this.dataManager = dataManager;
 
-    this.configManager.createNewFile("players" + File.separator + playerName + ".yml",
-        "Player data for " + playerName);
+    this.configManager.createNewFile(
+        "players" + File.separator + playerName + ".yml", "Player data for " + playerName);
     this.config = configManager.getConfig("players" + File.separator + playerName + ".yml");
   }
 
@@ -30,9 +28,7 @@ public class PlayerData {
   }
 
   public int getInt(String path) {
-    return config == null
-        ? 0
-        : config.getInt(path, 0);
+    return config == null ? 0 : config.getInt(path, 0);
   }
 
   public boolean getBoolean(String path) {
@@ -40,22 +36,17 @@ public class PlayerData {
   }
 
   public String getString(String path) {
-    return config == null
-        ? null
-        : config.getString(path, null);
+    return config == null ? null : config.getString(path, null);
   }
 
   public long getLong(String path) {
-    return config == null
-        ? 0L
-        : config.getLong(path, 0L);
+    return config == null ? 0L : config.getLong(path, 0L);
   }
 
   public void set(String path, Object value) {
     Object current = config.get(path);
 
-    if ((current == null && value != null)
-        || (current != null && !current.equals(value))) {
+    if ((current == null && value != null) || (current != null && !current.equals(value))) {
       config.set(path, value);
       dataManager.queueAdd(playerName);
     }
@@ -69,9 +60,7 @@ public class PlayerData {
   @SuppressWarnings("unused")
   public void remove(String key) {
     int current = getInt(key);
-    set(key, current > 0
-        ? current - 1
-        : 0);
+    set(key, current > 0 ? current - 1 : 0);
   }
 
   public void save() {

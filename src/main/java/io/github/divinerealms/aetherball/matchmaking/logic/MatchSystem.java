@@ -1,19 +1,27 @@
 package io.github.divinerealms.aetherball.matchmaking.logic;
 
+import static io.github.divinerealms.aetherball.configs.Lang.*;
+import static io.github.divinerealms.aetherball.utils.LoggerUtil.*;
+import static io.github.divinerealms.aetherball.utils.MatchUtils.*;
+
 import io.github.divinerealms.aetherball.configs.PlayerData;
 import io.github.divinerealms.aetherball.configs.Settings;
 import io.github.divinerealms.aetherball.managers.Manager;
 import io.github.divinerealms.aetherball.managers.PlayerDataManager;
 import io.github.divinerealms.aetherball.managers.Utilities;
+import io.github.divinerealms.aetherball.matchmaking.ArenaManager;
 import io.github.divinerealms.aetherball.matchmaking.Match;
 import io.github.divinerealms.aetherball.matchmaking.MatchPhase;
-import io.github.divinerealms.aetherball.matchmaking.ArenaManager;
+import io.github.divinerealms.aetherball.matchmaking.ScoreManager;
+import io.github.divinerealms.aetherball.matchmaking.TeamManager;
 import io.github.divinerealms.aetherball.matchmaking.player.MatchPlayer;
 import io.github.divinerealms.aetherball.matchmaking.player.StatsHelper;
 import io.github.divinerealms.aetherball.matchmaking.player.TeamColor;
-import io.github.divinerealms.aetherball.matchmaking.ScoreManager;
-import io.github.divinerealms.aetherball.matchmaking.TeamManager;
 import io.github.divinerealms.aetherball.utils.PlayerSettings;
+import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantLock;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Sound;
@@ -21,15 +29,6 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Slime;
 import org.bukkit.util.Vector;
-
-import java.util.*;
-import java.util.concurrent.ThreadLocalRandom;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.ReentrantLock;
-
-import static io.github.divinerealms.aetherball.configs.Lang.*;
-import static io.github.divinerealms.aetherball.utils.MatchUtils.*;
-import static io.github.divinerealms.aetherball.utils.LoggerUtil.*;
 
 public class MatchSystem {
 
@@ -47,6 +46,21 @@ public class MatchSystem {
     this.arenaManager = manager.getArenaManager();
     this.teamManager = manager.getTeamManager();
     this.dataManager = manager.getDataManager();
+  }
+
+  public static TeamManager.Team findTeam(
+      List<MatchPlayer> playersToAssign, TeamManager teamManager) {
+    for (MatchPlayer matchPlayer : playersToAssign) {
+      if (!isPlayerOnline(matchPlayer)) {
+        continue;
+      }
+
+      TeamManager.Team team = teamManager.getTeam(matchPlayer.getPlayer());
+      if (team != null) {
+        return team;
+      }
+    }
+    return null;
   }
 
   public void initializeMatchTypes() {
@@ -130,8 +144,9 @@ public class MatchSystem {
       horizontal *= -1;
     }
 
-    boolean x = Math.abs(arena.blueSpawn().getX() - arena.redSpawn().getX()) > Math.abs(
-        arena.blueSpawn().getZ() - arena.redSpawn().getZ());
+    boolean x =
+        Math.abs(arena.blueSpawn().getX() - arena.redSpawn().getX())
+            > Math.abs(arena.blueSpawn().getZ() - arena.redSpawn().getZ());
     if (x) {
       match.getCube().setVelocity(new Vector(0, vertical, horizontal));
     } else {
@@ -196,25 +211,23 @@ public class MatchSystem {
 
     if (arena.isXAxis()) {
       if (arena.redIsGreater() && cubeLocation.getX() + cubeRadius > arena.redSpawn().getX()
-          || !arena.redIsGreater() && cubeLocation.getX() - cubeRadius < arena.redSpawn()
-          .getX()) {
+          || !arena.redIsGreater() && cubeLocation.getX() - cubeRadius < arena.redSpawn().getX()) {
         score(match, TeamColor.BLUE);
       } else {
         if (arena.redIsGreater() && cubeLocation.getX() - cubeRadius < arena.blueSpawn().getX()
-            || !arena.redIsGreater() && cubeLocation.getX() + cubeRadius > arena.blueSpawn()
-            .getX()) {
+            || !arena.redIsGreater()
+                && cubeLocation.getX() + cubeRadius > arena.blueSpawn().getX()) {
           score(match, TeamColor.RED);
         }
       }
     } else {
       if (arena.redIsGreater() && cubeLocation.getZ() + cubeRadius > arena.redSpawn().getZ()
-          || !arena.redIsGreater() && cubeLocation.getZ() - cubeRadius < arena.redSpawn()
-          .getZ()) {
+          || !arena.redIsGreater() && cubeLocation.getZ() - cubeRadius < arena.redSpawn().getZ()) {
         score(match, TeamColor.BLUE);
       } else {
         if (arena.redIsGreater() && cubeLocation.getZ() - cubeRadius < arena.blueSpawn().getZ()
-            || !arena.redIsGreater() && cubeLocation.getZ() + cubeRadius > arena.blueSpawn()
-            .getZ()) {
+            || !arena.redIsGreater()
+                && cubeLocation.getZ() + cubeRadius > arena.blueSpawn().getZ()) {
           score(match, TeamColor.RED);
         }
       }
@@ -323,7 +336,8 @@ public class MatchSystem {
           } else {
             Collections.shuffle(playersToAssign);
             for (int i = 0; i < playersToAssign.size(); i++) {
-              playersToAssign.get(i)
+              playersToAssign
+                  .get(i)
                   .setTeamColor(i < requiredPlayers / 2 ? TeamColor.RED : TeamColor.BLUE);
             }
           }
@@ -351,7 +365,8 @@ public class MatchSystem {
           String matchId = String.valueOf(match.getArena().id());
 
           String matchTitle =
-              match.getCountdown() == 0 ? MATCHES_LIST_MATCH.replace(matchType, matchId)
+              match.getCountdown() == 0
+                  ? MATCHES_LIST_MATCH.replace(matchType, matchId)
                   : MATCHES_LIST_LOBBY.replace(matchType, matchId);
 
           for (MatchPlayer matchPlayer : players) {
@@ -363,11 +378,14 @@ public class MatchSystem {
             player.playSound(player.getLocation(), Sound.NOTE_STICKS, 1, 1);
 
             if (match.getCountdown() != 0) {
-              sendActionBar(player, MATCH_STARTING_ACTIONBAR, matchTitle,
+              sendActionBar(
+                  player,
+                  MATCH_STARTING_ACTIONBAR,
+                  matchTitle,
                   MATCHES_LIST_STARTING.replace(String.valueOf(match.getCountdown())));
             } else {
-              sendActionBar(player, MATCH_STARTING_ACTIONBAR, matchTitle,
-                  MATCH_STARTED_ACTIONBAR.toString());
+              sendActionBar(
+                  player, MATCH_STARTING_ACTIONBAR, matchTitle, MATCH_STARTED_ACTIONBAR.toString());
             }
 
             if (match.getCountdown() == 10) {
@@ -376,8 +394,7 @@ public class MatchSystem {
               title(player, matchTitle, MATCH_PREPARING, 10, 50, 10);
             } else {
               if (match.getCountdown() == 5) {
-                title(player, MATCH_PREPARATION_TITLE, MATCH_PREPARATION_SUBTITLE, 10, 50,
-                    10);
+                title(player, MATCH_PREPARATION_TITLE, MATCH_PREPARATION_SUBTITLE, 10, 50, 10);
               } else {
                 if (match.getCountdown() <= 0) {
                   title(player, MATCH_STARTING_TITLE, MATCH_STARTING_SUBTITLE, 5, 30, 5);
@@ -459,25 +476,13 @@ public class MatchSystem {
         break;
     }
 
-    match.setTakePlaceNeeded(currentPlayers < requiredPlayers && !match.isTakePlaceNeeded()
-        && match.getPhase() != MatchPhase.LOBBY);
+    match.setTakePlaceNeeded(
+        currentPlayers < requiredPlayers
+            && !match.isTakePlaceNeeded()
+            && match.getPhase() != MatchPhase.LOBBY);
     if (match.isTakePlaceNeeded()) {
       announceTakePlace(match);
     }
-  }
-
-  public static TeamManager.Team findTeam(List<MatchPlayer> playersToAssign, TeamManager teamManager) {
-    for (MatchPlayer matchPlayer : playersToAssign) {
-      if (!isPlayerOnline(matchPlayer)) {
-        continue;
-      }
-
-      TeamManager.Team team = teamManager.getTeam(matchPlayer.getPlayer());
-      if (team != null) {
-        return team;
-      }
-    }
-    return null;
   }
 
   public void processQueues() {
@@ -594,10 +599,11 @@ public class MatchSystem {
 
       if (!isDuelPair) {
         for (Match match : matchData.getMatches()) {
-          if (match.getArena().type() == matchType && match.getPhase() == MatchPhase.LOBBY && (
-              match.getPlayers().size() + groupSize <= maxPlayers)) {
-            if (targetMatch == null || match.getPlayers().size() < targetMatch.getPlayers()
-                .size()) {
+          if (match.getArena().type() == matchType
+              && match.getPhase() == MatchPhase.LOBBY
+              && (match.getPlayers().size() + groupSize <= maxPlayers)) {
+            if (targetMatch == null
+                || match.getPlayers().size() < targetMatch.getPlayers().size()) {
               targetMatch = match;
             }
           }
@@ -626,7 +632,8 @@ public class MatchSystem {
         scoreboardManager.showLobbyScoreboard(targetMatch, player);
 
         if (isDuelPair) {
-          matchData.removeDuelPairs(player.getUniqueId(),
+          matchData.removeDuelPairs(
+              player.getUniqueId(),
               playerGroup.stream()
                   .filter(p -> !p.equals(player))
                   .findFirst()
@@ -648,12 +655,21 @@ public class MatchSystem {
 
     StatsHelper stats = new StatsHelper(data);
 
-    sendMessage(asker, STATS, playerName, String.valueOf(stats.getMatches()),
-        String.valueOf(stats.getWins()), String.valueOf(stats.getLosses()),
-        String.valueOf(stats.getTies()), String.format("%.2f", stats.getWinsPerMatch()),
-        String.valueOf(stats.getBestWinStreak()), String.valueOf(stats.getGoals()),
-        String.format("%.2f", stats.getGoalsPerMatch()), String.valueOf(stats.getAssists()),
-        String.format("%.2f", stats.getSkillLevel()), stats.getRankName(),
+    sendMessage(
+        asker,
+        STATS,
+        playerName,
+        String.valueOf(stats.getMatches()),
+        String.valueOf(stats.getWins()),
+        String.valueOf(stats.getLosses()),
+        String.valueOf(stats.getTies()),
+        String.format("%.2f", stats.getWinsPerMatch()),
+        String.valueOf(stats.getBestWinStreak()),
+        String.valueOf(stats.getGoals()),
+        String.format("%.2f", stats.getGoalsPerMatch()),
+        String.valueOf(stats.getAssists()),
+        String.format("%.2f", stats.getSkillLevel()),
+        stats.getRankName(),
         String.valueOf(stats.getOwnGoals()));
   }
 
@@ -706,8 +722,9 @@ public class MatchSystem {
 
   private void announceTakePlace(Match match) {
     boolean firstAnnouncement = match.getLastTakePlaceAnnounceTick() == 0;
-    if (firstAnnouncement || match.getTick() - match.getLastTakePlaceAnnounceTick()
-        >= Settings.getTakePlaceAnnouncementInterval()) {
+    if (firstAnnouncement
+        || match.getTick() - match.getLastTakePlaceAnnounceTick()
+            >= Settings.getTakePlaceAnnouncementInterval()) {
       match.setLastTakePlaceAnnounceTick(match.getTick());
 
       long matchDuration = Settings.getMatchDuration(match.getArena().type());
@@ -719,13 +736,20 @@ public class MatchSystem {
       String matchTypeString = Settings.getMatchTypeName(matchType);
       boolean activeMatch = match.getPhase() == MatchPhase.IN_PROGRESS;
 
-      String matchTitle = activeMatch ? MATCHES_LIST_MATCH.replace(matchTypeString, matchIdString)
-          : MATCHES_LIST_LOBBY.replace(matchTypeString, matchIdString);
+      String matchTitle =
+          activeMatch
+              ? MATCHES_LIST_MATCH.replace(matchTypeString, matchIdString)
+              : MATCHES_LIST_LOBBY.replace(matchTypeString, matchIdString);
 
       String announcement =
-          activeMatch ? TAKE_PLACE_ANNOUNCEMENT_MATCH.replace(matchTitle, RED.toString(),
-              String.valueOf(match.getScoreRed()), String.valueOf(match.getScoreBlue()),
-              BLUE.toString(), Utilities.formatTimePretty((int) remainingSeconds))
+          activeMatch
+              ? TAKE_PLACE_ANNOUNCEMENT_MATCH.replace(
+                  matchTitle,
+                  RED.toString(),
+                  String.valueOf(match.getScoreRed()),
+                  String.valueOf(match.getScoreBlue()),
+                  BLUE.toString(),
+                  Utilities.formatTimePretty((int) remainingSeconds))
               : TAKE_PLACE_ANNOUNCEMENT_LOBBY.replace(matchTitle);
 
       for (Player player : Bukkit.getOnlinePlayers()) {

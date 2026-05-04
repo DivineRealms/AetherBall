@@ -1,7 +1,8 @@
 package io.github.divinerealms.aetherball.physics;
 
-import java.util.concurrent.ThreadLocalRandom;
 import lombok.Getter;
+
+import java.util.concurrent.ThreadLocalRandom;
 
 @Getter
 public class PhysicsConstants {
@@ -10,7 +11,7 @@ public class PhysicsConstants {
   public static final long PHYSICS_TASK_INTERVAL_TICKS = 1;
   public static final long MATCH_TASK_INTERVAL_TICKS = 1;
   public static final long GLOW_TASK_INTERVAL_TICKS = 2;
-  public static final int CLEANUP_LAST_TOUCHES_INTERVAL = 1;
+  public static final int CLEANUP_LAST_TOUCHES_INTERVAL = 40;
   public static final int EXP_UPDATE_INTERVAL_TICKS = 1;
 
   // --- Slime / Entity Configuration ---

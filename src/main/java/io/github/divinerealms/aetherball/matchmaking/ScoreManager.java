@@ -1,25 +1,24 @@
 package io.github.divinerealms.aetherball.matchmaking;
 
+import static io.github.divinerealms.aetherball.configs.Lang.*;
+import static io.github.divinerealms.aetherball.utils.MatchUtils.isPlayerOnline;
+
 import io.github.divinerealms.aetherball.configs.Settings;
 import io.github.divinerealms.aetherball.managers.Manager;
 import io.github.divinerealms.aetherball.managers.Utilities;
 import io.github.divinerealms.aetherball.matchmaking.player.MatchPlayer;
 import io.github.divinerealms.aetherball.matchmaking.player.TeamColor;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import me.neznamy.tab.api.TabAPI;
 import me.neznamy.tab.api.TabPlayer;
 import me.neznamy.tab.api.scoreboard.Scoreboard;
 import me.neznamy.tab.api.scoreboard.ScoreboardManager;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.UUID;
-import java.util.concurrent.TimeUnit;
-
-import static io.github.divinerealms.aetherball.configs.Lang.*;
-import static io.github.divinerealms.aetherball.utils.MatchUtils.isPlayerOnline;
 
 public class ScoreManager {
 
@@ -204,24 +203,30 @@ public class ScoreManager {
         if (!playersListBuilder.isEmpty()) {
           playersListBuilder.append(System.lineSeparator());
         }
-        playersListBuilder.append(SCOREBOARD_LINES_RED_PLAYERS_ENTRY.replace(String.valueOf(i + 1),
-            redPlayers.get(i).getName()));
+        playersListBuilder.append(
+            SCOREBOARD_LINES_RED_PLAYERS_ENTRY.replace(
+                String.valueOf(i + 1), redPlayers.get(i).getName()));
       }
 
       if (!redPlayers.isEmpty() && !bluePlayers.isEmpty()) {
-        playersListBuilder.append(System.lineSeparator()).append(ChatColor.RESET)
+        playersListBuilder
+            .append(System.lineSeparator())
+            .append(ChatColor.RESET)
             .append(System.lineSeparator());
       }
 
       for (int i = 0; i < bluePlayers.size(); i++) {
-        if (i > 0 || (!redPlayers.isEmpty() && !playersListBuilder.isEmpty()
-            && !playersListBuilder.toString().endsWith(System.lineSeparator()))) {
+        if (i > 0
+            || (!redPlayers.isEmpty()
+                && !playersListBuilder.isEmpty()
+                && !playersListBuilder.toString().endsWith(System.lineSeparator()))) {
           if (i > 0) {
             playersListBuilder.append(System.lineSeparator());
           }
         }
-        playersListBuilder.append(SCOREBOARD_LINES_BLUE_PLAYERS_ENTRY.replace(String.valueOf(i + 1),
-            bluePlayers.get(i).getName()));
+        playersListBuilder.append(
+            SCOREBOARD_LINES_BLUE_PLAYERS_ENTRY.replace(
+                String.valueOf(i + 1), bluePlayers.get(i).getName()));
       }
     } else {
       for (int i = 0; i < waitingPlayers.size(); i++) {
@@ -229,18 +234,21 @@ public class ScoreManager {
           playersListBuilder.append(System.lineSeparator());
         }
         playersListBuilder.append(
-            SCOREBOARD_LINES_WAITING_PLAYERS_ENTRY.replace(String.valueOf(i + 1),
-                waitingPlayers.get(i).getName()));
+            SCOREBOARD_LINES_WAITING_PLAYERS_ENTRY.replace(
+                String.valueOf(i + 1), waitingPlayers.get(i).getName()));
       }
     }
 
     String playersList =
         playersListBuilder.isEmpty() ? NOBODY.toString() : playersListBuilder.toString();
 
-    String status = match.getPhase() == MatchPhase.LOBBY ? MATCHES_LIST_WAITING.toString()
-        : MATCHES_LIST_STARTING.replace(String.valueOf(match.getCountdown()));
+    String status =
+        match.getPhase() == MatchPhase.LOBBY
+            ? MATCHES_LIST_WAITING.toString()
+            : MATCHES_LIST_STARTING.replace(String.valueOf(match.getCountdown()));
 
-    return SCOREBOARD_LINES_LOBBY.replace(playersList, status) + System.lineSeparator()
+    return SCOREBOARD_LINES_LOBBY.replace(playersList, status)
+        + System.lineSeparator()
         + SCOREBOARD_FOOTER;
   }
 
@@ -251,8 +259,13 @@ public class ScoreManager {
 
     String timeDisplay = Utilities.formatTimePretty((int) remainingSeconds);
 
-    return SCOREBOARD_LINES_MATCH.replace(RED.toString(), String.valueOf(match.getScoreRed()),
-        String.valueOf(match.getScoreBlue()), BLUE.toString(), timeDisplay) + System.lineSeparator()
+    return SCOREBOARD_LINES_MATCH.replace(
+            RED.toString(),
+            String.valueOf(match.getScoreRed()),
+            String.valueOf(match.getScoreBlue()),
+            BLUE.toString(),
+            timeDisplay)
+        + System.lineSeparator()
         + SCOREBOARD_FOOTER;
   }
 

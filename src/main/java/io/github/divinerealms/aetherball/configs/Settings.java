@@ -1,14 +1,13 @@
 package io.github.divinerealms.aetherball.configs;
 
-import lombok.Getter;
-import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.file.FileConfiguration;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import lombok.Getter;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.FileConfiguration;
 
 @SuppressWarnings("unused")
 @Getter
@@ -85,11 +84,10 @@ public enum Settings {
   // ==================== FEATURE TOGGLES ====================
   FEATURES_SIGNS("Features.Signs_Enabled", true);
 
+  static final Map<Integer, MatchTypeConfig> MATCH_TYPE_CACHE = new HashMap<>();
   private static FileConfiguration CONFIG;
   private final String path;
   private final Object def;
-
-  static final Map<Integer, MatchTypeConfig> MATCH_TYPE_CACHE = new HashMap<>();
 
   Settings(String path, Object def) {
     this.path = path;
@@ -105,42 +103,6 @@ public enum Settings {
     return CONFIG;
   }
 
-  public Object getDefault() {
-    return def;
-  }
-
-  // ==================== TYPE-SAFE GETTERS ====================
-
-  public boolean asBoolean() {
-    return Boolean.parseBoolean(String.valueOf(CONFIG.get(path, def)));
-  }
-
-  public int asInt() {
-    return Integer.parseInt(String.valueOf(CONFIG.get(path, def)));
-  }
-
-  public long asLong() {
-    return Long.parseLong(String.valueOf(CONFIG.get(path, def)));
-  }
-
-  public double asDouble() {
-    return Double.parseDouble(String.valueOf(CONFIG.get(path, def)));
-  }
-
-  public float asFloat() {
-    return Float.parseFloat(String.valueOf(CONFIG.get(path, def)));
-  }
-
-  @Override
-  public String toString() {
-    return CONFIG.getString(this.path, (String) this.def);
-  }
-
-  // ==================== DYNAMIC MATCH TYPE SYSTEM ====================
-
-  public record MatchTypeConfig(int type, boolean enabled, long duration, int maxScore, boolean countStats) {
-  }
-
   private static void loadMatchTypes() {
     MATCH_TYPE_CACHE.clear();
 
@@ -148,8 +110,8 @@ public enum Settings {
       return;
     }
 
-    ConfigurationSection matchTypesSection = CONFIG.getConfigurationSection(
-        "Matchmaking.Match_Types");
+    ConfigurationSection matchTypesSection =
+        CONFIG.getConfigurationSection("Matchmaking.Match_Types");
     if (matchTypesSection == null) {
       return;
     }
@@ -164,12 +126,14 @@ public enum Settings {
         int maxScore = CONFIG.getInt(basePath + "Max_Score", 10);
         boolean countStats = CONFIG.getBoolean(basePath + "Count_Stats", true);
 
-        MATCH_TYPE_CACHE.put(type,
-            new MatchTypeConfig(type, enabled, duration, maxScore, countStats));
+        MATCH_TYPE_CACHE.put(
+            type, new MatchTypeConfig(type, enabled, duration, maxScore, countStats));
       } catch (Exception ignored) {
       }
     }
   }
+
+  // ==================== TYPE-SAFE GETTERS ====================
 
   public static void reloadMatchTypes() {
     loadMatchTypes();
@@ -182,8 +146,6 @@ public enum Settings {
   public static Map<Integer, MatchTypeConfig> getAllMatchTypeConfigs() {
     return new HashMap<>(MATCH_TYPE_CACHE);
   }
-
-  // ==================== HELPER METHODS ====================
 
   public static long getMatchDuration(int type) {
     MatchTypeConfig config = MATCH_TYPE_CACHE.get(type);
@@ -199,6 +161,8 @@ public enum Settings {
     MatchTypeConfig config = MATCH_TYPE_CACHE.get(type);
     return config != null && config.countStats();
   }
+
+  // ==================== DYNAMIC MATCH TYPE SYSTEM ====================
 
   @SuppressWarnings("BooleanMethodIsAlwaysInverted")
   public static boolean isMatchTypeEnabled(int type) {
@@ -226,6 +190,8 @@ public enum Settings {
   public static long getHighScoreUpdateInterval() {
     return TimeUnit.MINUTES.toSeconds(HIGHSCORE_UPDATE_INTERVAL.asInt()) * 20L;
   }
+
+  // ==================== HELPER METHODS ====================
 
   public static long getAFKThreshold() {
     return TimeUnit.MINUTES.toSeconds(AFK_THRESHOLD.asLong()) * 20L;
@@ -262,4 +228,36 @@ public enum Settings {
   public static long getDefaultBanDuration() {
     return TimeUnit.MINUTES.toMillis(BAN_DEFAULT_DURATION.asLong());
   }
+
+  public Object getDefault() {
+    return def;
+  }
+
+  public boolean asBoolean() {
+    return Boolean.parseBoolean(String.valueOf(CONFIG.get(path, def)));
+  }
+
+  public int asInt() {
+    return Integer.parseInt(String.valueOf(CONFIG.get(path, def)));
+  }
+
+  public long asLong() {
+    return Long.parseLong(String.valueOf(CONFIG.get(path, def)));
+  }
+
+  public double asDouble() {
+    return Double.parseDouble(String.valueOf(CONFIG.get(path, def)));
+  }
+
+  public float asFloat() {
+    return Float.parseFloat(String.valueOf(CONFIG.get(path, def)));
+  }
+
+  @Override
+  public String toString() {
+    return CONFIG.getString(this.path, (String) this.def);
+  }
+
+  public record MatchTypeConfig(
+      int type, boolean enabled, long duration, int maxScore, boolean countStats) {}
 }

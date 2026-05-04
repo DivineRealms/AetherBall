@@ -3,8 +3,8 @@ package io.github.divinerealms.aetherball.tasks;
 import static io.github.divinerealms.aetherball.configs.Lang.MATCHES_LIST_LOBBY;
 import static io.github.divinerealms.aetherball.configs.Lang.MATCHES_LIST_WAITING;
 import static io.github.divinerealms.aetherball.configs.Lang.QUEUE_ACTIONBAR;
-import static io.github.divinerealms.aetherball.utils.MatchUtils.isPlayerOnline;
 import static io.github.divinerealms.aetherball.utils.LoggerUtil.sendActionBar;
+import static io.github.divinerealms.aetherball.utils.MatchUtils.isPlayerOnline;
 
 import io.github.divinerealms.aetherball.configs.Settings;
 import io.github.divinerealms.aetherball.managers.Manager;
@@ -45,9 +45,7 @@ public class QueueStatusTask extends BaseTask {
         }
       }
 
-      String colorCode = (currentPlayers == requiredPlayers)
-          ? "&a"
-          : "&e";
+      String colorCode = (currentPlayers == requiredPlayers) ? "&a" : "&e";
 
       for (MatchPlayer matchPlayer : match.getPlayers()) {
         if (!isPlayerOnline(matchPlayer)) {
@@ -55,14 +53,13 @@ public class QueueStatusTask extends BaseTask {
         }
 
         Player player = matchPlayer.getPlayer();
-        sendActionBar(player, QUEUE_ACTIONBAR,
-            MATCHES_LIST_LOBBY.replace(
-                matchTypeString, String.valueOf(match.getArena().id())
-            ),
+        sendActionBar(
+            player,
+            QUEUE_ACTIONBAR,
+            MATCHES_LIST_LOBBY.replace(matchTypeString, String.valueOf(match.getArena().id())),
             MATCHES_LIST_WAITING.toString(),
             colorCode + currentPlayers,
-            String.valueOf(requiredPlayers)
-        );
+            String.valueOf(requiredPlayers));
       }
     }
   }

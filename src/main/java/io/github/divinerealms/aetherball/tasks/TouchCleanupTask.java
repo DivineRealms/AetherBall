@@ -7,7 +7,6 @@ import io.github.divinerealms.aetherball.managers.Manager;
 import io.github.divinerealms.aetherball.physics.PhysicsData;
 import io.github.divinerealms.aetherball.physics.touch.CubeTouchInfo;
 import io.github.divinerealms.aetherball.physics.touch.CubeTouchType;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -15,10 +14,9 @@ import java.util.UUID;
 
 /**
  * Maintenance task to be run at a lower frequency (e.g., every 5-10 seconds).
- * <p>
- * Cleans up expired touch data and other non-critical cache structures to keep memory usage lean
+ *
+ * <p>Cleans up expired touch data and other non-critical cache structures to keep memory usage lean
  * without interrupting the primary physics calculations.
- * </p>
  */
 public class TouchCleanupTask extends BaseTask {
 
@@ -41,8 +39,7 @@ public class TouchCleanupTask extends BaseTask {
   }
 
   private void cleanupLastTouches(long now) {
-    Map<UUID, Map<CubeTouchType, CubeTouchInfo>> lastTouches = data
-        .getLastTouches();
+    Map<UUID, Map<CubeTouchType, CubeTouchInfo>> lastTouches = data.getLastTouches();
     if (lastTouches.isEmpty()) {
       return;
     }

@@ -9,11 +9,10 @@ import org.bukkit.event.entity.EntityDamageEvent;
 
 /**
  * Prevents damage to physics-enabled cube entities.
- * <p>
- * This listener extends {@link BaseListener} to automatically gain performance monitoring
+ *
+ * <p>This listener extends {@link BaseListener} to automatically gain performance monitoring
  * capabilities. All event handlers are wrapped with timing logic that reports slow executions when
  * debug mode is enabled.
- * </p>
  */
 public class CubeDamageListener extends BaseListener {
 
@@ -25,21 +24,20 @@ public class CubeDamageListener extends BaseListener {
 
   /**
    * Cancels any damage event involving tracked cube entities.
-   * <p>
-   * This ensures that physics-enabled {@link Slime} instances are not damaged by players or
+   *
+   * <p>This ensures that physics-enabled {@link Slime} instances are not damaged by players or
    * environmental sources, preserving gameplay integrity.
-   * </p>
    *
    * @param event the {@link EntityDamageEvent} fired when any entity takes damage
    */
   @EventHandler(priority = EventPriority.HIGHEST)
   public void disableDamage(EntityDamageEvent event) {
-    monitoredExecution(() -> {
-      // Cancel all damage applied to physics cubes.
-      if (event.getEntity() instanceof Slime cube
-          && physicsData.getCubes().contains(cube)) {
-        event.setCancelled(true);
-      }
-    });
+    monitoredExecution(
+        () -> {
+          // Cancel all damage applied to physics cubes.
+          if (event.getEntity() instanceof Slime cube && physicsData.getCubes().contains(cube)) {
+            event.setCancelled(true);
+          }
+        });
   }
 }

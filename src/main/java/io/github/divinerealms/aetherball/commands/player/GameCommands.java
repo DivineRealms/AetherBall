@@ -3,23 +3,19 @@ package io.github.divinerealms.aetherball.commands.player;
 import co.aikar.commands.BaseCommand;
 import co.aikar.commands.annotation.*;
 import io.github.divinerealms.aetherball.managers.Manager;
-import io.github.divinerealms.aetherball.matchmaking.Match;
-import io.github.divinerealms.aetherball.matchmaking.MatchManager;
-import io.github.divinerealms.aetherball.matchmaking.BanManager;
-import io.github.divinerealms.aetherball.matchmaking.HighScoreManager;
+import io.github.divinerealms.aetherball.matchmaking.*;
 import io.github.divinerealms.aetherball.matchmaking.logic.MatchData;
 import io.github.divinerealms.aetherball.matchmaking.logic.MatchSystem;
-import io.github.divinerealms.aetherball.matchmaking.TeamManager;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import java.util.List;
 
 import static io.github.divinerealms.aetherball.configs.Lang.*;
-import static io.github.divinerealms.aetherball.utils.MatchUtils.applyRageQuitPenalty;
-import static io.github.divinerealms.aetherball.utils.MatchUtils.shouldPreventAbuse;
 import static io.github.divinerealms.aetherball.utils.GameCommandsHelper.*;
 import static io.github.divinerealms.aetherball.utils.LoggerUtil.sendMessage;
+import static io.github.divinerealms.aetherball.utils.MatchUtils.applyRageQuitPenalty;
+import static io.github.divinerealms.aetherball.utils.MatchUtils.shouldPreventAbuse;
 import static io.github.divinerealms.aetherball.utils.Permissions.PERM_PLAY;
 
 @CommandAlias("aetherball|ab|fc")
@@ -93,7 +89,7 @@ public class GameCommands extends BaseCommand {
       return;
     }
 
-    if (banManager.isBanned(player)) {
+    if (banManager.checkAndNotify(player)) {
       return;
     }
 

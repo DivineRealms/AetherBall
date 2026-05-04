@@ -1,15 +1,14 @@
 package io.github.divinerealms.aetherball.matchmaking.logic;
 
 import io.github.divinerealms.aetherball.matchmaking.Match;
-import lombok.Getter;
-import lombok.Setter;
-import org.bukkit.entity.Player;
-
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.locks.ReentrantLock;
+import lombok.Getter;
+import lombok.Setter;
+import org.bukkit.entity.Player;
 
 @Getter
 public class MatchData {
@@ -21,11 +20,9 @@ public class MatchData {
   private final Map<Integer, ReentrantLock> queueLocks = new ConcurrentHashMap<>();
   private final Map<UUID, UUID> duelPairs = new ConcurrentHashMap<>();
 
-  @Setter
-  private boolean matchesEnabled = true;
+  @Setter private boolean matchesEnabled = true;
 
-  public MatchData() {
-  }
+  public MatchData() {}
 
   /**
    * Initializes queues and locks for the given match types. Called by MatchSystem after config is
@@ -55,24 +52,18 @@ public class MatchData {
     duelPairs.put(player2, player1);
   }
 
-  /**
-   * Gets the duel partner for a player, if any.
-   */
+  /** Gets the duel partner for a player, if any. */
   public UUID getDuelPair(UUID player) {
     return duelPairs.get(player);
   }
 
-  /**
-   * Removes a duel pair reservation.
-   */
+  /** Removes a duel pair reservation. */
   public void removeDuelPairs(UUID player1, UUID player2) {
     duelPairs.remove(player1);
     duelPairs.remove(player2);
   }
 
-  /**
-   * Checks if a player is part of a duel pair.
-   */
+  /** Checks if a player is part of a duel pair. */
   @SuppressWarnings("unused")
   public boolean isInDuelPair(UUID player) {
     return duelPairs.containsKey(player);
