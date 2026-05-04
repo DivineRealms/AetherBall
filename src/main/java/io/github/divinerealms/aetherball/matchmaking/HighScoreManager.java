@@ -41,10 +41,10 @@ public class HighScoreManager {
   private String[] topWinsNames;
   private String[] topStreakNames;
 
-  @Getter private long lastUpdate;
   @Getter private String[] participants;
-  @Getter private boolean isUpdating;
-  @Getter private boolean hasInitialData = false;
+  @Getter private volatile long lastUpdate;
+  @Getter private volatile boolean isUpdating;
+  @Getter private volatile boolean hasInitialData = false;
   @Getter private int totalPlayerFiles = 0;
   @Getter private int skippedCount = 0;
   @Getter private int processedCount = 0;

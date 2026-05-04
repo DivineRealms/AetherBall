@@ -72,7 +72,7 @@ public class BanCommands extends BaseCommand {
   @Description("Check if a player is banned")
   public void onCheckBan(CommandSender sender, @Flags("other") Player target) {
     if (banManager.isBanned(target)) {
-      long secondsLeft = TimeUnit.MINUTES.toSeconds(banManager.getRemainingMillis(target));
+      long secondsLeft = TimeUnit.MILLISECONDS.toSeconds(banManager.getRemainingMillis(target));
       sendMessage(
           sender, BAN_REMAINING, target.getDisplayName(), Utilities.formatTime(secondsLeft));
     } else {

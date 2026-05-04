@@ -45,6 +45,10 @@ public class PlayerCache {
   }
 
   public void cachePrefixedName(Player player) {
+    if (manager.isDisabling()) {
+      return;
+    }
+
     UUID uuid = player.getUniqueId();
 
     BukkitTask existing = prefixExpiryTasks.remove(uuid);

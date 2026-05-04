@@ -65,6 +65,7 @@ public class Manager {
     this.dataManager = new PlayerDataManager(this);
 
     setupConfigs();
+    sendBanner();
 
     this.dependencyLoader = new DependencyLoader(plugin);
     this.utilities = new Utilities(this);
@@ -145,7 +146,6 @@ public class Manager {
     listenerManager.registerAll();
 
     reloadOnlinePlayers();
-    sendBanner();
   }
 
   private void reloadOnlinePlayers() {
