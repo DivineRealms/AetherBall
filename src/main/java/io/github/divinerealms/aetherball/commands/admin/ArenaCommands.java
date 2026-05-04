@@ -29,14 +29,12 @@ import co.aikar.commands.annotation.Optional;
 import co.aikar.commands.annotation.Subcommand;
 import co.aikar.commands.annotation.Syntax;
 import io.github.divinerealms.aetherball.configs.Settings;
-import io.github.divinerealms.aetherball.managers.Manager;
 import io.github.divinerealms.aetherball.managers.ConfigManager;
-import io.github.divinerealms.aetherball.matchmaking.MatchManager;
+import io.github.divinerealms.aetherball.managers.Manager;
 import io.github.divinerealms.aetherball.matchmaking.ArenaManager;
-
+import io.github.divinerealms.aetherball.matchmaking.MatchManager;
 import java.util.Map;
 import java.util.Set;
-
 import org.bukkit.DyeColor;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -80,8 +78,7 @@ public class ArenaCommands extends BaseCommand {
       return;
     }
 
-    arenaManager.getSetupWizards()
-        .put(player, new ArenaManager.ArenaSetup(arenaType));
+    arenaManager.getSetupWizards().put(player, new ArenaManager.ArenaSetup(arenaType));
     sendMessage(player, SETUP_ARENA_START);
   }
 
@@ -170,11 +167,13 @@ public class ArenaCommands extends BaseCommand {
   public void onSetLobby(Player player) {
     config.set("lobby", player.getLocation());
     configManager.saveConfig("config.yml");
-    sendMessage(player, PRACTICE_AREA_SET, "lobby",
+    sendMessage(
+        player,
+        PRACTICE_AREA_SET,
+        "lobby",
         String.valueOf(player.getLocation().getX()),
         String.valueOf(player.getLocation().getY()),
-        String.valueOf(player.getLocation().getZ())
-    );
+        String.valueOf(player.getLocation().getZ()));
   }
 
   @Subcommand("setpracticearea|spa")
@@ -184,11 +183,13 @@ public class ArenaCommands extends BaseCommand {
   public void onSetPracticeArea(Player player, String name) {
     practice.set("practice-areas." + name, player.getLocation());
     configManager.saveConfig("practice.yml");
-    sendMessage(player, PRACTICE_AREA_SET, name,
+    sendMessage(
+        player,
+        PRACTICE_AREA_SET,
+        name,
         String.valueOf(player.getLocation().getX()),
         String.valueOf(player.getLocation().getY()),
-        String.valueOf(player.getLocation().getZ())
-    );
+        String.valueOf(player.getLocation().getZ()));
   }
 
   @Subcommand("setbutton|sb")

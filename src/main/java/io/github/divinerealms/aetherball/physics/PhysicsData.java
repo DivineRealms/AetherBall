@@ -22,7 +22,8 @@ public class PhysicsData {
   private final Map<UUID, Double> speed = new ConcurrentHashMap<>();
   private final Map<UUID, Double> charges = new ConcurrentHashMap<>();
 
-  private final Map<UUID, Map<CubeTouchType, CubeTouchInfo>> lastTouches = new ConcurrentHashMap<>();
+  private final Map<UUID, Map<CubeTouchType, CubeTouchInfo>> lastTouches =
+      new ConcurrentHashMap<>();
   private final Map<UUID, Long> raised = new ConcurrentHashMap<>();
 
   private final Map<UUID, Long> lastAction = new ConcurrentHashMap<>();
@@ -31,8 +32,7 @@ public class PhysicsData {
 
   private final Map<UUID, Location> previousCubeLocations = new ConcurrentHashMap<>();
   public long tickRate = 0;
-  @Setter
-  private boolean hitDebugEnabled = false;
+  @Setter private boolean hitDebugEnabled = false;
 
   public void cleanup() {
     cubes.clear();

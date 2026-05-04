@@ -7,44 +7,38 @@ import static io.github.divinerealms.aetherball.utils.Permissions.PERM_ADMIN;
 
 import io.github.divinerealms.aetherball.configs.Settings;
 import io.github.divinerealms.aetherball.managers.Manager;
-
 import java.util.ArrayDeque;
 import java.util.Queue;
-
 import lombok.Getter;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitTask;
 
 /**
  * Base class for all scheduled tasks with built-in performance monitoring.
- * <p>
- * Tracks execution times and provides automatic debug warnings when tasks exceed their threshold.
- * Maintains a rolling window of the last 20 execution times for performance analysis.
- * </p>
+ *
+ * <p>Tracks execution times and provides automatic debug warnings when tasks exceed their
+ * threshold. Maintains a rolling window of the last 20 execution times for performance analysis.
  */
 public abstract class BaseTask implements Runnable {
 
   protected final Manager manager;
   protected final Plugin plugin;
-  @Getter
-  private final String taskName;
+  @Getter private final String taskName;
   private final long interval;
   private final boolean async;
   private final Queue<Long> recentExecutionTimes = new ArrayDeque<>(20);
   private final long debugThreshold;
   private BukkitTask task;
-  @Getter
-  private boolean running = false;
-  @Getter
-  private long totalExecutions = 0;
+  @Getter private boolean running = false;
+  @Getter private long totalExecutions = 0;
   private long recentExecutionTimeSum = 0;
 
   protected BaseTask(Manager manager, String taskName, long interval, boolean async) {
     this(manager, taskName, interval, async, getDefaultThreshold(interval));
   }
 
-  protected BaseTask(Manager manager, String taskName, long interval, boolean async,
-                     long customThreshold) {
+  protected BaseTask(
+      Manager manager, String taskName, long interval, boolean async, long customThreshold) {
     this.manager = manager;
     this.plugin = manager.getPlugin();
     this.taskName = taskName;
@@ -72,15 +66,24 @@ public abstract class BaseTask implements Runnable {
     }
 
     if (async) {
-      task = plugin.getServer().getScheduler()
-          .runTaskTimerAsynchronously(plugin, this, interval, interval);
+      task =
+          plugin
+              .getServer()
+              .getScheduler()
+              .runTaskTimerAsynchronously(plugin, this, interval, interval);
     } else {
       task = plugin.getServer().getScheduler().runTaskTimer(plugin, this, interval, interval);
     }
 
     running = true;
-    debugConsole("{prefix_success}Started " + taskName + " task (type: " + (async ? "a" : "")
-        + "sync, frequency: " + interval + " ticks)");
+    debugConsole(
+        "{prefix_success}Started "
+            + taskName
+            + " task (type: "
+            + (async ? "a" : "")
+            + "sync, frequency: "
+            + interval
+            + " ticks)");
   }
 
   public void stop() {
@@ -109,8 +112,13 @@ public abstract class BaseTask implements Runnable {
       if (Settings.DEBUG_MODE.asBoolean()) {
         long durationMillis = durationNanos / 1_000_000;
         if (durationMillis > debugThreshold) {
-          sendMessage(PERM_ADMIN,
-              "{prefix_debug}&d" + taskName + " &ftook &e" + durationMillis + "ms &f(threshold: "
+          sendMessage(
+              PERM_ADMIN,
+              "{prefix_debug}&d"
+                  + taskName
+                  + " &ftook &e"
+                  + durationMillis
+                  + "ms &f(threshold: "
                   + debugThreshold
                   + "ms)");
         }

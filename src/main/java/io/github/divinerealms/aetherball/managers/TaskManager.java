@@ -1,25 +1,15 @@
 package io.github.divinerealms.aetherball.managers;
 
-import static io.github.divinerealms.aetherball.utils.LoggerUtil.debugConsole;
-import static io.github.divinerealms.aetherball.utils.LoggerUtil.logConsole;
-
 import io.github.divinerealms.aetherball.configs.Settings;
-import io.github.divinerealms.aetherball.tasks.BaseTask;
-import io.github.divinerealms.aetherball.tasks.CacheCleanupTask;
-import io.github.divinerealms.aetherball.tasks.CubeCleanerTask;
-import io.github.divinerealms.aetherball.tasks.HighScoresTask;
-import io.github.divinerealms.aetherball.tasks.MatchmakingTask;
-import io.github.divinerealms.aetherball.tasks.ParticleTrailTask;
-import io.github.divinerealms.aetherball.tasks.PhysicsTask;
-import io.github.divinerealms.aetherball.tasks.PlayerUpdateTask;
-import io.github.divinerealms.aetherball.tasks.QueueStatusTask;
-import io.github.divinerealms.aetherball.tasks.TouchCleanupTask;
+import io.github.divinerealms.aetherball.tasks.*;
 import io.github.divinerealms.aetherball.utils.TaskStats;
+import lombok.Getter;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import lombok.Getter;
+import static io.github.divinerealms.aetherball.utils.LoggerUtil.debugConsole;
+import static io.github.divinerealms.aetherball.utils.LoggerUtil.logConsole;
 
 /**
  * Centralized manager for all scheduled tasks. Handles initialization, lifecycle, and cleanup of
@@ -53,8 +43,7 @@ public class TaskManager {
     this.particleTrailTask = new ParticleTrailTask(manager);
 
     // Initialize general tasks.
-    this.cubeCleanerTask = new CubeCleanerTask(manager,
-        Settings.getPracticeAreaCleanupInterval());
+    this.cubeCleanerTask = new CubeCleanerTask(manager, Settings.getPracticeAreaCleanupInterval());
     this.matchmakingTask = new MatchmakingTask(manager);
     this.cacheCleanupTask = new CacheCleanupTask(manager, Settings.getCacheCleanupInterval());
     this.queueStatusTask = new QueueStatusTask(manager);
@@ -78,8 +67,11 @@ public class TaskManager {
         task.start();
         started++;
       } catch (Exception exception) {
-        logConsole("{prefix_error}Failed to start " + task.getTaskName() + " task: "
-            + exception.getMessage());
+        logConsole(
+            "{prefix_error}Failed to start "
+                + task.getTaskName()
+                + " task: "
+                + exception.getMessage());
       }
     }
     debugConsole(
@@ -95,8 +87,11 @@ public class TaskManager {
           task.stop();
           stopped++;
         } catch (Exception exception) {
-          logConsole("{prefix_error}Error stopping " + task.getTaskName() + " task: "
-              + exception.getMessage());
+          logConsole(
+              "{prefix_error}Error stopping "
+                  + task.getTaskName()
+                  + " task: "
+                  + exception.getMessage());
         }
       }
     }
@@ -111,10 +106,16 @@ public class TaskManager {
   }
 
   public TaskStats getStats() {
-    return new TaskStats(physicsTask.getAverageExecutionTime(),
-        touchCleanupTask.getAverageExecutionTime(), playerUpdateTask.getAverageExecutionTime(),
-        particleTrailTask.getAverageExecutionTime(), matchmakingTask.getAverageExecutionTime(),
-        queueStatusTask.getAverageExecutionTime());
+    return new TaskStats(
+        physicsTask.getAverageExecutionTime(),
+        touchCleanupTask.getAverageExecutionTime(),
+        playerUpdateTask.getAverageExecutionTime(),
+        particleTrailTask.getAverageExecutionTime(),
+        matchmakingTask.getAverageExecutionTime(),
+        queueStatusTask.getAverageExecutionTime(),
+        cubeCleanerTask.getAverageExecutionTime(),
+        cacheCleanupTask.getAverageExecutionTime(),
+        highScoresTask.getAverageExecutionTime());
   }
 
   public void resetAllStats() {

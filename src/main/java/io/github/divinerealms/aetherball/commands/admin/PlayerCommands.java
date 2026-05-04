@@ -25,9 +25,7 @@ import io.github.divinerealms.aetherball.configs.PlayerData;
 import io.github.divinerealms.aetherball.managers.Manager;
 import io.github.divinerealms.aetherball.managers.PlayerDataManager;
 import io.github.divinerealms.aetherball.matchmaking.MatchManager;
-
 import java.util.Arrays;
-
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -49,10 +47,11 @@ public class PlayerCommands extends BaseCommand {
   @Subcommand("statset")
   @CommandPermission(PERM_STAT_SET)
   @Syntax("<player> <stat> <amount|clear>")
-  @CommandCompletion("@players wins|matches|ties|goals|assists|owngoals|winstreak|bestwinstreak|all")
+  @CommandCompletion(
+      "@players wins|matches|ties|goals|assists|owngoals|winstreak|bestwinstreak|all")
   @Description("Set player statistics")
-  public void onStatSet(CommandSender sender, @Flags("other") Player target, String stat,
-                        String amountStr) {
+  public void onStatSet(
+      CommandSender sender, @Flags("other") Player target, String stat, String amountStr) {
     PlayerData playerData = dataManager.get(target);
     if (playerData == null) {
       sendMessage(sender, PLAYER_NOT_FOUND);
@@ -72,8 +71,9 @@ public class PlayerCommands extends BaseCommand {
     }
 
     String statLower = stat.toLowerCase();
-    String[] validStats = {"wins", "matches", "ties", "goals", "assists",
-        "owngoals", "winstreak", "bestwinstreak"};
+    String[] validStats = {
+      "wins", "matches", "ties", "goals", "assists", "owngoals", "winstreak", "bestwinstreak"
+    };
 
     if (Arrays.asList(validStats).contains(statLower)) {
       playerData.set(statLower, clear ? 0 : amount);
@@ -110,10 +110,16 @@ public class PlayerCommands extends BaseCommand {
     manager.cachePrefixedName(target);
     sendMessage(sender, "Refreshing prefix for " + target.getName() + "...");
 
-    plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
-      String refreshed = manager.getPrefixedName(target.getUniqueId());
-      sendMessage(sender, "Refreshed: " + refreshed);
-    }, 20L);
+    plugin
+        .getServer()
+        .getScheduler()
+        .runTaskLater(
+            plugin,
+            () -> {
+              String refreshed = manager.getPrefixedName(target.getUniqueId());
+              sendMessage(sender, "Refreshed: " + refreshed);
+            },
+            20L);
   }
 
   @Subcommand("clear stats")

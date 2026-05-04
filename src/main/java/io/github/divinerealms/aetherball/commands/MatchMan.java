@@ -15,9 +15,7 @@ import io.github.divinerealms.aetherball.managers.Manager;
 import io.github.divinerealms.aetherball.matchmaking.Match;
 import io.github.divinerealms.aetherball.matchmaking.MatchManager;
 import io.github.divinerealms.aetherball.matchmaking.MatchPhase;
-
 import java.util.Optional;
-
 import org.bukkit.entity.Player;
 
 @CommandAlias("matchman|mm")
@@ -51,8 +49,7 @@ public class MatchMan extends BaseCommand {
         match.setPhase(MatchPhase.ENDED);
       }
 
-      sendMessage(player, MATCHMAN_FORCE_END,
-          Settings.getMatchTypeName(match.getArena().type()));
+      sendMessage(player, MATCHMAN_FORCE_END, Settings.getMatchTypeName(match.getArena().type()));
     } else {
       sendMessage(player, MATCHES_LIST_NO_MATCHES);
     }

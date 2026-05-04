@@ -16,8 +16,7 @@ import org.bukkit.plugin.Plugin;
 
 public class ConfigManager {
 
-  @Getter
-  private final Plugin plugin;
+  @Getter private final Plugin plugin;
   private final String folderName;
 
   private final Map<String, FileConfiguration> configs = new HashMap<>();
@@ -31,9 +30,10 @@ public class ConfigManager {
   }
 
   public void createNewFile(String name, String header) {
-    File file = new File(plugin.getDataFolder(), folderName.isEmpty()
-        ? name
-        : folderName + File.separator + name);
+    File file =
+        new File(
+            plugin.getDataFolder(),
+            folderName.isEmpty() ? name : folderName + File.separator + name);
 
     FileConfiguration cfg;
 
@@ -71,9 +71,10 @@ public class ConfigManager {
   }
 
   public void reloadConfig(String name) {
-    File file = new File(plugin.getDataFolder(), folderName.isEmpty()
-        ? name
-        : folderName + File.separator + name);
+    File file =
+        new File(
+            plugin.getDataFolder(),
+            folderName.isEmpty() ? name : folderName + File.separator + name);
 
     if (!file.exists()) {
       copyDefaultsFromResource(name);
@@ -108,9 +109,7 @@ public class ConfigManager {
 
   private void copyDefaultsFromResource(String name) {
     try {
-      String resourcePath = folderName.isEmpty()
-          ? name
-          : folderName + File.separator + name;
+      String resourcePath = folderName.isEmpty() ? name : folderName + File.separator + name;
       if (plugin.getResource(resourcePath) != null) {
         plugin.saveResource(resourcePath, false);
         logConsole("{prefix_info}Copied default config from JAR: " + resourcePath);

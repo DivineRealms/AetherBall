@@ -57,16 +57,16 @@ public class StatsHelper {
 
   private static double calculateSkillLevel(int matches, int wins, int ties, int goals) {
     double multiplier = 1 - Math.pow(0.9, matches);
-    double goalBonus = matches > 0
-        ? (goals == matches
-        ? 1
-        : Math.min(1, 1 - multiplier * Math.pow(0.2, (double) goals / matches)))
-        : 0.5;
-    double addition = (matches > 0 && wins + ties > 0)
-        ? 8 * (1 / ((100 * matches) / (wins + 0.5 * ties) / 100)) - 4
-        : (matches > 0
-        ? -4
-        : 0);
+    double goalBonus =
+        matches > 0
+            ? (goals == matches
+                ? 1
+                : Math.min(1, 1 - multiplier * Math.pow(0.2, (double) goals / matches)))
+            : 0.5;
+    double addition =
+        (matches > 0 && wins + ties > 0)
+            ? 8 * (1 / ((100 * matches) / (wins + 0.5 * ties) / 100)) - 4
+            : (matches > 0 ? -4 : 0);
     return Math.min(5 + goalBonus + addition * multiplier, 10);
   }
 

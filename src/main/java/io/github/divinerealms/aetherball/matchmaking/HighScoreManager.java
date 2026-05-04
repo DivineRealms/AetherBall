@@ -41,22 +41,14 @@ public class HighScoreManager {
   private String[] topWinsNames;
   private String[] topStreakNames;
 
-  @Getter
-  private long lastUpdate;
-  @Getter
-  private String[] participants;
-  @Getter
-  private boolean isUpdating;
-  @Getter
-  private boolean hasInitialData = false;
-  @Getter
-  private int totalPlayerFiles = 0;
-  @Getter
-  private int skippedCount = 0;
-  @Getter
-  private int processedCount = 0;
-  @Getter
-  private int topScoresSize;
+  @Getter private long lastUpdate;
+  @Getter private String[] participants;
+  @Getter private boolean isUpdating;
+  @Getter private boolean hasInitialData = false;
+  @Getter private int totalPlayerFiles = 0;
+  @Getter private int skippedCount = 0;
+  @Getter private int processedCount = 0;
+  @Getter private int topScoresSize;
 
   public HighScoreManager(Manager manager) {
     this.manager = manager;
@@ -167,7 +159,7 @@ public class HighScoreManager {
     }
   }
 
-  public void startUpdate() {
+  public void startUpdate(Runnable onComplete) {
     File playerFolder = new File(plugin.getDataFolder(), "players");
     File[] files = playerFolder.listFiles((dir, name) -> name.endsWith(".yml"));
     totalPlayerFiles = files != null ? files.length : 0;
@@ -179,7 +171,7 @@ public class HighScoreManager {
 
     isUpdating = true;
     clearArrays();
-    processAllPlayers();
+    processAllPlayers(onComplete);
   }
 
   private void clearArrays() {
@@ -210,7 +202,7 @@ public class HighScoreManager {
     }
   }
 
-  public void processAllPlayers() {
+  public void processAllPlayers(Runnable onComplete) {
     List<CompletableFuture<Void>> nameFutures = new ArrayList<>();
 
     for (String playerName : participants) {
@@ -233,15 +225,23 @@ public class HighScoreManager {
       if (cachedPrefixedName != null) {
         insertAllCategories(stats, cachedPrefixedName);
       } else {
-        nameFutures.add(utilities.getPrefixedName(uuid, playerName).thenAccept(prefixedName -> insertAllCategories(stats, prefixedName)));
+        nameFutures.add(
+            utilities
+                .getPrefixedName(uuid, playerName)
+                .thenAccept(prefixedName -> insertAllCategories(stats, prefixedName)));
       }
     }
 
-    CompletableFuture.allOf(nameFutures.toArray(new CompletableFuture[0])).join();
-
-    lastUpdate = System.currentTimeMillis();
-    isUpdating = false;
-    hasInitialData = true;
+    CompletableFuture.allOf(nameFutures.toArray(new CompletableFuture[0]))
+        .thenRun(
+            () -> {
+              lastUpdate = System.currentTimeMillis();
+              isUpdating = false;
+              hasInitialData = true;
+              if (onComplete != null) {
+                onComplete.run();
+              }
+            });
   }
 
   private void insertAllCategories(StatsHelper statsHelper, String prefixedName) {
@@ -349,6 +349,11 @@ public class HighScoreManager {
   }
 
   public enum HighScoreCategory {
-    SKILL, GOALS, ASSISTS, OWN_GOALS, WINS, STREAK
+    SKILL,
+    GOALS,
+    ASSISTS,
+    OWN_GOALS,
+    WINS,
+    STREAK
   }
 }

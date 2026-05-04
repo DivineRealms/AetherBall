@@ -24,11 +24,11 @@ import co.aikar.commands.annotation.Optional;
 import co.aikar.commands.annotation.Subcommand;
 import co.aikar.commands.annotation.Syntax;
 import io.github.divinerealms.aetherball.configs.Settings;
-import io.github.divinerealms.aetherball.managers.Manager;
 import io.github.divinerealms.aetherball.managers.ConfigManager;
+import io.github.divinerealms.aetherball.managers.Manager;
 import io.github.divinerealms.aetherball.managers.TaskManager;
-import io.github.divinerealms.aetherball.matchmaking.MatchManager;
 import io.github.divinerealms.aetherball.matchmaking.ArenaManager;
+import io.github.divinerealms.aetherball.matchmaking.MatchManager;
 import io.github.divinerealms.aetherball.matchmaking.logic.MatchSystem;
 import io.github.divinerealms.aetherball.tasks.BaseTask;
 import io.github.divinerealms.aetherball.utils.TaskStats;
@@ -87,28 +87,32 @@ public class SystemCommands extends BaseCommand {
   @Description("Manage plugin tasks")
   public void onTasks(CommandSender sender, @Optional String action) {
     if (action == null) {
-      sendMessage(sender, TASKS_REPORT_HEADER,
+      sendMessage(
+          sender,
+          TASKS_REPORT_HEADER,
           String.valueOf(taskManager.getRunningTaskCount()),
-          String.valueOf(taskManager.getTaskCount())
-      );
+          String.valueOf(taskManager.getTaskCount()));
 
       for (BaseTask task : taskManager.getTasks()) {
         double average = task.getAverageExecutionTime();
         String status = task.isRunning() ? "&a✔" : "&c✘";
         String timeColor = getColorForTime(average);
 
-        sendMessage(sender, TASKS_REPORT_ENTRY,
-            status, task.getTaskName(),
+        sendMessage(
+            sender,
+            TASKS_REPORT_ENTRY,
+            status,
+            task.getTaskName(),
             timeColor + String.format("%.3f", average),
-            String.valueOf(task.getTotalExecutions())
-        );
+            String.valueOf(task.getTotalExecutions()));
       }
 
       TaskStats stats = taskManager.getStats();
       double totalAverage = stats.getAveragePerTask();
-      sendMessage(sender, TASKS_REPORT_FOOTER,
-          getColorForTime(totalAverage) + String.format("%.3f", totalAverage)
-      );
+      sendMessage(
+          sender,
+          TASKS_REPORT_FOOTER,
+          getColorForTime(totalAverage) + String.format("%.3f", totalAverage));
       return;
     }
 

@@ -1,27 +1,25 @@
 package io.github.divinerealms.aetherball.matchmaking;
 
+import static io.github.divinerealms.aetherball.configs.Lang.*;
+import static io.github.divinerealms.aetherball.utils.GameCommandsHelper.isInQueueOrMatch;
+import static io.github.divinerealms.aetherball.utils.LoggerUtil.sendMessage;
+import static io.github.divinerealms.aetherball.utils.MatchUtils.isPlayerOnline;
+
 import io.github.divinerealms.aetherball.configs.Settings;
 import io.github.divinerealms.aetherball.managers.Manager;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitTask;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
-
-import static io.github.divinerealms.aetherball.configs.Lang.*;
-import static io.github.divinerealms.aetherball.utils.MatchUtils.isPlayerOnline;
-import static io.github.divinerealms.aetherball.utils.GameCommandsHelper.isInQueueOrMatch;
-import static io.github.divinerealms.aetherball.utils.LoggerUtil.sendMessage;
-
 /**
  * Manages 1v1 duel requests between players.
- * <p>
- * Handles request creation, expiry, acceptance, and cancellation.
- * </p>
+ *
+ * <p>Handles request creation, expiry, acceptance, and cancellation.
  */
 public class DuelManager {
 
@@ -77,17 +75,14 @@ public class DuelManager {
 
     // Schedule expiry task.
     long expiryTicks = Settings.DUEL_REQUEST_EXPIRY.asLong() * 20L;
-    BukkitTask expiryTask = Bukkit.getScheduler().runTaskLater(
-        manager.getPlugin(),
-        () -> expireRequest(targetUuid),
-        expiryTicks
-    );
+    BukkitTask expiryTask =
+        Bukkit.getScheduler()
+            .runTaskLater(manager.getPlugin(), () -> expireRequest(targetUuid), expiryTicks);
     request.setExpiryTask(expiryTask);
 
     // Notify both players.
     sendMessage(sender, DUEL_REQUEST_SENT, target.getName());
     sendMessage(target, DUEL_REQUEST_RECEIVED, sender.getName());
-
   }
 
   /**
@@ -133,7 +128,6 @@ public class DuelManager {
     manager.getMatchData().createDuelPair(sender.getUniqueId(), acceptorUuid);
     manager.getMatchManager().joinQueue(sender, 1);
     manager.getMatchManager().joinQueue(acceptor, 1);
-
   }
 
   /**
@@ -157,7 +151,6 @@ public class DuelManager {
     Player sender = Bukkit.getPlayer(request.getSenderUuid());
     sendMessage(sender, DUEL_DECLINED_SENDER, decliner.getName());
     sendMessage(decliner, DUEL_DECLINED_DECLINER);
-
   }
 
   /**
@@ -192,7 +185,6 @@ public class DuelManager {
     Player target = Bukkit.getPlayer(removed.getTargetUuid());
     sendMessage(target, DUEL_CANCELED_TARGET, sender.getName());
     sendMessage(sender, DUEL_CANCELED_SENDER);
-
   }
 
   /**
@@ -229,13 +221,16 @@ public class DuelManager {
     }
 
     // Remove as sender.
-    activeRequests.entrySet().removeIf(entry -> {
-      if (entry.getValue().getSenderUuid().equals(playerUuid)) {
-        entry.getValue().cancelExpiryTask();
-        return true;
-      }
-      return false;
-    });
+    activeRequests
+        .entrySet()
+        .removeIf(
+            entry -> {
+              if (entry.getValue().getSenderUuid().equals(playerUuid)) {
+                entry.getValue().cancelExpiryTask();
+                return true;
+              }
+              return false;
+            });
 
     UUID partnerUuid = manager.getMatchData().getDuelPair(playerUuid);
     if (partnerUuid != null) {
@@ -243,17 +238,14 @@ public class DuelManager {
     }
   }
 
-  /**
-   * Represents a duel request between two players.
-   */
+  /** Represents a duel request between two players. */
   @Getter
   private static class DuelRequest {
 
     private final UUID senderUuid;
     private final UUID targetUuid;
     private final long createdAt;
-    @Setter
-    private BukkitTask expiryTask;
+    @Setter private BukkitTask expiryTask;
 
     public DuelRequest(UUID senderUuid, UUID targetUuid) {
       this.senderUuid = senderUuid;

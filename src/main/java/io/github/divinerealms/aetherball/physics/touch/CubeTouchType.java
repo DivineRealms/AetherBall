@@ -5,7 +5,8 @@ import lombok.Getter;
 
 @Getter
 public enum CubeTouchType {
-  REGULAR_KICK, CHARGED_KICK;
+  REGULAR_KICK,
+  CHARGED_KICK;
 
   /**
    * Gets the cooldown for this touch type from the config.

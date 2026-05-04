@@ -19,8 +19,8 @@ import static io.github.divinerealms.aetherball.configs.Lang.TOGGLES_KICK;
 import static io.github.divinerealms.aetherball.configs.Lang.TOGGLES_PARTICLES;
 import static io.github.divinerealms.aetherball.configs.Lang.TOGGLES_PARTICLES_MODE;
 import static io.github.divinerealms.aetherball.configs.Lang.USAGE;
-import static io.github.divinerealms.aetherball.utils.MatchUtils.joinStrings;
 import static io.github.divinerealms.aetherball.utils.LoggerUtil.sendMessage;
+import static io.github.divinerealms.aetherball.utils.MatchUtils.joinStrings;
 import static io.github.divinerealms.aetherball.utils.Permissions.PERM_SET_GOAL_CELEBRATION;
 import static io.github.divinerealms.aetherball.utils.Permissions.PERM_SET_PARTICLE;
 import static io.github.divinerealms.aetherball.utils.Permissions.PERM_SET_SOUND;
@@ -38,10 +38,8 @@ import io.github.divinerealms.aetherball.managers.Manager;
 import io.github.divinerealms.aetherball.managers.PlayerDataManager;
 import io.github.divinerealms.aetherball.physics.PhysicsData;
 import io.github.divinerealms.aetherball.utils.PlayerSettings;
-
 import java.util.ArrayList;
 import java.util.List;
-
 import net.minecraft.server.v1_8_R3.EnumParticle;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
@@ -77,29 +75,31 @@ public class SettingsCommands extends BaseCommand {
       case "kick":
         settings.setKickSoundEnabled(!settings.isKickSoundEnabled());
         data.set("sounds.kick.enabled", settings.isKickSoundEnabled());
-        sendMessage(player, TOGGLES_KICK,
-            settings.isKickSoundEnabled() ? ON.toString() : OFF.toString());
+        sendMessage(
+            player, TOGGLES_KICK, settings.isKickSoundEnabled() ? ON.toString() : OFF.toString());
         break;
 
       case "goal":
         settings.setGoalSoundEnabled(!settings.isGoalSoundEnabled());
         data.set("sounds.goal.enabled", settings.isGoalSoundEnabled());
-        sendMessage(player, TOGGLES_GOAL,
-            settings.isGoalSoundEnabled() ? ON.toString() : OFF.toString());
+        sendMessage(
+            player, TOGGLES_GOAL, settings.isGoalSoundEnabled() ? ON.toString() : OFF.toString());
         break;
 
       case "particles":
         settings.setParticlesEnabled(!settings.isParticlesEnabled());
         data.set("particles.enabled", settings.isParticlesEnabled());
-        sendMessage(player, TOGGLES_PARTICLES,
+        sendMessage(
+            player,
+            TOGGLES_PARTICLES,
             settings.isParticlesEnabled() ? ON.toString() : OFF.toString());
         break;
 
       case "particlemode":
       case "pmode":
         if (!settings.isParticlesEnabled()) {
-          sendMessage(player,
-              "{prefix_error}You must enable particles first with &e/fct particles");
+          sendMessage(
+              player, "{prefix_error}You must enable particles first with &e/fct particles");
           return;
         }
 
@@ -139,9 +139,10 @@ public class SettingsCommands extends BaseCommand {
       return;
     }
 
-    List<Sound> allowedSounds = soundTypeLower.equals("kick")
-        ? PlayerSettings.ALLOWED_KICK_SOUNDS
-        : PlayerSettings.ALLOWED_GOAL_SOUNDS;
+    List<Sound> allowedSounds =
+        soundTypeLower.equals("kick")
+            ? PlayerSettings.ALLOWED_KICK_SOUNDS
+            : PlayerSettings.ALLOWED_GOAL_SOUNDS;
 
     if (soundName.equalsIgnoreCase("list")) {
       showAllowedSounds(player, allowedSounds);
@@ -185,7 +186,10 @@ public class SettingsCommands extends BaseCommand {
   @Description("Set particle trail effect for cubes")
   public void onSetParticle(Player player, String particleName, @Optional String color) {
     if (particleName.equalsIgnoreCase("list")) {
-      sendMessage(player, AVAILABLE_TYPE, PARTICLE.toString(),
+      sendMessage(
+          player,
+          AVAILABLE_TYPE,
+          PARTICLE.toString(),
           joinStrings(PlayerSettings.getAllowedParticles()));
       return;
     }
@@ -220,8 +224,7 @@ public class SettingsCommands extends BaseCommand {
   @Description("Set goal celebration style")
   public void onSetGoalCelebration(Player player, String celebrationType) {
     if (celebrationType.equalsIgnoreCase("list")) {
-      sendMessage(player, AVAILABLE_TYPE, "goal celebrations",
-          "default, minimal, simple, epic");
+      sendMessage(player, AVAILABLE_TYPE, "goal celebrations", "default, minimal, simple, epic");
       return;
     }
 
@@ -231,11 +234,12 @@ public class SettingsCommands extends BaseCommand {
     }
 
     String type = celebrationType.toLowerCase();
-    if (!type.equals("default") && !type.equals("minimal") && !type.equals("simple")
+    if (!type.equals("default")
+        && !type.equals("minimal")
+        && !type.equals("simple")
         && !type.equals("epic")) {
       sendMessage(player, INVALID_TYPE, "goal celebrations");
-      sendMessage(player, AVAILABLE_TYPE, "goal celebrations",
-          "default, minimal, simple, epic");
+      sendMessage(player, AVAILABLE_TYPE, "goal celebrations", "default, minimal, simple, epic");
       return;
     }
 
@@ -266,7 +270,10 @@ public class SettingsCommands extends BaseCommand {
 
       if (PlayerSettings.DISALLOWED_PARTICLES.contains(particle)) {
         sendMessage(player, INVALID_TYPE, PARTICLE.toString());
-        sendMessage(player, AVAILABLE_TYPE, PARTICLE.toString(),
+        sendMessage(
+            player,
+            AVAILABLE_TYPE,
+            PARTICLE.toString(),
             joinStrings(PlayerSettings.getAllowedParticles()));
         return null;
       }
@@ -274,14 +281,21 @@ public class SettingsCommands extends BaseCommand {
       return particle;
     } catch (Exception e) {
       sendMessage(player, INVALID_TYPE, PARTICLE.toString());
-      sendMessage(player, AVAILABLE_TYPE, PARTICLE.toString(),
+      sendMessage(
+          player,
+          AVAILABLE_TYPE,
+          PARTICLE.toString(),
           joinStrings(PlayerSettings.getAllowedParticles()));
       return null;
     }
   }
 
-  private void handleRedstoneParticle(Player player, PlayerData playerData,
-                                      PlayerSettings settings, EnumParticle particle, String color) {
+  private void handleRedstoneParticle(
+      Player player,
+      PlayerData playerData,
+      PlayerSettings settings,
+      EnumParticle particle,
+      String color) {
     String colorName = color != null ? color.toUpperCase() : "WHITE";
     try {
       settings.setCustomRedstoneColor(colorName);
@@ -289,7 +303,10 @@ public class SettingsCommands extends BaseCommand {
       sendMessage(player, SET_PARTICLE_REDSTONE, particle.name(), colorName);
     } catch (IllegalArgumentException e) {
       sendMessage(player, INVALID_COLOR, colorName);
-      sendMessage(player, AVAILABLE_TYPE, COLOR.toString(),
+      sendMessage(
+          player,
+          AVAILABLE_TYPE,
+          COLOR.toString(),
           joinStrings(PlayerSettings.getAllowedColorNames()));
       return;
     }

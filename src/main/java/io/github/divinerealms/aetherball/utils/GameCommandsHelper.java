@@ -21,7 +21,10 @@ public class GameCommandsHelper {
     MatchManager matchManager = manager.getMatchManager();
 
     if (!Settings.isMatchTypeEnabled(type)) {
-      sendMessage(player, MATCH_TYPE_UNAVAILABLE, Settings.getMatchTypeName(type),
+      sendMessage(
+          player,
+          MATCH_TYPE_UNAVAILABLE,
+          Settings.getMatchTypeName(type),
           matchManager.getAvailableTypesString());
       return;
     }
@@ -31,7 +34,7 @@ public class GameCommandsHelper {
       return;
     }
 
-    if (manager.getBanManager().isBanned(player)) {
+    if (manager.getBanManager().checkAndNotify(player)) {
       return;
     }
 
@@ -79,7 +82,9 @@ public class GameCommandsHelper {
         }
       }
 
-      sendMessage(player, TAKEPLACE_AVAILABLE_ENTRY,
+      sendMessage(
+          player,
+          TAKEPLACE_AVAILABLE_ENTRY,
           String.valueOf(openMatch.getArena().id()),
           Settings.getMatchTypeName(openMatch.getArena().type()),
           String.valueOf(emptySlots));
@@ -149,8 +154,7 @@ public class GameCommandsHelper {
     teamManager.removeInvite(player);
   }
 
-  public static void handleInvite(Player player, int matchType, Player target,
-                                  Manager manager) {
+  public static void handleInvite(Player player, int matchType, Player target, Manager manager) {
     TeamManager teamManager = manager.getTeamManager();
 
     if (teamManager.isInTeam(player)) {

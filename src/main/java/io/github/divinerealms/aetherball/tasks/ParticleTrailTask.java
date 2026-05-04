@@ -12,12 +12,10 @@ import io.github.divinerealms.aetherball.managers.Manager;
 import io.github.divinerealms.aetherball.managers.Utilities;
 import io.github.divinerealms.aetherball.physics.PhysicsData;
 import io.github.divinerealms.aetherball.utils.PlayerSettings;
-
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-
 import net.minecraft.server.v1_8_R3.EnumParticle;
 import org.bukkit.Color;
 import org.bukkit.Location;
@@ -28,18 +26,17 @@ import org.bukkit.entity.Slime;
  * Renders particle trails that visually follow cubes (Slime entities) for players who are far
  * enough away that they might not see the actual cube entity due to Minecraft 1.8.8 render distance
  * limitations.
- * <p>
- * This method improves visibility and game immersion by simulating cube motion with particles,
+ *
+ * <p>This method improves visibility and game immersion by simulating cube motion with particles,
  * ensuring remote players can still perceive the ball's movement even outside their render
  * distance.
- * </p>
  *
  * <p><b>Performance considerations:</b> Particle effects are sent only to players who are
  * sufficiently far from the cube, reducing unnecessary network and client load. The method is
- * optimized through caching of player locations and settings to minimize per-interval lookups.</p>
+ * optimized through caching of player locations and settings to minimize per-interval lookups.
  *
  * @implNote This task is executed periodically every X ticks (default 10). The interval balances
- * visual responsiveness and server performance.
+ *     visual responsiveness and server performance.
  */
 public class ParticleTrailTask extends BaseTask {
 
@@ -164,8 +161,17 @@ public class ParticleTrailTask extends BaseTask {
     }
   }
 
-  private void renderTrail(Player player, EnumParticle particle, PlayerSettings settings,
-                           int trailPoints, double prevX, double prevY, double prevZ, double x, double y, double z) {
+  private void renderTrail(
+      Player player,
+      EnumParticle particle,
+      PlayerSettings settings,
+      int trailPoints,
+      double prevX,
+      double prevY,
+      double prevZ,
+      double x,
+      double y,
+      double z) {
     for (int i = 0; i < trailPoints; i++) {
       double t = (double) i / Math.max(trailPoints - 1, 1);
 
@@ -177,14 +183,30 @@ public class ParticleTrailTask extends BaseTask {
         Color color = settings.getRedstoneColor();
         float fadeFactor = 0.6f + (float) (t * 0.4f);
 
-        Utilities.sendParticle(player, EnumParticle.REDSTONE, trailX, trailY, trailZ,
-            (color.getRed() / 255F) * fadeFactor, (color.getGreen() / 255F) * fadeFactor,
-            (color.getBlue() / 255F) * fadeFactor, 1.0F, 0);
+        Utilities.sendParticle(
+            player,
+            EnumParticle.REDSTONE,
+            trailX,
+            trailY,
+            trailZ,
+            (color.getRed() / 255F) * fadeFactor,
+            (color.getGreen() / 255F) * fadeFactor,
+            (color.getBlue() / 255F) * fadeFactor,
+            1.0F,
+            0);
       } else {
         int particleCount = (int) (GENERIC_PARTICLE_COUNT * (0.6 + t * 0.4));
 
-        Utilities.sendParticle(player, particle, trailX, trailY, trailZ, GENERIC_PARTICLE_OFFSET,
-            GENERIC_PARTICLE_OFFSET, GENERIC_PARTICLE_OFFSET, GENERIC_PARTICLE_SPEED,
+        Utilities.sendParticle(
+            player,
+            particle,
+            trailX,
+            trailY,
+            trailZ,
+            GENERIC_PARTICLE_OFFSET,
+            GENERIC_PARTICLE_OFFSET,
+            GENERIC_PARTICLE_OFFSET,
+            GENERIC_PARTICLE_SPEED,
             Math.max(1, particleCount));
       }
     }

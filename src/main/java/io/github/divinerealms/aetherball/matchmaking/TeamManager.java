@@ -1,19 +1,18 @@
 package io.github.divinerealms.aetherball.matchmaking;
 
+import static io.github.divinerealms.aetherball.configs.Lang.TEAM_DISBANDED;
+import static io.github.divinerealms.aetherball.configs.Lang.TEAM_INVITE_EXPIRED;
+import static io.github.divinerealms.aetherball.utils.LoggerUtil.sendMessage;
+import static io.github.divinerealms.aetherball.utils.MatchUtils.isPlayerOnline;
+
 import io.github.divinerealms.aetherball.configs.Settings;
 import io.github.divinerealms.aetherball.managers.Manager;
 import io.github.divinerealms.aetherball.matchmaking.logic.MatchData;
+import java.util.*;
 import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
-
-import java.util.*;
-
-import static io.github.divinerealms.aetherball.configs.Lang.TEAM_DISBANDED;
-import static io.github.divinerealms.aetherball.configs.Lang.TEAM_INVITE_EXPIRED;
-import static io.github.divinerealms.aetherball.utils.MatchUtils.isPlayerOnline;
-import static io.github.divinerealms.aetherball.utils.LoggerUtil.sendMessage;
 
 @Getter
 public class TeamManager {
@@ -35,10 +34,14 @@ public class TeamManager {
 
   public void invite(Player inviter, Player invited, int matchType) {
     teamInvites.put(invited, Collections.singletonMap(inviter, matchType));
-    Bukkit.getScheduler().runTaskLaterAsynchronously(plugin, () -> {
-      teamInvites.remove(invited);
-      sendMessage(inviter, TEAM_INVITE_EXPIRED);
-    }, Settings.getTeamExpiry());
+    Bukkit.getScheduler()
+        .runTaskLaterAsynchronously(
+            plugin,
+            () -> {
+              teamInvites.remove(invited);
+              sendMessage(inviter, TEAM_INVITE_EXPIRED);
+            },
+            Settings.getTeamExpiry());
   }
 
   public Player getInviter(Player invited) {
@@ -99,8 +102,7 @@ public class TeamManager {
     }
 
     boolean anyInQueue = false;
-    Collection<Queue<Player>> playerQueues = matchData.getPlayerQueues()
-        .values();
+    Collection<Queue<Player>> playerQueues = matchData.getPlayerQueues().values();
 
     for (Queue<Player> queue : playerQueues) {
       if (queue != null && queue.contains(leaver)) {
@@ -138,12 +140,6 @@ public class TeamManager {
     disbandTeam(team);
   }
 
-  public record Team(Player leader, Player member, int matchType) {
-    public List<Player> getMembers() {
-      return Arrays.asList(leader, member);
-    }
-  }
-
   public void handlePlayerDisconnect(Player player) {
     if (!isInTeam(player)) {
       return;
@@ -161,5 +157,11 @@ public class TeamManager {
     }
 
     disbandTeam(team);
+  }
+
+  public record Team(Player leader, Player member, int matchType) {
+    public List<Player> getMembers() {
+      return Arrays.asList(leader, member);
+    }
   }
 }

@@ -15,8 +15,6 @@ import org.bukkit.entity.Slime;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.plugin.Plugin;
-import org.bukkit.scheduler.BukkitScheduler;
 import org.bukkit.util.Vector;
 
 import java.util.Map;
@@ -31,24 +29,19 @@ import static io.github.divinerealms.aetherball.utils.Permissions.PERM_HIT_DEBUG
 
 /**
  * Handles player interactions with cube entities through left-click attacks.
- * <p>
- * Replaces standard entity damage behavior with custom physics-driven kicking mechanics, including
- * velocity application, cooldown management, sound effects, and debug feedback.
- * </p>
+ *
+ * <p>Replaces standard entity damage behavior with custom physics-driven kicking mechanics,
+ * including velocity application, cooldown management, sound effects, and debug feedback.
  */
 public class CubeKickListener extends BaseListener {
 
   private final Manager manager;
-  private final BukkitScheduler scheduler;
-  private final Plugin plugin;
   private final PhysicsSystem system;
   private final PhysicsData data;
   private final MatchManager matchManager;
 
   public CubeKickListener(Manager manager) {
     this.manager = manager;
-    this.scheduler = manager.getScheduler();
-    this.plugin = manager.getPlugin();
     this.system = manager.getPhysicsSystem();
     this.data = manager.getPhysicsData();
     this.matchManager = manager.getMatchManager();
@@ -56,103 +49,105 @@ public class CubeKickListener extends BaseListener {
 
   /**
    * Handles custom hit detection for cube entities when attacked by players.
-   * <p>
-   * Replaces standard attack behavior with physics-driven logic including velocity application,
+   *
+   * <p>Replaces standard attack behavior with physics-driven logic including velocity application,
    * cooldown tracking, power calculations, and debug feedback. Creative mode players with
    * appropriate permissions can instantly remove cubes.
-   * </p>
    *
    * @param event the {@link EntityDamageByEntityEvent} triggered when one entity damages another
    */
   @EventHandler(priority = EventPriority.LOW)
   public void leftClick(EntityDamageByEntityEvent event) {
-    monitoredExecution(() -> {
-      // Only process Slime entities (cubes).
-      if (!(event.getEntity() instanceof Slime cube)) {
-        return;
-      }
-
-      // Only process player attacks.
-      if (!(event.getDamager() instanceof Player player)) {
-        return;
-      }
-
-      // Only process tracked physics cubes.
-      if (!data.getCubes().contains(cube)) {
-        return;
-      }
-
-      event.setCancelled(true);
-      UUID playerId = player.getUniqueId();
-
-      // Creative players with permission can instantly remove cubes.
-      if (player.getGameMode() == GameMode.CREATIVE && player.hasPermission(PERM_CLEAR_CUBE)) {
-        cube.setHealth(0);
-        sendMessage(player, CUBE_CLEAR);
-        return;
-      }
-
-      // Prevent unauthorized players from interacting with cubes.
-      if (system.notAllowedToInteract(player)) {
-        return;
-      }
-
-      // Determine kick type: charged (sneaking) or regular.
-      CubeTouchType kickType =
-          player.isSneaking() ? CubeTouchType.CHARGED_KICK : CubeTouchType.REGULAR_KICK;
-
-      // Check if player is still on cooldown for this kick type.
-      Map<CubeTouchType, CubeTouchInfo> touches = data.getLastTouches().get(playerId);
-      if (touches != null) {
-        CubeTouchInfo lastTouch = touches.get(kickType);
-        if (lastTouch != null) {
-          long elapsed = System.currentTimeMillis() - lastTouch.getTimestamp();
-          if (elapsed < kickType.getCooldown()) {
-            return; // Still on cooldown, prevent kick.
+    monitoredExecution(
+        () -> {
+          // Only process Slime entities (cubes).
+          if (!(event.getEntity() instanceof Slime cube)) {
+            return;
           }
-        }
-      }
 
-      // Calculate kick power based on player state and settings.
-      PhysicsSystem.PlayerKickResult kickResult = system.calculateKickPower(player);
+          // Only process player attacks.
+          if (!(event.getDamager() instanceof Player player)) {
+            return;
+          }
 
-      // Apply kick velocity to cube: direction from player's view + vertical boost.
-      Vector kickDirection = player.getLocation().getDirection().normalize();
-      Vector kick = kickDirection.clone().multiply(kickResult.finalKickPower());
-      kick.setY(Settings.KICK_VERTICAL_BOOST.asDouble());
-      cube.setVelocity(cube.getVelocity().add(kick));
-      cube.setNoDamageTicks(0);
+          // Only process tracked physics cubes.
+          if (!data.getCubes().contains(cube)) {
+            return;
+          }
 
-      // Update cooldown timestamp for this kick type.
-      data.getLastTouches().computeIfAbsent(playerId, k -> new ConcurrentHashMap<>())
-          .put(kickType, new CubeTouchInfo(System.currentTimeMillis(), kickType));
+          event.setCancelled(true);
+          UUID playerId = player.getUniqueId();
 
-      // Record player action for tracking and notify match manager.
-      system.recordPlayerAction(player);
-      matchManager.kick(player);
+          // Creative players with permission can instantly remove cubes.
+          if (player.getGameMode() == GameMode.CREATIVE && player.hasPermission(PERM_CLEAR_CUBE)) {
+            cube.setHealth(0);
+            sendMessage(player, CUBE_CLEAR);
+            return;
+          }
 
-      // Play cube kick sound at cube location.
-      cube.getWorld().playSound(cube.getLocation(), Sound.SLIME_WALK, 0.75F, 1.0F);
+          // Prevent unauthorized players from interacting with cubes.
+          if (system.notAllowedToInteract(player)) {
+            return;
+          }
 
-      // Schedule sync tasks for player feedback (sounds and debug info).
-      scheduler.runTask(plugin, () -> {
-        // Play personalized kick sound if player has it enabled.
-        PlayerSettings playerSettings = manager.getPlayerSettings(player);
-        if (playerSettings != null && playerSettings.isKickSoundEnabled()) {
-          player.playSound(player.getLocation(), playerSettings.getKickSound(), 0.5F, 1.0F);
-        }
+          // Determine kick type: charged (sneaking) or regular.
+          CubeTouchType kickType =
+              player.isSneaking() ? CubeTouchType.CHARGED_KICK : CubeTouchType.REGULAR_KICK;
 
-        // Send debug information to nearby players with debug permission.
-        if (data.isHitDebugEnabled()) {
-          sendMessage(PERM_HIT_DEBUG, player.getLocation(), 100, HITDEBUG_WHOLE,
-              system.onHitDebug(player, kickResult));
-        }
+          // Check if player is still on cooldown for this kick type.
+          Map<CubeTouchType, CubeTouchInfo> touches = data.getLastTouches().get(playerId);
+          if (touches != null) {
+            CubeTouchInfo lastTouch = touches.get(kickType);
+            if (lastTouch != null) {
+              long elapsed = System.currentTimeMillis() - lastTouch.getTimestamp();
+              if (elapsed < kickType.getCooldown()) {
+                return; // Still on cooldown, prevent kick.
+              }
+            }
+          }
 
-        // Show visual hit feedback if player has it enabled.
-        if (data.getCubeHits().contains(playerId)) {
-          system.showHits(player, kickResult);
-        }
-      });
-    });
+          // Calculate kick power based on player state and settings.
+          PhysicsSystem.PlayerKickResult kickResult = system.calculateKickPower(player);
+
+          // Apply kick velocity to cube: direction from player's view + vertical boost.
+          Vector kickDirection = player.getLocation().getDirection().normalize();
+          Vector kick = kickDirection.clone().multiply(kickResult.finalKickPower());
+          kick.setY(Settings.KICK_VERTICAL_BOOST.asDouble());
+          cube.setVelocity(cube.getVelocity().add(kick));
+          cube.setNoDamageTicks(0);
+
+          // Update cooldown timestamp for this kick type.
+          data.getLastTouches()
+              .computeIfAbsent(playerId, k -> new ConcurrentHashMap<>())
+              .put(kickType, new CubeTouchInfo(System.currentTimeMillis(), kickType));
+
+          // Record player action for tracking and notify match manager.
+          system.recordPlayerAction(player);
+          matchManager.kick(player);
+
+          // Play cube kick sound at cube location.
+          cube.getWorld().playSound(cube.getLocation(), Sound.SLIME_WALK, 0.75F, 1.0F);
+
+          // Play personalized kick sound if player has it enabled.
+          PlayerSettings playerSettings = manager.getPlayerSettings(player);
+          if (playerSettings != null && playerSettings.isKickSoundEnabled()) {
+            player.playSound(player.getLocation(), playerSettings.getKickSound(), 0.5F, 1.0F);
+          }
+
+          // Send debug information to nearby players with debug permission.
+          if (data.isHitDebugEnabled()) {
+            sendMessage(
+                PERM_HIT_DEBUG,
+                player.getLocation(),
+                100,
+                HITDEBUG_WHOLE,
+                system.onHitDebug(player, kickResult));
+          }
+
+          // Show visual hit feedback if player has it enabled.
+          if (data.getCubeHits().contains(playerId)) {
+            system.showHits(player, kickResult);
+          }
+        });
   }
 }

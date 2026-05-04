@@ -1,7 +1,6 @@
 package io.github.divinerealms.aetherball.tasks;
 
 import static io.github.divinerealms.aetherball.configs.Lang.HITDEBUG_VELOCITY_CAP;
-import static io.github.divinerealms.aetherball.utils.MatchUtils.isPlayerOnline;
 import static io.github.divinerealms.aetherball.physics.PhysicsConstants.AIR_DRAG_FACTOR;
 import static io.github.divinerealms.aetherball.physics.PhysicsConstants.BOUNCE_THRESHOLD;
 import static io.github.divinerealms.aetherball.physics.PhysicsConstants.CUBE_SPEED_TOUCH_DIVISOR;
@@ -24,6 +23,7 @@ import static io.github.divinerealms.aetherball.physics.PhysicsConstants.VERTICA
 import static io.github.divinerealms.aetherball.physics.PhysicsConstants.WALL_BOUNCE_FACTOR;
 import static io.github.divinerealms.aetherball.utils.LoggerUtil.logConsole;
 import static io.github.divinerealms.aetherball.utils.LoggerUtil.sendMessage;
+import static io.github.divinerealms.aetherball.utils.MatchUtils.isPlayerOnline;
 import static io.github.divinerealms.aetherball.utils.Permissions.PERM_HIT_DEBUG;
 
 import io.github.divinerealms.aetherball.configs.Settings;
@@ -32,11 +32,9 @@ import io.github.divinerealms.aetherball.matchmaking.MatchManager;
 import io.github.divinerealms.aetherball.physics.PhysicsData;
 import io.github.divinerealms.aetherball.physics.utilities.PhysicsFormulae;
 import io.github.divinerealms.aetherball.physics.utilities.PhysicsSystem;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-
 import org.bukkit.Location;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
@@ -171,7 +169,8 @@ public class PhysicsTask extends BaseTask {
           playSound = true; // Trigger sound if impact force is strong enough.
         }
       } else {
-        // If cube wasn't recently kicked and velocity change is small, apply gradual air drag slowdown.
+        // If cube wasn't recently kicked and velocity change is small, apply gradual air drag
+        // slowdown.
         if (!wasMoved
             && Math.abs(previousVelocity.getX() - newVelocity.getX()) < VECTOR_CHANGE_THRESHOLD) {
           newVelocity.setX(previousVelocity.getX() * AIR_DRAG_FACTOR); // Apply air drag.
@@ -186,7 +185,8 @@ public class PhysicsTask extends BaseTask {
           playSound = true; // Trigger sound if impact force is strong enough.
         }
       } else {
-        // If cube wasn't recently kicked and velocity change is small, apply gradual air drag slowdown.
+        // If cube wasn't recently kicked and velocity change is small, apply gradual air drag
+        // slowdown.
         if (!wasMoved
             && Math.abs(previousVelocity.getZ() - newVelocity.getZ()) < VECTOR_CHANGE_THRESHOLD) {
           newVelocity.setZ(previousVelocity.getZ() * AIR_DRAG_FACTOR); // Apply air drag.
@@ -195,7 +195,8 @@ public class PhysicsTask extends BaseTask {
 
       // Y-axis bounce (vertical collision against floor or ceiling).
       // This ensures realistic vertical rebound, preventing velocity loss bugs on impact.
-      if (newVelocity.getY() < 0 && previousVelocity.getY() < 0
+      if (newVelocity.getY() < 0
+          && previousVelocity.getY() < 0
           && previousVelocity.getY() < newVelocity.getY() - VERTICAL_BOUNCE_THRESHOLD) {
         // Reverse and reduce Y velocity on downward collision.
         newVelocity.setY(-previousVelocity.getY() * WALL_BOUNCE_FACTOR);
@@ -228,24 +229,26 @@ public class PhysicsTask extends BaseTask {
         double playerY = interaction.cache.location.getY();
         Vector nextPos = cubePos.clone().add(newVelocity);
 
-        boolean currentYInRange = cubePos.getY() < playerY + PLAYER_HEAD_LEVEL
-            && cubePos.getY() > playerY - PLAYER_FOOT_LEVEL;
-        boolean nextYInRange = nextPos.getY() < playerY + PLAYER_HEAD_LEVEL
-            && nextPos.getY() > playerY - PLAYER_FOOT_LEVEL;
+        boolean currentYInRange =
+            cubePos.getY() < playerY + PLAYER_HEAD_LEVEL
+                && cubePos.getY() > playerY - PLAYER_FOOT_LEVEL;
+        boolean nextYInRange =
+            nextPos.getY() < playerY + PLAYER_HEAD_LEVEL
+                && nextPos.getY() > playerY - PLAYER_FOOT_LEVEL;
 
         if (!currentYInRange || !nextYInRange) {
           continue; // Not vertically aligned.
         }
 
         // Check if moving toward player.
-        if (!formulae.isMovingTowardPlayer(interaction.player.getLocation(), cubePos,
-            newVelocity)) {
+        if (!formulae.isMovingTowardPlayer(
+            interaction.player.getLocation(), cubePos, newVelocity)) {
           continue;
         }
 
         // Check if path intercepts player's collision radius.
-        double distanceToPath = formulae.getPerpendicularDistance(newVelocity, cubePos,
-            interaction.player);
+        double distanceToPath =
+            formulae.getPerpendicularDistance(newVelocity, cubePos, interaction.player);
         if (distanceToPath < MIN_RADIUS) {
           // Apply velocity scaling to prevent clipping.
           newVelocity.multiply(distance / cubeSpeed);
@@ -260,7 +263,9 @@ public class PhysicsTask extends BaseTask {
         newVelocity.multiply(maxKickPower / finalSpeed); // Scale back to MAX_KP.
         // Log violation to players with debugging permissions.
         if (Settings.DEBUG_MODE.asBoolean()) {
-          sendMessage(PERM_HIT_DEBUG, HITDEBUG_VELOCITY_CAP,
+          sendMessage(
+              PERM_HIT_DEBUG,
+              HITDEBUG_VELOCITY_CAP,
               String.format("%.2f", finalSpeed),
               String.valueOf(maxKickPower));
         }
@@ -281,8 +286,7 @@ public class PhysicsTask extends BaseTask {
    * performance.
    *
    * @return a map of player UUIDs to their corresponding physics cache
-   *
-   **/
+   */
   private Map<UUID, PlayerPhysicsCache> buildPlayerCache(PhysicsSystem system, PhysicsData data) {
     Map<UUID, PlayerPhysicsCache> cache = new HashMap<>();
 
@@ -296,8 +300,8 @@ public class PhysicsTask extends BaseTask {
         PlayerPhysicsCache physicsCache = new PlayerPhysicsCache(player, system, data);
         cache.put(player.getUniqueId(), physicsCache);
       } catch (Exception exception) {
-        logConsole("{prefix_warn}Failed to cache player " + player.getName(),
-            exception.getMessage());
+        logConsole(
+            "{prefix_warn}Failed to cache player " + player.getName(), exception.getMessage());
       }
     }
 
@@ -308,23 +312,20 @@ public class PhysicsTask extends BaseTask {
    * Temporary structure to store player interaction data during a single cube's processing.
    * Prevents recalculating distances and player lookups in the anti-clipping phase.
    *
-   * <p><b>Lifecycle:</b> Created during touch detection, reused in anti-clipping,
-   * then discarded at the end of each cube's processing.</p>
+   * <p><b>Lifecycle:</b> Created during touch detection, reused in anti-clipping, then discarded at
+   * the end of each cube's processing.
    */
-  private record PlayerInteraction(Player player, PlayerPhysicsCache cache, double distance) {
-
-  }
+  private record PlayerInteraction(Player player, PlayerPhysicsCache cache, double distance) {}
 
   /**
    * Immutable cache containing pre-calculated physics data for a player during a single tick.
-   * <p>
-   * This cache reduces redundant calculations when processing multiple cubes against the same
+   *
+   * <p>This cache reduces redundant calculations when processing multiple cubes against the same
    * player, improving performance by storing commonly accessed values like location, direction, and
    * eligibility.
-   * </p>
    *
-   * <p><b>Lifecycle:</b> Created once per player per tick in {@code buildPlayerCache()},
-   * then reused for all cube-player interactions during that tick.</p>
+   * <p><b>Lifecycle:</b> Created once per player per tick in {@code buildPlayerCache()}, then
+   * reused for all cube-player interactions during that tick.
    */
   private static class PlayerPhysicsCache {
 

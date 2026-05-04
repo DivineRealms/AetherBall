@@ -1,6 +1,10 @@
 package io.github.divinerealms.aetherball.managers;
 
+import static io.github.divinerealms.aetherball.utils.LoggerUtil.logConsole;
+
 import io.github.divinerealms.aetherball.utils.PlayerSettings;
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import net.luckperms.api.LuckPerms;
 import net.luckperms.api.cacheddata.CachedMetaData;
 import net.minecraft.server.v1_8_R3.EnumParticle;
@@ -9,15 +13,10 @@ import org.bukkit.ChatColor;
 import org.bukkit.craftbukkit.v1_8_R3.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 
-import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-
-import static io.github.divinerealms.aetherball.utils.LoggerUtil.logConsole;
-
 public class Utilities {
 
-  private final Manager manager;
   public final LuckPerms luckPerms;
+  private final Manager manager;
 
   public Utilities(Manager manager) {
     this.manager = manager;
@@ -142,18 +141,26 @@ public class Utilities {
     return sb.toString();
   }
 
-  public static void sendParticle(Player player, EnumParticle particle,
-                                  double x, double y, double z,
-                                  float offsetX, float offsetY, float offsetZ,
-                                  float speed, int count) {
+  public static void sendParticle(
+      Player player,
+      EnumParticle particle,
+      double x,
+      double y,
+      double z,
+      float offsetX,
+      float offsetY,
+      float offsetZ,
+      float speed,
+      int count) {
     if (PlayerSettings.DISALLOWED_PARTICLES.contains(particle)) {
       return;
     }
 
     try {
-      PacketPlayOutWorldParticles packet = new PacketPlayOutWorldParticles(particle, true,
-          (float) x, (float) y, (float) z,
-          offsetX, offsetY, offsetZ, speed, count);
+      PacketPlayOutWorldParticles packet =
+          new PacketPlayOutWorldParticles(
+              particle, true, (float) x, (float) y, (float) z, offsetX, offsetY, offsetZ, speed,
+              count);
       ((CraftPlayer) player).getHandle().playerConnection.sendPacket(packet);
     } catch (Exception exception) {
       logConsole("{prefix_error}Error while trying to send particle", exception.getMessage());
@@ -170,17 +177,21 @@ public class Utilities {
   }
 
   public CompletableFuture<String> getPrefixedName(UUID uuid, String playerName) {
-    return luckPerms.getUserManager().loadUser(uuid).thenApplyAsync(user -> {
-      CachedMetaData meta = user.getCachedData().getMetaData(
-          luckPerms.getContextManager().getStaticQueryOptions()
-      );
+    return luckPerms
+        .getUserManager()
+        .loadUser(uuid)
+        .thenApplyAsync(
+            user -> {
+              CachedMetaData meta =
+                  user.getCachedData()
+                      .getMetaData(luckPerms.getContextManager().getStaticQueryOptions());
 
-      String prefix = meta.getPrefix();
-      if (prefix == null) {
-        prefix = "";
-      }
+              String prefix = meta.getPrefix();
+              if (prefix == null) {
+                prefix = "";
+              }
 
-      return ChatColor.translateAlternateColorCodes('&', prefix + playerName);
-    });
+              return ChatColor.translateAlternateColorCodes('&', prefix + playerName);
+            });
   }
 }

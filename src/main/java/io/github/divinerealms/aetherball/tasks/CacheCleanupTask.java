@@ -1,7 +1,7 @@
 package io.github.divinerealms.aetherball.tasks;
 
-import static io.github.divinerealms.aetherball.utils.MatchUtils.isPlayerOnline;
 import static io.github.divinerealms.aetherball.utils.LoggerUtil.debugConsole;
+import static io.github.divinerealms.aetherball.utils.MatchUtils.isPlayerOnline;
 
 import io.github.divinerealms.aetherball.managers.Manager;
 import org.bukkit.entity.Player;
