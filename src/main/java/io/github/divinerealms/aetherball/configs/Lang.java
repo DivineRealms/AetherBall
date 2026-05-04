@@ -1,19 +1,20 @@
 package io.github.divinerealms.aetherball.configs;
 
-import java.util.HashMap;
-import java.util.Map;
 import lombok.Getter;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.FileConfiguration;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @Getter
 public enum Lang {
-  INFO("prefix.info", "&8▎ &r", "\u001B[36m"),
-  SUCCESS("prefix.success", "&a▎ &r", "\u001B[32m"),
-  ERROR("prefix.error", "&4▎ &c", "\u001B[31m"),
-  WARN("prefix.warn", "&6▎ &e", "\u001B[33m"),
-  OTHER("prefix.other", "&b▎ &r", "\u001B[37m"),
-  DEBUG("prefix.debug", "&9▎ &e[&oDEBUG&e] &f", "\u001B[35m"),
+  INFO("prefix.info", "&8▎ &r", "&7"),
+  SUCCESS("prefix.success", "&a▎ &r", "&f"),
+  ERROR("prefix.error", "&4▎ &c", "&c[ERROR] "),
+  WARN("prefix.warn", "&6▎ &e", "&e[WARN] &6"),
+  OTHER("prefix.other", "&b▎ &r", "&3"),
+  DEBUG("prefix.debug", "&9▎ &e[&oDEBUG&e] &f", "&d[DEBUG] &5"),
 
   BANNER_PLAYER(
       "banner.player",
@@ -637,12 +638,12 @@ public enum Lang {
   private static FileConfiguration LANG;
   private final String path;
   private final String def;
-  private final String consoleColor;
+  private final String consolePrefix;
 
-  Lang(String path, String start, String consoleColor) {
+  Lang(String path, String start, String consolePrefix) {
     this.path = path;
     this.def = start;
-    this.consoleColor = consoleColor;
+    this.consolePrefix = consolePrefix;
   }
 
   Lang(String path, String start) {
@@ -665,10 +666,9 @@ public enum Lang {
 
     for (Lang prefix : new Lang[] {INFO, SUCCESS, ERROR, WARN, OTHER, DEBUG}) {
       String tag = "{prefix_" + prefix.name().toLowerCase() + "}";
-      String consoleTag =
-          String.format("%s\u001B[1m[AetherBall]\u001B[0m ", prefix.getConsoleColor());
-      CONSOLE_PREFIX_CACHE.put(tag, consoleTag);
       PLAYER_PREFIX_CACHE.put(tag, getColoredPrefix(prefix));
+      String consolePrefix = color("&b[AetherBall] " + prefix.getConsolePrefix());
+      CONSOLE_PREFIX_CACHE.put(tag, consolePrefix);
     }
   }
 

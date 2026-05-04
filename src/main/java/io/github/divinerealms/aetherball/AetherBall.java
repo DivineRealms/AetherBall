@@ -1,10 +1,11 @@
 package io.github.divinerealms.aetherball;
 
-import static io.github.divinerealms.aetherball.utils.LoggerUtil.logConsole;
-
 import io.github.divinerealms.aetherball.managers.Manager;
-import java.util.logging.Level;
 import org.bukkit.plugin.java.JavaPlugin;
+
+import java.util.logging.Level;
+
+import static io.github.divinerealms.aetherball.utils.LoggerUtil.logConsole;
 
 public class AetherBall extends JavaPlugin {
 
@@ -16,10 +17,7 @@ public class AetherBall extends JavaPlugin {
       this.manager = new Manager(this);
       manager.setEnabling(true);
       manager.reload();
-      logConsole(
-          "{prefix_success}Successfully enabled AetherBall v"
-              + getDescription().getVersion()
-              + "!");
+      logConsole("{prefix_success}Successfully enabled!");
     } catch (Exception exception) {
       getLogger()
           .log(

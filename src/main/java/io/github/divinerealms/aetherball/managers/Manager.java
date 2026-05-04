@@ -252,13 +252,9 @@ public class Manager {
 
     String[] banner =
         new String[] {
-          "&2┏┓┏┓" + "&8 -+-------------------------------------------+-",
-          "&2┣ ┃ "
-              + "&7  Created by &b"
-              + joiner
-              + "&7, version &f"
-              + plugin.getDescription().getVersion(),
-          "&2┻ ┗┛" + "&8 -+-------------------------------------------+-"
+          "&9  ┓ ",
+          "&9┏┓┣┓" + "&7  created by &b" + joiner,
+          "&9┗┻┗┛" + "&8  &ov" + plugin.getDescription().getVersion()
         };
 
     for (String line : banner) {

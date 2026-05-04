@@ -1,7 +1,5 @@
 package io.github.divinerealms.aetherball.utils;
 
-import static io.github.divinerealms.aetherball.utils.MatchUtils.isPlayerOnline;
-
 import io.github.divinerealms.aetherball.configs.Lang;
 import io.github.divinerealms.aetherball.configs.Settings;
 import net.minecraft.server.v1_8_R3.IChatBaseComponent;
@@ -12,8 +10,11 @@ import net.minecraft.server.v1_8_R3.PacketPlayOutTitle.EnumTitleAction;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.craftbukkit.v1_8_R3.entity.CraftPlayer;
 import org.bukkit.entity.Player;
+
+import static io.github.divinerealms.aetherball.utils.MatchUtils.isPlayerOnline;
 
 /**
  * The LoggerUtil class provides a utility for managing formatted logging and messaging
@@ -25,7 +26,8 @@ public class LoggerUtil {
 
   // Private constructor prevents instantiation.
   private LoggerUtil() {
-    throw new UnsupportedOperationException("Logger is a utility class and cannot be instantiated");
+    throw new UnsupportedOperationException(
+        "LoggerUtil is a utility class and cannot be instantiated");
   }
 
   /**
@@ -36,7 +38,12 @@ public class LoggerUtil {
    */
   public static void logConsole(Object messageObject, String... args) {
     String message = resolveMessage(messageObject, true, args);
-    Bukkit.getConsoleSender().sendMessage(message + "\u001B[0m");
+    ConsoleCommandSender console = Bukkit.getConsoleSender();
+    if (console != null) {
+      Bukkit.getConsoleSender().sendMessage(message);
+    } else {
+      System.out.println(message);
+    }
   }
 
   /**
